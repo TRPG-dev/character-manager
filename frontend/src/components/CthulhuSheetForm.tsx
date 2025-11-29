@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import type { CthulhuSheetData, CthulhuSkill, CthulhuWeapon, CthulhuItem } from '../types/cthulhu';
 import { calculateDerivedValues, normalizeSheetData, getJobPointsLimit, getInterestPointsLimit } from '../utils/cthulhu';
 import { calculateSkillTotal, calculateTotalJobPoints, calculateTotalInterestPoints } from '../data/cthulhuSkills';
+import { useAuth } from '../auth/useAuth';
+import { rollDice } from '../services/api';
 
 interface CthulhuSheetFormProps {
   data: CthulhuSheetData;
@@ -9,8 +11,10 @@ interface CthulhuSheetFormProps {
 }
 
 export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
+  const { getAccessToken } = useAuth();
   const [sheetData, setSheetData] = useState<CthulhuSheetData>(normalizeSheetData(data));
   const [isInternalUpdate, setIsInternalUpdate] = useState(false);
+  const [rollingAllAttributes, setRollingAllAttributes] = useState(false);
 
   useEffect(() => {
     // 内部更新の場合はスキップ（無限ループ防止）
@@ -56,6 +60,82 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
     const updated = { ...sheetData, derived: { ...sheetData.derived, [key]: value } };
     setSheetData(updated);
     onChange(updated);
+  };
+
+  // 全能力値ロール関数
+  const rollAllAttributes = async () => {
+    setRollingAllAttributes(true);
+    try {
+      const token = await getAccessToken();
+      if (!token) {
+        alert('認証トークンの取得に失敗しました');
+        setRollingAllAttributes(false);
+        return;
+      }
+
+      // 各能力値に応じたダイス式でロール
+      const attributeFormulas: Record<keyof typeof sheetData.attributes, string> = {
+        STR: '3d6',
+        CON: '3d6',
+        POW: '3d6',
+        DEX: '3d6',
+        APP: '3d6',
+        INT: '2d6+6',
+        EDU: '3d6+3',
+        SIZ: '2d6+6',
+      };
+
+      const newAttributes = { ...sheetData.attributes };
+      
+      // すべての能力値を順番にロール
+      for (const [key, formula] of Object.entries(attributeFormulas)) {
+        try {
+          const result = await rollDice(token, formula);
+          newAttributes[key as keyof typeof sheetData.attributes] = result.total;
+        } catch (error: any) {
+          console.error(`Failed to roll ${key}:`, error);
+          // エラーが発生した場合はスキップして続行
+        }
+      }
+
+      // すべての能力値を一度に更新
+      const newDerived = calculateDerivedValues(newAttributes);
+      const updatedDerived = {
+        ...newDerived,
+        SAN_current: sheetData.derived.SAN_current,
+        HP_current: sheetData.derived.HP_current,
+        MP_current: sheetData.derived.MP_current,
+      };
+
+      // 動的計算が必要な技能の初期値を更新
+      const updatedSkills = sheetData.skills.map(skill => {
+        if (skill.name === '回避') {
+          const baseValue = newAttributes.DEX;
+          return { ...skill, baseValue, total: calculateSkillTotal({ ...skill, baseValue }) };
+        }
+        if (skill.name === '母国語') {
+          const baseValue = newAttributes.EDU * 5;
+          return { ...skill, baseValue, total: calculateSkillTotal({ ...skill, baseValue }) };
+        }
+        return skill;
+      });
+
+      const updated = {
+        ...sheetData,
+        attributes: newAttributes,
+        derived: updatedDerived,
+        skills: updatedSkills,
+      };
+      setIsInternalUpdate(true);
+      setSheetData(updated);
+      onChange(updated);
+    } catch (error: any) {
+      console.error('Failed to roll all attributes:', error);
+      const errorMessage = error.response?.data?.detail || error.message || '能力値のロールに失敗しました';
+      alert(`エラー: ${errorMessage}`);
+    } finally {
+      setRollingAllAttributes(false);
+    }
   };
 
   // 技能関連の関数
@@ -225,9 +305,28 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* 能力値セクション */}
       <section>
-        <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
-          能力値
-        </h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+          <button
+            type="button"
+            onClick={rollAllAttributes}
+            disabled={rollingAllAttributes}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: rollingAllAttributes ? '#ccc' : '#28a745',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: rollingAllAttributes ? 'not-allowed' : 'pointer',
+              fontSize: '0.875rem',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {rollingAllAttributes ? 'ロール中...' : '🎲 能力値をロール'}
+          </button>
+          <h2 style={{ margin: 0, fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem', flex: 1 }}>
+            能力値
+          </h2>
+        </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
           {(Object.keys(sheetData.attributes) as Array<keyof typeof sheetData.attributes>).map((key) => (
             <div key={key}>

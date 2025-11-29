@@ -3,28 +3,29 @@ import random
 from typing import List, Tuple, Dict, Any
 
 
-def parse_dice_formula(formula: str) -> Tuple[int, int]:
+def parse_dice_formula(formula: str) -> Tuple[int, int, int]:
     """
-    ダイス式をパースして、ダイスの個数と面数を返す
+    ダイス式をパースして、ダイスの個数、面数、修正値を返す
     
     Args:
-        formula: ダイス式（例: "3d6", "1d20"）
+        formula: ダイス式（例: "3d6", "2d6+6", "3d6+3"）
     
     Returns:
-        (ダイスの個数, ダイスの面数)
+        (ダイスの個数, ダイスの面数, 修正値)
     
     Raises:
         ValueError: 無効なダイス式の場合
     """
-    # 正規表現でXdY形式をマッチ
-    pattern = r'^(\d+)d(\d+)$'
+    # 正規表現でXdY形式またはXdY+Z形式をマッチ
+    pattern = r'^(\d+)d(\d+)([+-]\d+)?$'
     match = re.match(pattern, formula.lower())
     
     if not match:
-        raise ValueError(f"無効なダイス式です: {formula}. 形式は 'XdY' (例: 3d6) です。")
+        raise ValueError(f"無効なダイス式です: {formula}. 形式は 'XdY' または 'XdY+Z' (例: 3d6, 2d6+6) です。")
     
     count = int(match.group(1))
     sides = int(match.group(2))
+    modifier = int(match.group(3)) if match.group(3) else 0
     
     # バリデーション
     if count < 1 or count > 1000:
@@ -33,7 +34,7 @@ def parse_dice_formula(formula: str) -> Tuple[int, int]:
     if sides < 2 or sides > 1000:
         raise ValueError(f"ダイスの面数は2から1000の範囲で指定してください。現在の値: {sides}")
     
-    return count, sides
+    return count, sides, modifier
 
 
 def roll_dice(count: int, sides: int) -> List[int]:
@@ -52,20 +53,20 @@ def roll_dice(count: int, sides: int) -> List[int]:
 
 def roll_dice_formula(formula: str) -> Tuple[List[int], int]:
     """
-    ダイス式からダイスを振る
+    ダイス式からダイスを振る（修正値付きにも対応）
     
     Args:
-        formula: ダイス式（例: "3d6"）
+        formula: ダイス式（例: "3d6", "2d6+6", "3d6+3"）
     
     Returns:
-        (各ダイスの結果のリスト, 合計値)
+        (各ダイスの結果のリスト, 合計値（修正値込み）)
     
     Raises:
         ValueError: 無効なダイス式の場合
     """
-    count, sides = parse_dice_formula(formula)
+    count, sides, modifier = parse_dice_formula(formula)
     rolls = roll_dice(count, sides)
-    total = sum(rolls)
+    total = sum(rolls) + modifier
     return rolls, total
 
 
@@ -125,11 +126,11 @@ def generate_cthulhu_attributes() -> Dict[str, Any]:
     APP = roll_dice_formula("3d6")[1]
     
     # SIZ, INT (2d6+6)
-    SIZ = roll_dice_with_modifier("2d6+6")
-    INT = roll_dice_with_modifier("2d6+6")
+    SIZ = roll_dice_formula("2d6+6")[1]
+    INT = roll_dice_formula("2d6+6")[1]
     
     # EDU (3d6+3)
-    EDU = roll_dice_with_modifier("3d6+3")
+    EDU = roll_dice_formula("3d6+3")[1]
     
     attributes = {
         "STR": STR,

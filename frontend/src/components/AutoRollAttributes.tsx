@@ -1,7 +1,34 @@
 import { useState } from 'react';
 import { useAuth } from '../auth/useAuth';
-import { autoRollAttributes, AutoRollAttributesResponse, SystemEnum } from '../services/api';
+import { autoRollAttributes } from '../services/api';
 import type { CthulhuAttributes, CthulhuDerived } from '../types/cthulhu';
+
+type SystemEnum = 'cthulhu' | 'shinobigami' | 'sw25' | 'satasupe';
+
+interface AutoRollAttributesResponse {
+  attributes: {
+    STR: number;
+    CON: number;
+    POW: number;
+    DEX: number;
+    APP: number;
+    INT: number;
+    EDU: number;
+    SIZ: number;
+  };
+  derived: {
+    SAN_current: number;
+    SAN_max: number;
+    HP_current: number;
+    HP_max: number;
+    MP_current: number;
+    MP_max: number;
+    IDEA?: number;
+    KNOW?: number;
+    LUCK?: number;
+    DB?: string;
+  };
+}
 
 interface AutoRollAttributesProps {
   characterId: string;
