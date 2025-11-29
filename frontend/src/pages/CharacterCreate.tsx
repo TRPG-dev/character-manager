@@ -9,6 +9,7 @@ import { normalizeSheetData as normalizeCthulhuSheetData } from '../utils/cthulh
 import { ShinobigamiSheetForm } from '../components/ShinobigamiSheetForm';
 import type { ShinobigamiSheetData } from '../types/shinobigami';
 import { normalizeSheetData as normalizeShinobigamiSheetData } from '../utils/shinobigami';
+import { DiceRoller } from '../components/DiceRoller';
 
 const SYSTEM_NAMES: Record<SystemEnum, string> = {
   cthulhu: 'クトゥルフ神話TRPG',
@@ -135,6 +136,11 @@ export const CharacterCreate = () => {
     try {
       // 1. 署名付きURLを取得
       const { upload_url, public_url } = await getImageUploadUrl(token, characterId, file.type);
+      
+      console.log('Upload URL received:', upload_url);
+      console.log('Public URL:', public_url);
+      console.log('File type:', file.type);
+      console.log('File size:', file.size);
 
       // 2. 署名付きURLにPUTリクエストで画像をアップロード
       const xhr = new XMLHttpRequest();
@@ -148,7 +154,9 @@ export const CharacterCreate = () => {
         });
 
         xhr.addEventListener('load', async () => {
-          if (xhr.status === 200) {
+          console.log('XHR load event - Status:', xhr.status);
+          console.log('Response:', xhr.responseText);
+          if (xhr.status === 200 || xhr.status === 204) {
             try {
               // 3. キャラクターのprofile_image_urlを更新
               await updateCharacter(token, characterId, {
@@ -160,16 +168,27 @@ export const CharacterCreate = () => {
               reject(error);
             }
           } else {
-            reject(new Error(`アップロードに失敗しました (ステータス: ${xhr.status})`));
+            const errorMsg = `アップロードに失敗しました (ステータス: ${xhr.status}, レスポンス: ${xhr.responseText || 'なし'})`;
+            console.error(errorMsg);
+            reject(new Error(errorMsg));
           }
         });
 
-        xhr.addEventListener('error', () => {
-          reject(new Error('アップロード中にエラーが発生しました'));
+        xhr.addEventListener('error', (e) => {
+          console.error('XHR error:', e);
+          console.error('Upload URL:', upload_url);
+          console.error('File type:', file.type);
+          console.error('File size:', file.size);
+          reject(new Error(`アップロード中にエラーが発生しました。URL: ${upload_url}`));
+        });
+
+        xhr.addEventListener('timeout', () => {
+          reject(new Error('アップロードがタイムアウトしました'));
         });
 
         xhr.open('PUT', upload_url);
         xhr.setRequestHeader('Content-Type', file.type);
+        xhr.timeout = 30000; // 30秒のタイムアウト
         xhr.send(file);
       });
     } catch (error: any) {
@@ -499,6 +518,8 @@ export const CharacterCreate = () => {
             </div>
           )}
         </div>
+
+        <DiceRoller initialFormula="3d6" />
 
         {selectedSystem === 'cthulhu' && sheetData && (
           <div style={{ marginTop: '2rem' }}>

@@ -10,6 +10,7 @@ import { ShinobigamiSheetForm } from '../components/ShinobigamiSheetForm';
 import type { ShinobigamiSheetData } from '../types/shinobigami';
 import { normalizeSheetData as normalizeShinobigamiSheetData } from '../utils/shinobigami';
 import { ImageUpload } from '../components/ImageUpload';
+import { DiceRoller } from '../components/DiceRoller';
 
 const SYSTEM_NAMES: Record<SystemEnum, string> = {
   cthulhu: 'クトゥルフ神話TRPG',
@@ -274,6 +275,8 @@ export const CharacterEdit = () => {
             </button>
           </div>
         </div>
+
+        <DiceRoller initialFormula="3d6" />
 
         {character.system === 'cthulhu' && cthulhuSheetData ? (
           <div style={{ marginBottom: '1.5rem' }}>

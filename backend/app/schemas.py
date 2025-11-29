@@ -70,3 +70,12 @@ class ImageUploadUrlResponse(BaseModel):
     public_url: str
     expires_at: datetime
 
+
+class DiceRollRequest(BaseModel):
+    formula: str = Field(..., description="ダイス式（例: 3d6）")
+
+
+class DiceRollResponse(BaseModel):
+    rolls: List[int] = Field(..., description="各ダイスの結果")
+    total: int = Field(..., description="合計値")
+

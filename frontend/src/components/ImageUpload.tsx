@@ -65,6 +65,11 @@ export const ImageUpload = ({
         file.type
       );
 
+      console.log('Upload URL received:', upload_url);
+      console.log('Public URL:', public_url);
+      console.log('File type:', file.type);
+      console.log('File size:', file.size);
+
       // 2. 署名付きURLにPUTリクエストで画像をアップロード
       const xhr = new XMLHttpRequest();
 
@@ -77,7 +82,9 @@ export const ImageUpload = ({
         });
 
         xhr.addEventListener('load', async () => {
-          if (xhr.status === 200) {
+          console.log('XHR load event - Status:', xhr.status);
+          console.log('Response:', xhr.responseText);
+          if (xhr.status === 200 || xhr.status === 204) {
             try {
               // 3. キャラクターのprofile_image_urlを更新
               await updateCharacter(accessToken, characterId, {
@@ -93,14 +100,25 @@ export const ImageUpload = ({
               reject(error);
             }
           } else {
-            const errorMsg = `アップロードに失敗しました (ステータス: ${xhr.status})`;
+            const errorMsg = `アップロードに失敗しました (ステータス: ${xhr.status}, レスポンス: ${xhr.responseText || 'なし'})`;
+            console.error(errorMsg);
             onError?.(errorMsg);
             reject(new Error(errorMsg));
           }
         });
 
-        xhr.addEventListener('error', () => {
-          const errorMsg = 'アップロード中にエラーが発生しました';
+        xhr.addEventListener('error', (e) => {
+          console.error('XHR error:', e);
+          console.error('Upload URL:', upload_url);
+          console.error('File type:', file.type);
+          console.error('File size:', file.size);
+          const errorMsg = `アップロード中にエラーが発生しました。URL: ${upload_url}`;
+          onError?.(errorMsg);
+          reject(new Error(errorMsg));
+        });
+
+        xhr.addEventListener('timeout', () => {
+          const errorMsg = 'アップロードがタイムアウトしました';
           onError?.(errorMsg);
           reject(new Error(errorMsg));
         });
@@ -113,6 +131,7 @@ export const ImageUpload = ({
 
         xhr.open('PUT', upload_url);
         xhr.setRequestHeader('Content-Type', file.type);
+        xhr.timeout = 30000; // 30秒のタイムアウト
         xhr.send(file);
       });
     } catch (error: any) {

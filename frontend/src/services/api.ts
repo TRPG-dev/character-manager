@@ -202,6 +202,31 @@ export const getImageUploadUrl = async (
   return response.data;
 };
 
+export interface DiceRollRequest {
+  formula: string;
+}
+
+export interface DiceRollResponse {
+  rolls: number[];
+  total: number;
+}
+
+export const rollDice = async (
+  accessToken: string,
+  formula: string
+): Promise<DiceRollResponse> => {
+  const response = await axios.post<DiceRollResponse>(
+    `${API_BASE_URL}/api/dice/roll`,
+    { formula },
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+  return response.data;
+};
+
 export default axios.create({
   baseURL: API_BASE_URL,
 });
