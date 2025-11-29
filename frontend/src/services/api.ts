@@ -227,6 +227,52 @@ export const rollDice = async (
   return response.data;
 };
 
+export interface AutoRollAttributesRequest {
+  system: SystemEnum;
+}
+
+export interface AutoRollAttributesResponse {
+  attributes: {
+    STR: number;
+    CON: number;
+    POW: number;
+    DEX: number;
+    APP: number;
+    INT: number;
+    EDU: number;
+    SIZ: number;
+  };
+  derived: {
+    SAN_current: number;
+    SAN_max: number;
+    HP_current: number;
+    HP_max: number;
+    MP_current: number;
+    MP_max: number;
+    IDEA?: number;
+    KNOW?: number;
+    LUCK?: number;
+    DB?: string;
+  };
+}
+
+export const autoRollAttributes = async (
+  accessToken: string,
+  characterId: string,
+  system: SystemEnum
+): Promise<AutoRollAttributesResponse> => {
+  const response = await axios.post<AutoRollAttributesResponse>(
+    `${API_BASE_URL}/api/characters/${characterId}/attributes/auto-roll`,
+    { system },
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+  return response.data;
+};
+
 export default axios.create({
   baseURL: API_BASE_URL,
 });

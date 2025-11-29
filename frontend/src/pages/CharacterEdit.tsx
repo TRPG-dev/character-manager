@@ -11,6 +11,7 @@ import type { ShinobigamiSheetData } from '../types/shinobigami';
 import { normalizeSheetData as normalizeShinobigamiSheetData } from '../utils/shinobigami';
 import { ImageUpload } from '../components/ImageUpload';
 import { DiceRoller } from '../components/DiceRoller';
+import { AutoRollAttributes } from '../components/AutoRollAttributes';
 
 const SYSTEM_NAMES: Record<SystemEnum, string> = {
   cthulhu: 'クトゥルフ神話TRPG',
@@ -277,6 +278,23 @@ export const CharacterEdit = () => {
         </div>
 
         <DiceRoller initialFormula="3d6" />
+
+        {id && character.system === 'cthulhu' && (
+          <AutoRollAttributes
+            characterId={id}
+            system={character.system}
+            onApply={(attributes, derived) => {
+              if (cthulhuSheetData) {
+                const updated = {
+                  ...cthulhuSheetData,
+                  attributes,
+                  derived,
+                };
+                setCthulhuSheetData(updated);
+              }
+            }}
+          />
+        )}
 
         {character.system === 'cthulhu' && cthulhuSheetData ? (
           <div style={{ marginBottom: '1.5rem' }}>

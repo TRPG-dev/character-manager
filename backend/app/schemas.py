@@ -79,3 +79,12 @@ class DiceRollResponse(BaseModel):
     rolls: List[int] = Field(..., description="各ダイスの結果")
     total: int = Field(..., description="合計値")
 
+
+class AutoRollAttributesRequest(BaseModel):
+    system: SystemEnum = Field(..., description="システム（現在はcthulhuのみ対応）")
+
+
+class AutoRollAttributesResponse(BaseModel):
+    attributes: Dict[str, int] = Field(..., description="能力値")
+    derived: Dict[str, Any] = Field(..., description="派生値")
+

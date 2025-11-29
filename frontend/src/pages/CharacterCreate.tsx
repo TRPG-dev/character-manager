@@ -10,6 +10,7 @@ import { ShinobigamiSheetForm } from '../components/ShinobigamiSheetForm';
 import type { ShinobigamiSheetData } from '../types/shinobigami';
 import { normalizeSheetData as normalizeShinobigamiSheetData } from '../utils/shinobigami';
 import { DiceRoller } from '../components/DiceRoller';
+import { autoRollAttributes } from '../services/api';
 
 const SYSTEM_NAMES: Record<SystemEnum, string> = {
   cthulhu: 'クトゥルフ神話TRPG',
@@ -235,6 +236,30 @@ export const CharacterCreate = () => {
         tags,
         sheet_data: (selectedSystem === 'cthulhu' || selectedSystem === 'shinobigami') && sheetData ? sheetData : undefined,
       });
+
+      // クトゥルフの場合、能力値が未設定なら自動生成を提案
+      if (selectedSystem === 'cthulhu' && sheetData && 'attributes' in sheetData) {
+        const cthulhuData = sheetData as CthulhuSheetData;
+        const hasZeroAttributes = Object.values(cthulhuData.attributes).some(val => val === 0);
+        if (hasZeroAttributes) {
+          try {
+            const autoRollResult = await autoRollAttributes(token, character.id, selectedSystem);
+            // 能力値を更新
+            const updatedSheetData = {
+              ...cthulhuData,
+              attributes: autoRollResult.attributes,
+              derived: autoRollResult.derived,
+            };
+            await updateCharacter(token, character.id, {
+              sheet_data: updatedSheetData,
+            });
+            alert('能力値を自動生成しました');
+          } catch (error: any) {
+            console.error('Failed to auto roll attributes:', error);
+            // エラーは無視して続行
+          }
+        }
+      }
 
       // 画像が選択されている場合はアップロード
       if (selectedImage) {

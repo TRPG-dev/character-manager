@@ -1,6 +1,11 @@
 import { useState } from 'react';
 import { useAuth } from '../auth/useAuth';
-import { rollDice, DiceRollResponse } from '../services/api';
+import { rollDice } from '../services/api';
+
+interface DiceRollResponse {
+  rolls: number[];
+  total: number;
+}
 
 interface DiceRollerProps {
   onRollResult?: (result: DiceRollResponse) => void;

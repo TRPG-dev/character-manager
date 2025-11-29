@@ -14,9 +14,12 @@ from app.schemas import (
     CharacterListResponse,
     PublishRequest,
     PublishResponse,
+    AutoRollAttributesRequest,
+    AutoRollAttributesResponse,
 )
 from app.templates import generate_template
 from app.validators import validate_cthulhu_skill_points
+from app.services.dice import generate_cthulhu_attributes
 
 router = APIRouter(prefix="/api/characters", tags=["characters"])
 
@@ -262,5 +265,50 @@ async def publish_character(
     return PublishResponse(
         is_public=character.is_public,
         share_token=character.share_token,
+    )
+
+
+@router.post("/{character_id}/attributes/auto-roll", response_model=AutoRollAttributesResponse)
+async def auto_roll_attributes(
+    character_id: uuid.UUID,
+    request: AutoRollAttributesRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """能力値自動生成（クトゥルフのみ対応）"""
+    character = db.query(Character).filter(Character.id == character_id).first()
+
+    if not character:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Character not found",
+        )
+
+    if character.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied",
+        )
+
+    # システムチェック（現在はクトゥルフのみ対応）
+    if request.system != SystemEnum.cthulhu:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"能力値自動生成は現在 {SystemEnum.cthulhu.value} のみ対応しています",
+        )
+
+    # キャラクターのシステムと一致するかチェック
+    if character.system != request.system:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"キャラクターのシステム ({character.system.value}) とリクエストのシステム ({request.system.value}) が一致しません",
+        )
+
+    # 能力値を生成
+    result = generate_cthulhu_attributes()
+
+    return AutoRollAttributesResponse(
+        attributes=result["attributes"],
+        derived=result["derived"],
     )
 
