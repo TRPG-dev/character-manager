@@ -282,6 +282,8 @@ Future (優先度低):
 
 ### 環境変数の設定
 
+**詳細な設定手順は [AUTH0_SETUP.md](./AUTH0_SETUP.md) を参照してください。**
+
 バックエンド用の環境変数を設定します。`backend/.env`ファイルを作成して以下を設定してください：
 
 ```bash
@@ -300,6 +302,11 @@ VITE_AUTH0_DOMAIN=your-tenant.auth0.com
 VITE_AUTH0_CLIENT_ID=your-client-id
 VITE_AUTH0_AUDIENCE=your-api-identifier
 ```
+
+**Auth0ダッシュボードでの設定値の取得方法：**
+- `AUTH0_DOMAIN`: Auth0ダッシュボードのSettings → Domain
+- `AUTH0_AUDIENCE`: Applications → APIs → 作成したAPIのIdentifier
+- `VITE_AUTH0_CLIENT_ID`: Applications → 作成したアプリケーションのClient ID
 
 ### 起動方法
 

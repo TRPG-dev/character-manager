@@ -11,7 +11,11 @@ export const useAuth = () => {
   } = useAuth0();
 
   const login = () => {
-    loginWithRedirect();
+    loginWithRedirect({
+      appState: {
+        returnTo: '/dashboard',
+      },
+    });
   };
 
   const handleLogout = () => {

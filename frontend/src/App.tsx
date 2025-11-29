@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from './auth/useAuth';
 import { Layout } from './components/Layout';
 import { Dashboard } from './pages/Dashboard';
@@ -9,7 +9,14 @@ import { SharedCharacter } from './pages/SharedCharacter';
 import './App.css';
 
 function LoginPage() {
-  const { isLoading, login } = useAuth();
+  const { isLoading, login, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  // 既に認証済みの場合はダッシュボードにリダイレクト
+  if (isAuthenticated) {
+    navigate('/dashboard', { replace: true });
+    return <div>リダイレクト中...</div>;
+  }
 
   if (isLoading) {
     return <div>読み込み中...</div>;
