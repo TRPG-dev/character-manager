@@ -8,12 +8,197 @@ export interface User {
   display_name: string;
 }
 
+export type SystemEnum = 'cthulhu' | 'shinobigami' | 'sw25' | 'satasupe';
+
+export interface Character {
+  id: string;
+  user_id: string;
+  system: SystemEnum;
+  name: string;
+  tags: string[];
+  profile_image_url: string | null;
+  sheet_data: Record<string, any>;
+  is_public: boolean;
+  share_token: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CharacterListResponse {
+  items: Character[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface CharacterCreate {
+  system: SystemEnum;
+  name: string;
+  tags?: string[];
+  profile_image_url?: string | null;
+  sheet_data?: Record<string, any>;
+}
+
+export interface CharacterUpdate {
+  name?: string;
+  tags?: string[];
+  profile_image_url?: string | null;
+  sheet_data?: Record<string, any>;
+}
+
+export interface PublishRequest {
+  is_public: boolean;
+}
+
+export interface PublishResponse {
+  is_public: boolean;
+  share_token: string | null;
+}
+
+export interface ImageUploadUrlRequest {
+  mime_type: string;
+}
+
+export interface ImageUploadUrlResponse {
+  upload_url: string;
+  public_url: string;
+  expires_at: string;
+}
+
 export const getUser = async (accessToken: string): Promise<User> => {
   const response = await axios.get<User>(`${API_BASE_URL}/api/me`, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
   });
+  return response.data;
+};
+
+export const getCharacters = async (
+  accessToken: string,
+  params?: {
+    query?: string;
+    tags?: string[];
+    system?: SystemEnum;
+    page?: number;
+    limit?: number;
+  }
+): Promise<CharacterListResponse> => {
+  const queryParams = new URLSearchParams();
+  if (params?.query) queryParams.append('query', params.query);
+  if (params?.tags) params.tags.forEach(tag => queryParams.append('tags', tag));
+  if (params?.system) queryParams.append('system', params.system);
+  if (params?.page) queryParams.append('page', params.page.toString());
+  if (params?.limit) queryParams.append('limit', params.limit.toString());
+
+  const response = await axios.get<CharacterListResponse>(
+    `${API_BASE_URL}/api/characters?${queryParams.toString()}`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+  return response.data;
+};
+
+export const getCharacter = async (
+  accessToken: string,
+  characterId: string
+): Promise<Character> => {
+  const response = await axios.get<Character>(
+    `${API_BASE_URL}/api/characters/${characterId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+  return response.data;
+};
+
+export const createCharacter = async (
+  accessToken: string,
+  data: CharacterCreate
+): Promise<Character> => {
+  const response = await axios.post<Character>(
+    `${API_BASE_URL}/api/characters`,
+    data,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+  return response.data;
+};
+
+export const updateCharacter = async (
+  accessToken: string,
+  characterId: string,
+  data: CharacterUpdate
+): Promise<Character> => {
+  const response = await axios.put<Character>(
+    `${API_BASE_URL}/api/characters/${characterId}`,
+    data,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+  return response.data;
+};
+
+export const deleteCharacter = async (
+  accessToken: string,
+  characterId: string
+): Promise<void> => {
+  await axios.delete(`${API_BASE_URL}/api/characters/${characterId}`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+};
+
+export const publishCharacter = async (
+  accessToken: string,
+  characterId: string,
+  isPublic: boolean
+): Promise<PublishResponse> => {
+  const response = await axios.post<PublishResponse>(
+    `${API_BASE_URL}/api/characters/${characterId}/publish`,
+    { is_public: isPublic },
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+  return response.data;
+};
+
+export const getSharedCharacter = async (token: string): Promise<Character> => {
+  const response = await axios.get<Character>(
+    `${API_BASE_URL}/api/share/${token}`
+  );
+  return response.data;
+};
+
+export const getImageUploadUrl = async (
+  accessToken: string,
+  characterId: string,
+  mimeType: string
+): Promise<ImageUploadUrlResponse> => {
+  const response = await axios.post<ImageUploadUrlResponse>(
+    `${API_BASE_URL}/api/characters/${characterId}/image/upload-url`,
+    { mime_type: mimeType },
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
   return response.data;
 };
 

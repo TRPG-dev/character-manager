@@ -1,76 +1,96 @@
-import { useEffect, useState } from 'react'
-import './App.css'
-import { useAuth } from './auth/useAuth'
-import { getUser, User } from './services/api'
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from './auth/useAuth';
+import { Layout } from './components/Layout';
+import { Dashboard } from './pages/Dashboard';
+import { CharacterCreate } from './pages/CharacterCreate';
+import { CharacterDetail } from './pages/CharacterDetail';
+import { CharacterEdit } from './pages/CharacterEdit';
+import { SharedCharacter } from './pages/SharedCharacter';
+import './App.css';
 
-function App() {
-  const { isAuthenticated, isLoading, login, logout, getAccessToken } = useAuth()
-  const [user, setUser] = useState<User | null>(null)
-  const [loadingUser, setLoadingUser] = useState(false)
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      if (isAuthenticated && !loadingUser) {
-        setLoadingUser(true)
-        try {
-          const token = await getAccessToken()
-          if (token) {
-            const userData = await getUser(token)
-            setUser(userData)
-          }
-        } catch (error) {
-          console.error('Failed to fetch user:', error)
-        } finally {
-          setLoadingUser(false)
-        }
-      }
-    }
-    fetchUser()
-  }, [isAuthenticated, loadingUser, getAccessToken])
+function LoginPage() {
+  const { isLoading, login } = useAuth();
 
   if (isLoading) {
-    return <div>読み込み中...</div>
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <div style={{ padding: '2rem', textAlign: 'center' }}>
-        <h1>TRPGキャラクターシート保管・作成サービス</h1>
-        <p>ログインしてご利用ください</p>
-        <button onClick={login} style={{ padding: '0.5rem 1rem', fontSize: '1rem' }}>
-          ログイン
-        </button>
-      </div>
-    )
+    return <div>読み込み中...</div>;
   }
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <h1>TRPGキャラクターシート保管・作成サービス</h1>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          {user && (
-            <span>こんにちは、{user.display_name}さん</span>
-          )}
-          <button onClick={logout} style={{ padding: '0.5rem 1rem' }}>
-            ログアウト
-          </button>
-        </div>
-      </header>
-      
-      {loadingUser ? (
-        <div>ユーザー情報を取得中...</div>
-      ) : user ? (
-        <div>
-          <h2>ダッシュボード</h2>
-          <p>メールアドレス: {user.email}</p>
-          <p>表示名: {user.display_name}</p>
-        </div>
-      ) : (
-        <div>ユーザー情報の取得に失敗しました</div>
-      )}
+    <div style={{ padding: '2rem', textAlign: 'center', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+      <h1>TRPGキャラクターシート保管・作成サービス</h1>
+      <p style={{ marginBottom: '2rem' }}>ログインしてご利用ください</p>
+      <button
+        onClick={login}
+        style={{
+          padding: '0.75rem 2rem',
+          fontSize: '1.125rem',
+          backgroundColor: '#007bff',
+          color: '#fff',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+        }}
+      >
+        ログイン
+      </button>
     </div>
-  )
+  );
+}
+
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <div>読み込み中...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <Layout>{children}</Layout>;
+}
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<LoginPage />} />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/characters/new"
+        element={
+          <ProtectedRoute>
+            <CharacterCreate />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/characters/:id"
+        element={
+          <ProtectedRoute>
+            <CharacterDetail />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/characters/:id/edit"
+        element={
+          <ProtectedRoute>
+            <CharacterEdit />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="/share/:token" element={<SharedCharacter />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
 }
 
 export default App
