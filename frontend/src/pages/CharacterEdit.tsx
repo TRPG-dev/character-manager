@@ -9,9 +9,13 @@ import { normalizeSheetData as normalizeCthulhuSheetData } from '../utils/cthulh
 import { ShinobigamiSheetForm } from '../components/ShinobigamiSheetForm';
 import type { ShinobigamiSheetData } from '../types/shinobigami';
 import { normalizeSheetData as normalizeShinobigamiSheetData } from '../utils/shinobigami';
+import { CharacterSheetForm } from '../components/CharacterSheetForm';
 import { ImageUpload } from '../components/ImageUpload';
 import { DiceRoller } from '../components/DiceRoller';
 import { AutoRollAttributes } from '../components/AutoRollAttributes';
+import { CollapsibleSection } from '../components/CollapsibleSection';
+import { ConfirmDialog } from '../components/ConfirmDialog';
+import { Toast } from '../components/Toast';
 
 const SYSTEM_NAMES: Record<SystemEnum, string> = {
   cthulhu: 'クトゥルフ神話TRPG',
@@ -34,7 +38,15 @@ export const CharacterEdit = () => {
   const [sheetData, setSheetData] = useState<string>('');
   const [cthulhuSheetData, setCthulhuSheetData] = useState<CthulhuSheetData | null>(null);
   const [shinobigamiSheetData, setShinobigamiSheetData] = useState<ShinobigamiSheetData | null>(null);
+  const [genericSheetData, setGenericSheetData] = useState<Record<string, any> | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info'; isVisible: boolean }>({
+    message: '',
+    type: 'info',
+    isVisible: false,
+  });
+  const [nameError, setNameError] = useState<string>('');
 
   useEffect(() => {
     const fetchCharacter = async () => {
@@ -55,12 +67,15 @@ export const CharacterEdit = () => {
           if (char.system === 'cthulhu') {
             setCthulhuSheetData(normalizeCthulhuSheetData(char.sheet_data));
             setShinobigamiSheetData(null);
+            setGenericSheetData(null);
           } else if (char.system === 'shinobigami') {
             setShinobigamiSheetData(normalizeShinobigamiSheetData(char.sheet_data));
             setCthulhuSheetData(null);
+            setGenericSheetData(null);
           } else {
             setCthulhuSheetData(null);
             setShinobigamiSheetData(null);
+            setGenericSheetData(char.sheet_data);
           }
         }
       } catch (error) {
@@ -71,6 +86,23 @@ export const CharacterEdit = () => {
     };
     fetchCharacter();
   }, [id]);
+
+  const validateName = (value: string) => {
+    if (!value.trim()) {
+      setNameError('名前は必須です');
+      return false;
+    }
+    setNameError('');
+    return true;
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setName(value);
+    if (value.trim()) {
+      setNameError('');
+    }
+  };
 
   const handleAddTag = () => {
     if (tagInput.trim() && !tags.includes(tagInput.trim())) {
@@ -83,8 +115,20 @@ export const CharacterEdit = () => {
     setTags(tags.filter(t => t !== tag));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmitClick = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateName(name)) {
+      return;
+    }
+    setShowConfirmDialog(true);
+  };
+
+  const handleConfirmSave = async () => {
+    setShowConfirmDialog(false);
+    await performSave();
+  };
+
+  const performSave = async () => {
     if (!id || !character) return;
 
     // クトゥルフの場合、ポイント上限チェック
@@ -115,12 +159,19 @@ export const CharacterEdit = () => {
         } else if (character.system === 'shinobigami' && shinobigamiSheetData) {
           // シノビガミの場合はフォームデータを使用
           parsedSheetData = shinobigamiSheetData;
+        } else if (genericSheetData) {
+          // sw25、satasupeの場合はフォームデータを使用
+          parsedSheetData = genericSheetData;
         } else {
-          // その他のシステムはJSONテキストエリアから取得
+          // フォールバック: JSONテキストエリアから取得
           try {
             parsedSheetData = JSON.parse(sheetData);
           } catch (error) {
-            alert('シートデータが正しいJSON形式ではありません');
+            setToast({
+              message: 'シートデータが正しいJSON形式ではありません',
+              type: 'error',
+              isVisible: true,
+            });
             setSaving(false);
             return;
           }
@@ -132,16 +183,28 @@ export const CharacterEdit = () => {
           profile_image_url: profileImageUrl,
           sheet_data: parsedSheetData,
         });
-        alert('更新が完了しました');
-        navigate(`/characters/${id}`);
+        setToast({
+          message: '更新が完了しました',
+          type: 'success',
+          isVisible: true,
+        });
+        setTimeout(() => {
+          navigate(`/characters/${id}`);
+        }, 1000);
       }
     } catch (error: any) {
       console.error('Failed to update character:', error);
+      let errorMessage = '更新に失敗しました';
       if (error.response?.data?.detail?.error === 'skill_points_limit_exceeded') {
-        alert(`更新に失敗しました: ${error.response.data.detail.message}\n${error.response.data.detail.details?.join('\n')}`);
-      } else {
-        alert('更新に失敗しました');
+        errorMessage = `${error.response.data.detail.message}\n${error.response.data.detail.details?.join('\n')}`;
+      } else if (error.response?.data?.detail) {
+        errorMessage = error.response.data.detail;
       }
+      setToast({
+        message: errorMessage,
+        type: 'error',
+        isVisible: true,
+      });
     } finally {
       setSaving(false);
     }
@@ -156,192 +219,217 @@ export const CharacterEdit = () => {
   }
 
   return (
-    <div>
-      <h1>キャラクター編集</h1>
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '1.5rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-            システム
-          </label>
-          <div style={{ padding: '0.75rem', backgroundColor: '#f5f5f5', borderRadius: '4px' }}>
-            {SYSTEM_NAMES[character.system]}
+    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }}>
+      <h1 style={{ marginBottom: '2rem' }}>キャラクター編集</h1>
+      <form onSubmit={handleSubmitClick}>
+        <CollapsibleSection title="基本情報" defaultOpen={true}>
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+              システム
+            </label>
+            <div style={{ padding: '0.75rem', backgroundColor: '#f5f5f5', borderRadius: '4px' }}>
+              {SYSTEM_NAMES[character.system]}
+            </div>
           </div>
-        </div>
 
-        <div style={{ marginBottom: '1.5rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-            名前 <span style={{ color: 'red' }}>*</span>
-          </label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            style={{
-              width: '100%',
-              maxWidth: '400px',
-              padding: '0.75rem',
-              fontSize: '1rem',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-            }}
-          />
-        </div>
-
-        {id && accessToken && (
-          <ImageUpload
-            characterId={id}
-            accessToken={accessToken}
-            currentImageUrl={profileImageUrl}
-            onUploadSuccess={(imageUrl) => {
-              setProfileImageUrl(imageUrl);
-              alert('画像のアップロードが完了しました');
-            }}
-            onError={(error) => {
-              alert(`エラー: ${error}`);
-            }}
-          />
-        )}
-
-        <div style={{ marginBottom: '1.5rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-            タグ
-          </label>
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
-            {tags.map(tag => (
-              <span
-                key={tag}
-                style={{
-                  padding: '0.25rem 0.5rem',
-                  backgroundColor: '#007bff',
-                  color: '#fff',
-                  borderRadius: '4px',
-                  fontSize: '0.875rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                }}
-              >
-                {tag}
-                <button
-                  type="button"
-                  onClick={() => handleRemoveTag(tag)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#fff',
-                    cursor: 'pointer',
-                    fontSize: '1rem',
-                  }}
-                >
-                  ×
-                </button>
-              </span>
-            ))}
-          </div>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+              名前 <span style={{ color: 'red' }}>*</span>
+            </label>
             <input
               type="text"
-              placeholder="タグを追加"
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleAddTag();
-                }
-              }}
+              value={name}
+              onChange={handleNameChange}
+              onBlur={() => validateName(name)}
+              required
               style={{
-                padding: '0.5rem',
-                fontSize: '0.875rem',
-                border: '1px solid #ddd',
+                width: '100%',
+                maxWidth: '400px',
+                padding: '0.75rem',
+                fontSize: '1rem',
+                border: nameError ? '1px solid #dc3545' : '1px solid #ddd',
                 borderRadius: '4px',
-                flex: 1,
-                maxWidth: '300px',
               }}
             />
-            <button
-              type="button"
-              onClick={handleAddTag}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#6c757d',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-              }}
-            >
-              追加
-            </button>
+            {nameError && (
+              <div style={{ color: '#dc3545', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                {nameError}
+              </div>
+            )}
           </div>
-        </div>
 
-        <DiceRoller initialFormula="3d6" />
+          {id && accessToken && (
+            <div style={{ marginBottom: '1.5rem' }}>
+              <ImageUpload
+                characterId={id}
+                accessToken={accessToken}
+                currentImageUrl={profileImageUrl}
+                onUploadSuccess={(imageUrl) => {
+                  setProfileImageUrl(imageUrl);
+                  setToast({
+                    message: '画像のアップロードが完了しました',
+                    type: 'success',
+                    isVisible: true,
+                  });
+                }}
+                onError={(error) => {
+                  setToast({
+                    message: `エラー: ${error}`,
+                    type: 'error',
+                    isVisible: true,
+                  });
+                }}
+              />
+            </div>
+          )}
 
-        {id && character.system === 'cthulhu' && (
-          <AutoRollAttributes
-            characterId={id}
-            system={character.system}
-            onApply={(attributes, derived) => {
-              if (cthulhuSheetData) {
-                const updated = {
-                  ...cthulhuSheetData,
-                  attributes,
-                  derived,
-                };
-                setCthulhuSheetData(updated);
-              }
-            }}
-          />
-        )}
-
-        {character.system === 'cthulhu' && cthulhuSheetData ? (
           <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+              タグ
+            </label>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
+              {tags.map(tag => (
+                <span
+                  key={tag}
+                  style={{
+                    padding: '0.25rem 0.5rem',
+                    backgroundColor: '#007bff',
+                    color: '#fff',
+                    borderRadius: '4px',
+                    fontSize: '0.875rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                  }}
+                >
+                  {tag}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveTag(tag)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#fff',
+                      cursor: 'pointer',
+                      fontSize: '1rem',
+                    }}
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <input
+                type="text"
+                placeholder="タグを追加"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddTag();
+                  }
+                }}
+                style={{
+                  padding: '0.5rem',
+                  fontSize: '0.875rem',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  flex: 1,
+                  maxWidth: '300px',
+                }}
+              />
+              <button
+                type="button"
+                onClick={handleAddTag}
+                style={{
+                  padding: '0.5rem 1rem',
+                  backgroundColor: '#6c757d',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              >
+                追加
+              </button>
+            </div>
+          </div>
+        </CollapsibleSection>
+
+        <CollapsibleSection title="ツール" defaultOpen={false}>
+          <DiceRoller initialFormula="3d6" />
+
+          {id && character.system === 'cthulhu' && (
+            <div style={{ marginTop: '1rem' }}>
+              <AutoRollAttributes
+                characterId={id}
+                system={character.system}
+                onApply={(attributes, derived) => {
+                  if (cthulhuSheetData) {
+                    const updated = {
+                      ...cthulhuSheetData,
+                      attributes,
+                      derived,
+                    };
+                    setCthulhuSheetData(updated);
+                  }
+                }}
+              />
+            </div>
+          )}
+        </CollapsibleSection>
+
+        <CollapsibleSection title="キャラクターシート" defaultOpen={true}>
+          {character.system === 'cthulhu' && cthulhuSheetData ? (
             <CthulhuSheetForm
               data={cthulhuSheetData}
               onChange={(data) => setCthulhuSheetData(data)}
             />
-          </div>
-        ) : character.system === 'shinobigami' && shinobigamiSheetData ? (
-          <div style={{ marginBottom: '1.5rem' }}>
+          ) : character.system === 'shinobigami' && shinobigamiSheetData ? (
             <ShinobigamiSheetForm
               data={shinobigamiSheetData}
               onChange={(data) => setShinobigamiSheetData(data)}
             />
-          </div>
-        ) : (
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              シートデータ (JSON)
-            </label>
-            <textarea
-              value={sheetData}
-              onChange={(e) => setSheetData(e.target.value)}
-              rows={20}
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                fontSize: '0.875rem',
-                fontFamily: 'monospace',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-              }}
+          ) : genericSheetData ? (
+            <CharacterSheetForm
+              data={genericSheetData}
+              onChange={(data) => setGenericSheetData(data)}
             />
-          </div>
-        )}
+          ) : (
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                シートデータ (JSON)
+              </label>
+              <textarea
+                value={sheetData}
+                onChange={(e) => setSheetData(e.target.value)}
+                rows={20}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  fontSize: '0.875rem',
+                  fontFamily: 'monospace',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                }}
+              />
+            </div>
+          )}
+        </CollapsibleSection>
 
         <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
           <button
             type="submit"
-            disabled={saving || !name.trim()}
+            disabled={saving || !name.trim() || !!nameError}
             style={{
               padding: '0.75rem 2rem',
-              backgroundColor: saving || !name.trim() ? '#ccc' : '#007bff',
+              backgroundColor: saving || !name.trim() || !!nameError ? '#ccc' : '#007bff',
               color: '#fff',
               border: 'none',
               borderRadius: '4px',
-              cursor: saving || !name.trim() ? 'not-allowed' : 'pointer',
+              cursor: saving || !name.trim() || !!nameError ? 'not-allowed' : 'pointer',
               fontSize: '1rem',
             }}
           >
@@ -364,6 +452,23 @@ export const CharacterEdit = () => {
           </button>
         </div>
       </form>
+
+      <ConfirmDialog
+        isOpen={showConfirmDialog}
+        title="保存の確認"
+        message="変更内容を保存しますか？"
+        confirmText="保存"
+        cancelText="キャンセル"
+        onConfirm={handleConfirmSave}
+        onCancel={() => setShowConfirmDialog(false)}
+      />
+
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={() => setToast({ ...toast, isVisible: false })}
+      />
     </div>
   );
 };
