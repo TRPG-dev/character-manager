@@ -27,7 +27,13 @@ export interface CthulhuDerived {
 
 export interface CthulhuSkill {
   name: string;
-  value: number;
+  baseValue: number; // 初期値
+  jobPoints?: number; // 職業P
+  interestPoints?: number; // 興味P
+  growth?: number; // 成長
+  other?: number; // その他
+  total?: number; // 合計値（計算値）
+  isCustom?: boolean; // 追加技能かどうか
 }
 
 export interface CthulhuWeapon {
@@ -51,6 +57,7 @@ export interface CthulhuSheetData {
   attributes: CthulhuAttributes;
   derived: CthulhuDerived;
   skills: CthulhuSkill[];
+  customSkills?: CthulhuSkill[]; // 追加技能
   weapons?: CthulhuWeapon[];
   items?: CthulhuItem[];
   backstory: string;

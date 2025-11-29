@@ -73,6 +73,23 @@ export const CharacterEdit = () => {
     e.preventDefault();
     if (!id || !character) return;
 
+    // クトゥルフの場合、ポイント上限チェック
+    if (character.system === 'cthulhu' && cthulhuSheetData) {
+      const { calculateTotalJobPoints, calculateTotalInterestPoints } = await import('../data/cthulhuSkills');
+      const { getJobPointsLimit, getInterestPointsLimit } = await import('../utils/cthulhu');
+      
+      const allSkills = [...cthulhuSheetData.skills, ...(cthulhuSheetData.customSkills || [])];
+      const totalJobPoints = calculateTotalJobPoints(allSkills);
+      const totalInterestPoints = calculateTotalInterestPoints(allSkills);
+      const jobPointsLimit = getJobPointsLimit(cthulhuSheetData.attributes.EDU);
+      const interestPointsLimit = getInterestPointsLimit(cthulhuSheetData.attributes.INT);
+
+      if (totalJobPoints > jobPointsLimit || totalInterestPoints > interestPointsLimit) {
+        alert(`ポイントの上限を超えています。\n職業P: ${totalJobPoints}/${jobPointsLimit}\n興味P: ${totalInterestPoints}/${interestPointsLimit}`);
+        return;
+      }
+    }
+
     setSaving(true);
     try {
       const token = await getAccessToken();
@@ -100,9 +117,13 @@ export const CharacterEdit = () => {
         });
         navigate(`/characters/${id}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to update character:', error);
-      alert('更新に失敗しました');
+      if (error.response?.data?.detail?.error === 'skill_points_limit_exceeded') {
+        alert(`更新に失敗しました: ${error.response.data.detail.message}\n${error.response.data.detail.details?.join('\n')}`);
+      } else {
+        alert('更新に失敗しました');
+      }
     } finally {
       setSaving(false);
     }

@@ -1,5 +1,6 @@
 // クトゥルフ神話TRPG用のユーティリティ関数
-import type { CthulhuAttributes, CthulhuDerived } from '../types/cthulhu';
+import type { CthulhuAttributes, CthulhuDerived, CthulhuSheetData, CthulhuSkill } from '../types/cthulhu';
+import { DEFAULT_CTHULHU_SKILLS, calculateSkillTotal, calculateTotalJobPoints, calculateTotalInterestPoints } from '../data/cthulhuSkills';
 
 /**
  * 能力値から派生値を計算
@@ -72,7 +73,7 @@ export function calculateDerivedValues(attributes: CthulhuAttributes): CthulhuDe
 /**
  * シートデータを正規化（不足しているフィールドを追加）
  */
-export function normalizeSheetData(data: any): any {
+export function normalizeSheetData(data: any): CthulhuSheetData {
   const defaultAttributes = {
     STR: 0,
     CON: 0,
@@ -97,14 +98,79 @@ export function normalizeSheetData(data: any): any {
     MP_current: data.derived?.MP_current ?? derived.MP_current,
   };
 
+  // 技能データの正規化
+  let defaultSkills: CthulhuSkill[] = [];
+  let customSkills: CthulhuSkill[] = [];
+
+  if (data.skills && Array.isArray(data.skills)) {
+    // 既存データからデフォルト技能と追加技能を分離
+    const existingSkillNames = new Set(data.skills.map((s: any) => s.name));
+    
+    // デフォルト技能をマージ
+    defaultSkills = DEFAULT_CTHULHU_SKILLS.map(defaultSkill => {
+      const existing = data.skills.find((s: any) => s.name === defaultSkill.name);
+      if (existing) {
+        // 既存データから値を取得
+        const skill: CthulhuSkill = {
+          ...defaultSkill,
+          jobPoints: existing.jobPoints ?? existing.job_points ?? 0,
+          interestPoints: existing.interestPoints ?? existing.interest_points ?? 0,
+          growth: existing.growth ?? 0,
+          other: existing.other ?? 0,
+        };
+        skill.total = calculateSkillTotal(skill);
+        return skill;
+      }
+      return { ...defaultSkill, total: calculateSkillTotal(defaultSkill) };
+    });
+
+    // 追加技能を抽出
+    customSkills = data.skills
+      .filter((s: any) => !DEFAULT_CTHULHU_SKILLS.some(ds => ds.name === s.name))
+      .map((s: any) => {
+        const skill: CthulhuSkill = {
+          name: s.name,
+          baseValue: s.baseValue ?? s.base_value ?? s.value ?? 0,
+          jobPoints: s.jobPoints ?? s.job_points ?? 0,
+          interestPoints: s.interestPoints ?? s.interest_points ?? 0,
+          growth: s.growth ?? 0,
+          other: s.other ?? 0,
+          isCustom: true,
+        };
+        skill.total = calculateSkillTotal(skill);
+        return skill;
+      });
+  } else {
+    // 新規作成時はデフォルト技能のみ
+    defaultSkills = DEFAULT_CTHULHU_SKILLS.map(skill => ({
+      ...skill,
+      total: calculateSkillTotal(skill),
+    }));
+  }
+
   return {
     attributes,
     derived: mergedDerived,
-    skills: data.skills || [],
+    skills: defaultSkills,
+    customSkills,
     weapons: data.weapons || [],
     items: data.items || [],
     backstory: data.backstory || '',
     notes: data.notes || '',
   };
+}
+
+/**
+ * 職業Pの上限を計算
+ */
+export function getJobPointsLimit(edu: number): number {
+  return edu * 20;
+}
+
+/**
+ * 興味Pの上限を計算
+ */
+export function getInterestPointsLimit(int: number): number {
+  return int * 10;
 }
 

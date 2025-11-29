@@ -16,6 +16,7 @@ from app.schemas import (
     PublishResponse,
 )
 from app.templates import generate_template
+from app.validators import validate_cthulhu_skill_points
 
 router = APIRouter(prefix="/api/characters", tags=["characters"])
 
@@ -95,6 +96,10 @@ async def create_character(
     # sheet_dataが空の場合、テンプレートを使用
     sheet_data = character_data.sheet_data if character_data.sheet_data else template
 
+    # クトゥルフの場合、技能ポイント上限チェック
+    if character_data.system == SystemEnum.cthulhu:
+        validate_cthulhu_skill_points(sheet_data)
+
     character = Character(
         id=uuid.uuid4(),
         user_id=current_user.id,
@@ -170,6 +175,9 @@ async def update_character(
     if character_data.profile_image_url is not None:
         character.profile_image_url = character_data.profile_image_url
     if character_data.sheet_data is not None:
+        # クトゥルフの場合、技能ポイント上限チェック
+        if character.system == SystemEnum.cthulhu:
+            validate_cthulhu_skill_points(character_data.sheet_data)
         character.sheet_data = character_data.sheet_data
 
     db.commit()

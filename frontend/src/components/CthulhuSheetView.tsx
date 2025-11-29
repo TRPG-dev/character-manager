@@ -116,15 +116,16 @@ export const CthulhuSheetView = ({ data }: CthulhuSheetViewProps) => {
       </section>
 
       {/* 技能セクション */}
-      {sheetData.skills.length > 0 && (
+      {((sheetData.skills && sheetData.skills.length > 0) || (sheetData.customSkills && sheetData.customSkills.length > 0)) && (
         <section>
           <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
             技能
           </h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '0.75rem' }}>
+            {/* デフォルト技能 */}
             {sheetData.skills.map((skill, index) => (
               <div
-                key={index}
+                key={`default-${index}`}
                 style={{
                   padding: '0.75rem',
                   backgroundColor: '#f8f9fa',
@@ -132,8 +133,23 @@ export const CthulhuSheetView = ({ data }: CthulhuSheetViewProps) => {
                   border: '1px solid #dee2e6',
                 }}
               >
+                <div style={{ fontWeight: 'bold', marginBottom: '0.25rem' }}>{skill.name}</div>
+                <div style={{ fontSize: '1.25rem', color: '#007bff' }}>{skill.total || skill.baseValue || 0}</div>
+              </div>
+            ))}
+            {/* 追加技能 */}
+            {(sheetData.customSkills || []).map((skill, index) => (
+              <div
+                key={`custom-${index}`}
+                style={{
+                  padding: '0.75rem',
+                  backgroundColor: '#fffbf0',
+                  borderRadius: '4px',
+                  border: '1px solid #dee2e6',
+                }}
+              >
                 <div style={{ fontWeight: 'bold', marginBottom: '0.25rem' }}>{skill.name || '(無名)'}</div>
-                <div style={{ fontSize: '1.25rem', color: '#007bff' }}>{skill.value}</div>
+                <div style={{ fontSize: '1.25rem', color: '#007bff' }}>{skill.total || skill.baseValue || 0}</div>
               </div>
             ))}
           </div>

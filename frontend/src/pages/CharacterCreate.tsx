@@ -72,6 +72,23 @@ export const CharacterCreate = () => {
     e.preventDefault();
     if (!selectedSystem || !name.trim()) return;
 
+    // クトゥルフの場合、ポイント上限チェック
+    if (selectedSystem === 'cthulhu' && sheetData) {
+      const { calculateTotalJobPoints, calculateTotalInterestPoints } = await import('../data/cthulhuSkills');
+      const { getJobPointsLimit, getInterestPointsLimit } = await import('../utils/cthulhu');
+      
+      const allSkills = [...sheetData.skills, ...(sheetData.customSkills || [])];
+      const totalJobPoints = calculateTotalJobPoints(allSkills);
+      const totalInterestPoints = calculateTotalInterestPoints(allSkills);
+      const jobPointsLimit = getJobPointsLimit(sheetData.attributes.EDU);
+      const interestPointsLimit = getInterestPointsLimit(sheetData.attributes.INT);
+
+      if (totalJobPoints > jobPointsLimit || totalInterestPoints > interestPointsLimit) {
+        alert(`ポイントの上限を超えています。\n職業P: ${totalJobPoints}/${jobPointsLimit}\n興味P: ${totalInterestPoints}/${interestPointsLimit}`);
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       const token = await getAccessToken();
@@ -84,9 +101,13 @@ export const CharacterCreate = () => {
         });
         navigate(`/characters/${character.id}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to create character:', error);
-      alert('キャラクターの作成に失敗しました');
+      if (error.response?.data?.detail?.error === 'skill_points_limit_exceeded') {
+        alert(`保存に失敗しました: ${error.response.data.detail.message}\n${error.response.data.detail.details?.join('\n')}`);
+      } else {
+        alert('キャラクターの作成に失敗しました');
+      }
     } finally {
       setLoading(false);
     }
