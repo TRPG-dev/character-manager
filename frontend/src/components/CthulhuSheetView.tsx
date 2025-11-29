@@ -47,21 +47,39 @@ export const CthulhuSheetView = ({ data }: CthulhuSheetViewProps) => {
         </h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
           <div>
-            <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>SAN (現在/最大)</div>
+            <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>SAN (現在)</div>
             <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>
-              {sheetData.derived.SAN_current} / {sheetData.derived.SAN_max}
+              {sheetData.derived.SAN_current}
             </div>
           </div>
           <div>
-            <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>HP (現在/最大)</div>
+            <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>SAN (最大)</div>
             <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>
-              {sheetData.derived.HP_current} / {sheetData.derived.HP_max}
+              {sheetData.derived.SAN_max}
             </div>
           </div>
           <div>
-            <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>MP (現在/最大)</div>
+            <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>HP (現在)</div>
             <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>
-              {sheetData.derived.MP_current} / {sheetData.derived.MP_max}
+              {sheetData.derived.HP_current}
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>HP (最大)</div>
+            <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>
+              {sheetData.derived.HP_max}
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>MP (現在)</div>
+            <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>
+              {sheetData.derived.MP_current}
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>MP (最大)</div>
+            <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>
+              {sheetData.derived.MP_max}
             </div>
           </div>
           <div>

@@ -174,66 +174,72 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
           <div>
             <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
-              SAN (現在/最大)
+              SAN (現在)
             </label>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <input
-                type="number"
-                value={sheetData.derived.SAN_current}
-                onChange={(e) => updateDerived('SAN_current', parseInt(e.target.value) || 0)}
-                style={{ flex: 1, padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-              />
-              <span style={{ display: 'flex', alignItems: 'center' }}>/</span>
-              <input
-                type="number"
-                value={sheetData.derived.SAN_max}
-                onChange={(e) => updateDerived('SAN_max', parseInt(e.target.value) || 0)}
-                style={{ flex: 1, padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                readOnly
-              />
-            </div>
+            <input
+              type="number"
+              value={sheetData.derived.SAN_current}
+              onChange={(e) => updateDerived('SAN_current', parseInt(e.target.value) || 0)}
+              style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+            />
           </div>
           <div>
             <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
-              HP (現在/最大)
+              SAN (最大)
             </label>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <input
-                type="number"
-                value={sheetData.derived.HP_current}
-                onChange={(e) => updateDerived('HP_current', parseInt(e.target.value) || 0)}
-                style={{ flex: 1, padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-              />
-              <span style={{ display: 'flex', alignItems: 'center' }}>/</span>
-              <input
-                type="number"
-                value={sheetData.derived.HP_max}
-                onChange={(e) => updateDerived('HP_max', parseInt(e.target.value) || 0)}
-                style={{ flex: 1, padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                readOnly
-              />
-            </div>
+            <input
+              type="number"
+              value={sheetData.derived.SAN_max}
+              onChange={(e) => updateDerived('SAN_max', parseInt(e.target.value) || 0)}
+              style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f5f5f5' }}
+              readOnly
+            />
           </div>
           <div>
             <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
-              MP (現在/最大)
+              HP (現在)
             </label>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <input
-                type="number"
-                value={sheetData.derived.MP_current}
-                onChange={(e) => updateDerived('MP_current', parseInt(e.target.value) || 0)}
-                style={{ flex: 1, padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-              />
-              <span style={{ display: 'flex', alignItems: 'center' }}>/</span>
-              <input
-                type="number"
-                value={sheetData.derived.MP_max}
-                onChange={(e) => updateDerived('MP_max', parseInt(e.target.value) || 0)}
-                style={{ flex: 1, padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                readOnly
-              />
-            </div>
+            <input
+              type="number"
+              value={sheetData.derived.HP_current}
+              onChange={(e) => updateDerived('HP_current', parseInt(e.target.value) || 0)}
+              style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
+              HP (最大)
+            </label>
+            <input
+              type="number"
+              value={sheetData.derived.HP_max}
+              onChange={(e) => updateDerived('HP_max', parseInt(e.target.value) || 0)}
+              style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f5f5f5' }}
+              readOnly
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
+              MP (現在)
+            </label>
+            <input
+              type="number"
+              value={sheetData.derived.MP_current}
+              onChange={(e) => updateDerived('MP_current', parseInt(e.target.value) || 0)}
+              style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
+              MP (最大)
+            </label>
+            <input
+              type="number"
+              value={sheetData.derived.MP_max}
+              onChange={(e) => updateDerived('MP_max', parseInt(e.target.value) || 0)}
+              style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f5f5f5' }}
+              readOnly
+            />
           </div>
           <div>
             <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
