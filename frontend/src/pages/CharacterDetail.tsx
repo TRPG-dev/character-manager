@@ -3,6 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
 import { getCharacter, deleteCharacter, publishCharacter } from '../services/api';
 import type { Character, SystemEnum } from '../services/api';
+import { CthulhuSheetView } from '../components/CthulhuSheetView';
+import type { CthulhuSheetData } from '../types/cthulhu';
+import { normalizeSheetData } from '../utils/cthulhu';
 
 const SYSTEM_NAMES: Record<SystemEnum, string> = {
   cthulhu: 'クトゥルフ神話TRPG',
@@ -201,15 +204,19 @@ export const CharacterDetail = () => {
 
       <div style={{ marginTop: '2rem' }}>
         <h2>キャラクターシート</h2>
-        <pre style={{
-          padding: '1rem',
-          backgroundColor: '#f5f5f5',
-          borderRadius: '4px',
-          overflow: 'auto',
-          whiteSpace: 'pre-wrap',
-        }}>
-          {JSON.stringify(character.sheet_data, null, 2)}
-        </pre>
+        {character.system === 'cthulhu' ? (
+          <CthulhuSheetView data={normalizeSheetData(character.sheet_data) as CthulhuSheetData} />
+        ) : (
+          <pre style={{
+            padding: '1rem',
+            backgroundColor: '#f5f5f5',
+            borderRadius: '4px',
+            overflow: 'auto',
+            whiteSpace: 'pre-wrap',
+          }}>
+            {JSON.stringify(character.sheet_data, null, 2)}
+          </pre>
+        )}
       </div>
     </div>
   );

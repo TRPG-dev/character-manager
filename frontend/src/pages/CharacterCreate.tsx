@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
 import { createCharacter } from '../services/api';
 import type { SystemEnum } from '../services/api';
+import { CthulhuSheetForm } from '../components/CthulhuSheetForm';
+import type { CthulhuSheetData } from '../types/cthulhu';
+import { normalizeSheetData } from '../utils/cthulhu';
 
 const SYSTEM_NAMES: Record<SystemEnum, string> = {
   cthulhu: 'クトゥルフ神話TRPG',
@@ -20,10 +23,38 @@ export const CharacterCreate = () => {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [sheetData, setSheetData] = useState<CthulhuSheetData | null>(null);
 
   const handleSystemSelect = (system: SystemEnum) => {
     setSelectedSystem(system);
     setStep('form');
+    // クトゥルフの場合、初期シートデータを設定
+    if (system === 'cthulhu') {
+      setSheetData(normalizeSheetData({
+        attributes: {
+          STR: 0,
+          CON: 0,
+          POW: 0,
+          DEX: 0,
+          APP: 0,
+          INT: 0,
+          EDU: 0,
+          SIZ: 0,
+        },
+        derived: {
+          SAN_current: 0,
+          SAN_max: 0,
+          HP_current: 0,
+          HP_max: 0,
+          MP_current: 0,
+          MP_max: 0,
+        },
+        skills: [],
+        backstory: '',
+      }));
+    } else {
+      setSheetData(null);
+    }
   };
 
   const handleAddTag = () => {
@@ -49,6 +80,7 @@ export const CharacterCreate = () => {
           system: selectedSystem,
           name: name.trim(),
           tags,
+          sheet_data: selectedSystem === 'cthulhu' && sheetData ? sheetData : undefined,
         });
         navigate(`/characters/${character.id}`);
       }
@@ -231,6 +263,15 @@ export const CharacterCreate = () => {
             </button>
           </div>
         </div>
+
+        {selectedSystem === 'cthulhu' && sheetData && (
+          <div style={{ marginTop: '2rem' }}>
+            <CthulhuSheetForm
+              data={sheetData}
+              onChange={(data) => setSheetData(data)}
+            />
+          </div>
+        )}
 
         <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
           <button

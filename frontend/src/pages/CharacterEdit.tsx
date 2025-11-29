@@ -3,6 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
 import { getCharacter, updateCharacter } from '../services/api';
 import type { Character, SystemEnum } from '../services/api';
+import { CthulhuSheetForm } from '../components/CthulhuSheetForm';
+import type { CthulhuSheetData } from '../types/cthulhu';
+import { normalizeSheetData } from '../utils/cthulhu';
 
 const SYSTEM_NAMES: Record<SystemEnum, string> = {
   cthulhu: 'クトゥルフ神話TRPG',
@@ -23,6 +26,7 @@ export const CharacterEdit = () => {
   const [tagInput, setTagInput] = useState('');
   const [profileImageUrl, setProfileImageUrl] = useState<string>('');
   const [sheetData, setSheetData] = useState<string>('');
+  const [cthulhuSheetData, setCthulhuSheetData] = useState<CthulhuSheetData | null>(null);
 
   useEffect(() => {
     const fetchCharacter = async () => {
@@ -38,6 +42,12 @@ export const CharacterEdit = () => {
           setTags(char.tags);
           setProfileImageUrl(char.profile_image_url || '');
           setSheetData(JSON.stringify(char.sheet_data, null, 2));
+          // クトゥルフの場合、シートデータを正規化
+          if (char.system === 'cthulhu') {
+            setCthulhuSheetData(normalizeSheetData(char.sheet_data));
+          } else {
+            setCthulhuSheetData(null);
+          }
         }
       } catch (error) {
         console.error('Failed to fetch character:', error);
@@ -68,12 +78,18 @@ export const CharacterEdit = () => {
       const token = await getAccessToken();
       if (token) {
         let parsedSheetData;
-        try {
-          parsedSheetData = JSON.parse(sheetData);
-        } catch (error) {
-          alert('シートデータが正しいJSON形式ではありません');
-          setSaving(false);
-          return;
+        if (character.system === 'cthulhu' && cthulhuSheetData) {
+          // クトゥルフの場合はフォームデータを使用
+          parsedSheetData = cthulhuSheetData;
+        } else {
+          // その他のシステムはJSONテキストエリアから取得
+          try {
+            parsedSheetData = JSON.parse(sheetData);
+          } catch (error) {
+            alert('シートデータが正しいJSON形式ではありません');
+            setSaving(false);
+            return;
+          }
         }
 
         await updateCharacter(token, id, {
@@ -226,24 +242,33 @@ export const CharacterEdit = () => {
           </div>
         </div>
 
-        <div style={{ marginBottom: '1.5rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-            シートデータ (JSON)
-          </label>
-          <textarea
-            value={sheetData}
-            onChange={(e) => setSheetData(e.target.value)}
-            rows={20}
-            style={{
-              width: '100%',
-              padding: '0.75rem',
-              fontSize: '0.875rem',
-              fontFamily: 'monospace',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-            }}
-          />
-        </div>
+        {character.system === 'cthulhu' && cthulhuSheetData ? (
+          <div style={{ marginBottom: '1.5rem' }}>
+            <CthulhuSheetForm
+              data={cthulhuSheetData}
+              onChange={(data) => setCthulhuSheetData(data)}
+            />
+          </div>
+        ) : (
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+              シートデータ (JSON)
+            </label>
+            <textarea
+              value={sheetData}
+              onChange={(e) => setSheetData(e.target.value)}
+              rows={20}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                fontSize: '0.875rem',
+                fontFamily: 'monospace',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+              }}
+            />
+          </div>
+        )}
 
         <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
           <button
