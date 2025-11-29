@@ -9,6 +9,7 @@ import { normalizeSheetData as normalizeCthulhuSheetData } from '../utils/cthulh
 import { ShinobigamiSheetForm } from '../components/ShinobigamiSheetForm';
 import type { ShinobigamiSheetData } from '../types/shinobigami';
 import { normalizeSheetData as normalizeShinobigamiSheetData } from '../utils/shinobigami';
+import { ImageUpload } from '../components/ImageUpload';
 
 const SYSTEM_NAMES: Record<SystemEnum, string> = {
   cthulhu: 'クトゥルフ神話TRPG',
@@ -27,10 +28,11 @@ export const CharacterEdit = () => {
   const [name, setName] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
-  const [profileImageUrl, setProfileImageUrl] = useState<string>('');
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
   const [sheetData, setSheetData] = useState<string>('');
   const [cthulhuSheetData, setCthulhuSheetData] = useState<CthulhuSheetData | null>(null);
   const [shinobigamiSheetData, setShinobigamiSheetData] = useState<ShinobigamiSheetData | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchCharacter = async () => {
@@ -40,11 +42,12 @@ export const CharacterEdit = () => {
       try {
         const token = await getAccessToken();
         if (token) {
+          setAccessToken(token);
           const char = await getCharacter(token, id);
           setCharacter(char);
           setName(char.name);
           setTags(char.tags);
-          setProfileImageUrl(char.profile_image_url || '');
+          setProfileImageUrl(char.profile_image_url || null);
           setSheetData(JSON.stringify(char.sheet_data, null, 2));
           // システムに応じてシートデータを正規化
           if (char.system === 'cthulhu') {
@@ -124,9 +127,10 @@ export const CharacterEdit = () => {
         await updateCharacter(token, id, {
           name: name.trim(),
           tags,
-          profile_image_url: profileImageUrl || null,
+          profile_image_url: profileImageUrl,
           sheet_data: parsedSheetData,
         });
+        alert('更新が完了しました');
         navigate(`/characters/${id}`);
       }
     } catch (error: any) {
@@ -182,24 +186,20 @@ export const CharacterEdit = () => {
           />
         </div>
 
-        <div style={{ marginBottom: '1.5rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-            プロフィール画像URL
-          </label>
-          <input
-            type="url"
-            value={profileImageUrl}
-            onChange={(e) => setProfileImageUrl(e.target.value)}
-            style={{
-              width: '100%',
-              maxWidth: '600px',
-              padding: '0.75rem',
-              fontSize: '1rem',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
+        {id && accessToken && (
+          <ImageUpload
+            characterId={id}
+            accessToken={accessToken}
+            currentImageUrl={profileImageUrl}
+            onUploadSuccess={(imageUrl) => {
+              setProfileImageUrl(imageUrl);
+              alert('画像のアップロードが完了しました');
+            }}
+            onError={(error) => {
+              alert(`エラー: ${error}`);
             }}
           />
-        </div>
+        )}
 
         <div style={{ marginBottom: '1.5rem' }}>
           <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>

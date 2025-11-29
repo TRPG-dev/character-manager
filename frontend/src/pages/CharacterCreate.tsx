@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
-import { createCharacter } from '../services/api';
+import { createCharacter, getImageUploadUrl, updateCharacter } from '../services/api';
 import type { SystemEnum } from '../services/api';
 import { CthulhuSheetForm } from '../components/CthulhuSheetForm';
 import type { CthulhuSheetData } from '../types/cthulhu';
@@ -27,6 +27,11 @@ export const CharacterCreate = () => {
   const [tagInput, setTagInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [sheetData, setSheetData] = useState<CthulhuSheetData | ShinobigamiSheetData | null>(null);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSystemSelect = (system: SystemEnum) => {
     setSelectedSystem(system);
@@ -85,6 +90,96 @@ export const CharacterCreate = () => {
     setTags(tags.filter(t => t !== tag));
   };
 
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+  const ALLOWED_MIME_TYPES = ['image/png', 'image/jpeg', 'image/jpg'];
+
+  const validateImageFile = (file: File): string | null => {
+    if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+      return 'PNGまたはJPEG形式の画像を選択してください';
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      return 'ファイルサイズは5MB以下にしてください';
+    }
+    return null;
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const error = validateImageFile(file);
+      if (error) {
+        alert(error);
+        return;
+      }
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleImageRemove = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const uploadImageAfterCreate = async (characterId: string, file: File, token: string) => {
+    setUploadingImage(true);
+    setUploadProgress(0);
+
+    try {
+      // 1. 署名付きURLを取得
+      const { upload_url, public_url } = await getImageUploadUrl(token, characterId, file.type);
+
+      // 2. 署名付きURLにPUTリクエストで画像をアップロード
+      const xhr = new XMLHttpRequest();
+
+      return new Promise<void>((resolve, reject) => {
+        xhr.upload.addEventListener('progress', (e) => {
+          if (e.lengthComputable) {
+            const percentComplete = (e.loaded / e.total) * 100;
+            setUploadProgress(percentComplete);
+          }
+        });
+
+        xhr.addEventListener('load', async () => {
+          if (xhr.status === 200) {
+            try {
+              // 3. キャラクターのprofile_image_urlを更新
+              await updateCharacter(token, characterId, {
+                profile_image_url: public_url,
+              });
+              resolve();
+            } catch (error: any) {
+              console.error('Failed to update character:', error);
+              reject(error);
+            }
+          } else {
+            reject(new Error(`アップロードに失敗しました (ステータス: ${xhr.status})`));
+          }
+        });
+
+        xhr.addEventListener('error', () => {
+          reject(new Error('アップロード中にエラーが発生しました'));
+        });
+
+        xhr.open('PUT', upload_url);
+        xhr.setRequestHeader('Content-Type', file.type);
+        xhr.send(file);
+      });
+    } catch (error: any) {
+      console.error('Failed to get upload URL:', error);
+      throw error;
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedSystem || !name.trim()) return;
@@ -121,6 +216,18 @@ export const CharacterCreate = () => {
         tags,
         sheet_data: (selectedSystem === 'cthulhu' || selectedSystem === 'shinobigami') && sheetData ? sheetData : undefined,
       });
+
+      // 画像が選択されている場合はアップロード
+      if (selectedImage) {
+        try {
+          await uploadImageAfterCreate(character.id, selectedImage, token);
+          alert('画像のアップロードが完了しました');
+        } catch (error: any) {
+          console.error('Failed to upload image:', error);
+          alert('画像のアップロードに失敗しましたが、キャラクターは作成されました');
+        }
+      }
+
       navigate(`/characters/${character.id}`);
     } catch (error: any) {
       console.error('Failed to create character:', error);
@@ -308,6 +415,89 @@ export const CharacterCreate = () => {
               追加
             </button>
           </div>
+        </div>
+
+        <div style={{ marginBottom: '1.5rem' }}>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+            プロフィール画像
+          </label>
+          {imagePreview && (
+            <div style={{ marginBottom: '1rem', position: 'relative', display: 'inline-block' }}>
+              <img
+                src={imagePreview}
+                alt="プレビュー"
+                style={{
+                  maxWidth: '300px',
+                  maxHeight: '300px',
+                  borderRadius: '8px',
+                  border: '1px solid #ddd',
+                }}
+              />
+              {!uploadingImage && (
+                <button
+                  type="button"
+                  onClick={handleImageRemove}
+                  style={{
+                    position: 'absolute',
+                    top: '0.5rem',
+                    right: '0.5rem',
+                    padding: '0.25rem 0.5rem',
+                    backgroundColor: 'rgba(220, 53, 69, 0.9)',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                  }}
+                >
+                  削除
+                </button>
+              )}
+            </div>
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/jpg"
+            onChange={handleImageSelect}
+            disabled={uploadingImage || loading}
+            style={{
+              padding: '0.5rem',
+              fontSize: '0.875rem',
+              border: '1px solid #ddd',
+              borderRadius: '4px',
+            }}
+          />
+          <div style={{ fontSize: '0.75rem', color: '#999', marginTop: '0.5rem' }}>
+            PNG/JPEG形式、最大5MB
+          </div>
+          {uploadingImage && (
+            <div style={{ marginTop: '0.5rem' }}>
+              <div style={{ marginBottom: '0.5rem' }}>画像をアップロード中...</div>
+              <div
+                style={{
+                  width: '100%',
+                  maxWidth: '400px',
+                  height: '8px',
+                  backgroundColor: '#e9ecef',
+                  borderRadius: '4px',
+                  overflow: 'hidden',
+                }}
+              >
+                <div
+                  style={{
+                    width: `${uploadProgress}%`,
+                    height: '100%',
+                    backgroundColor: '#007bff',
+                    transition: 'width 0.3s',
+                  }}
+                />
+              </div>
+              <div style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#6c757d' }}>
+                {Math.round(uploadProgress)}%
+              </div>
+            </div>
+          )}
         </div>
 
         {selectedSystem === 'cthulhu' && sheetData && (
