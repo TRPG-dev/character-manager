@@ -21,47 +21,6 @@ export const CthulhuSheetView = ({ data }: CthulhuSheetViewProps) => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      {/* 基本情報セクション */}
-      {(sheetData.playerName || sheetData.occupation || sheetData.age || sheetData.gender || sheetData.birthplace) && (
-        <section>
-          <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
-            基本情報
-          </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
-            {sheetData.playerName && (
-              <div>
-                <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>プレイヤー名</div>
-                <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>{sheetData.playerName}</div>
-              </div>
-            )}
-            {sheetData.occupation && (
-              <div>
-                <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>職業</div>
-                <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>{sheetData.occupation}</div>
-              </div>
-            )}
-            {sheetData.age && (
-              <div>
-                <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>年齢</div>
-                <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>{sheetData.age}</div>
-              </div>
-            )}
-            {sheetData.gender && (
-              <div>
-                <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>性別</div>
-                <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>{sheetData.gender}</div>
-              </div>
-            )}
-            {sheetData.birthplace && (
-              <div>
-                <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>出身地</div>
-                <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>{sheetData.birthplace}</div>
-              </div>
-            )}
-          </div>
-        </section>
-      )}
-
       {/* 能力値セクション */}
       <section>
         <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>

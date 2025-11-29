@@ -334,10 +334,10 @@ export const CharacterCreate = () => {
         <CollapsibleSection title="ツール" defaultOpen={false}>
           <DiceRoller initialFormula="3d6" />
 
-          {createdCharacterId && selectedSystem === 'cthulhu' && (
+          {selectedSystem === 'cthulhu' && (
             <div style={{ marginTop: '1rem' }}>
               <AutoRollAttributes
-                characterId={createdCharacterId}
+                characterId={createdCharacterId || undefined}
                 system={selectedSystem}
                 onApply={(attributes, derived) => {
                   if (sheetData && 'attributes' in sheetData) {

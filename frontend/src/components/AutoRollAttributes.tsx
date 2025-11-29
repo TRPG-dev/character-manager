@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../auth/useAuth';
 import { autoRollAttributes } from '../services/api';
+import { generateCthulhuAttributes } from '../utils/cthulhu';
 import type { CthulhuAttributes, CthulhuDerived } from '../types/cthulhu';
 
 type SystemEnum = 'cthulhu' | 'shinobigami' | 'sw25' | 'satasupe';
@@ -31,7 +32,7 @@ interface AutoRollAttributesResponse {
 }
 
 interface AutoRollAttributesProps {
-  characterId: string;
+  characterId?: string;
   system: SystemEnum;
   onApply?: (attributes: CthulhuAttributes, derived: CthulhuDerived) => void;
 }
@@ -57,15 +58,22 @@ export const AutoRollAttributes = ({
     setResult(null);
 
     try {
-      const token = await getAccessToken();
-      if (!token) {
-        setError('認証トークンの取得に失敗しました');
-        setLoading(false);
-        return;
-      }
+      // characterIdが存在する場合はAPIを呼び出す
+      if (characterId) {
+        const token = await getAccessToken();
+        if (!token) {
+          setError('認証トークンの取得に失敗しました');
+          setLoading(false);
+          return;
+        }
 
-      const rollResult = await autoRollAttributes(token, characterId, system);
-      setResult(rollResult);
+        const rollResult = await autoRollAttributes(token, characterId, system);
+        setResult(rollResult);
+      } else {
+        // characterIdが存在しない場合はフロントエンドで生成
+        const generated = generateCthulhuAttributes();
+        setResult(generated);
+      }
     } catch (err: any) {
       console.error('Failed to auto roll attributes:', err);
       const errorMessage = err.response?.data?.detail || err.message || '能力値の自動生成に失敗しました';

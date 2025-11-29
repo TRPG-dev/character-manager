@@ -317,13 +317,13 @@ export const CharacterDetail = () => {
         }}>
           基本情報
         </h2>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
           <div>
             <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>システム</div>
             <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{SYSTEM_NAMES[character.system]}</div>
           </div>
           {character.tags.length > 0 && (
-            <div>
+            <div style={{ gridColumn: '1 / -1' }}>
               <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.5rem' }}>タグ</div>
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                 {character.tags.map(tag => (
@@ -344,6 +344,43 @@ export const CharacterDetail = () => {
               </div>
             </div>
           )}
+          {character.system === 'cthulhu' && (() => {
+            const sheetData = normalizeCthulhuSheetData(character.sheet_data) as CthulhuSheetData;
+            return (
+              <>
+                {sheetData.playerName && (
+                  <div>
+                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>プレイヤー名</div>
+                    <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.playerName}</div>
+                  </div>
+                )}
+                {sheetData.occupation && (
+                  <div>
+                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>職業</div>
+                    <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.occupation}</div>
+                  </div>
+                )}
+                {sheetData.age && (
+                  <div>
+                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>年齢</div>
+                    <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.age}</div>
+                  </div>
+                )}
+                {sheetData.gender && (
+                  <div>
+                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>性別</div>
+                    <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.gender}</div>
+                  </div>
+                )}
+                {sheetData.birthplace && (
+                  <div>
+                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>出身地</div>
+                    <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.birthplace}</div>
+                  </div>
+                )}
+              </>
+            );
+          })()}
         </div>
       </section>
 

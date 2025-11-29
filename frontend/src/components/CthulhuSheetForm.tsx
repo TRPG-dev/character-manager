@@ -153,11 +153,72 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
   // 格闘技能関連の関数
   const updateCombatSkill = (index: number, field: 'jobPoints' | 'interestPoints' | 'growth' | 'other', value: number) => {
     const newCombatSkills = [...(sheetData.combatSkills || [])];
+    const currentSkill = newCombatSkills[index];
     newCombatSkills[index] = {
-      ...newCombatSkills[index],
+      ...currentSkill,
       [field]: value,
+      isCustom: currentSkill.isCustom === true, // isCustomフラグを保持
     };
     newCombatSkills[index].total = calculateSkillTotal(newCombatSkills[index]);
+    const updated = { ...sheetData, combatSkills: newCombatSkills };
+    setIsInternalUpdate(true);
+    setSheetData(updated);
+    onChange(updated);
+  };
+
+  const addCombatSkill = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    const newCombatSkill: CthulhuSkill = {
+      name: '',
+      baseValue: 0,
+      jobPoints: 0,
+      interestPoints: 0,
+      growth: 0,
+      other: 0,
+      total: 0,
+      isCustom: true,
+    };
+    const newCombatSkills = [...(sheetData.combatSkills || []), newCombatSkill];
+    const updated = { ...sheetData, combatSkills: newCombatSkills };
+    setIsInternalUpdate(true);
+    setSheetData(updated);
+    onChange(updated);
+  };
+
+  const updateCombatSkillName = (index: number, name: string) => {
+    const newCombatSkills = [...(sheetData.combatSkills || [])];
+    const currentSkill = newCombatSkills[index];
+    newCombatSkills[index] = {
+      ...currentSkill,
+      name,
+      isCustom: currentSkill.isCustom === true, // isCustomフラグを保持
+    };
+    const updated = { ...sheetData, combatSkills: newCombatSkills };
+    setIsInternalUpdate(true);
+    setSheetData(updated);
+    onChange(updated);
+  };
+
+  const updateCombatSkillBaseValue = (index: number, baseValue: number) => {
+    const newCombatSkills = [...(sheetData.combatSkills || [])];
+    const currentSkill = newCombatSkills[index];
+    newCombatSkills[index] = {
+      ...currentSkill,
+      baseValue,
+      isCustom: currentSkill.isCustom === true, // isCustomフラグを保持
+    };
+    newCombatSkills[index].total = calculateSkillTotal(newCombatSkills[index]);
+    const updated = { ...sheetData, combatSkills: newCombatSkills };
+    setIsInternalUpdate(true);
+    setSheetData(updated);
+    onChange(updated);
+  };
+
+  const removeCombatSkill = (index: number) => {
+    const newCombatSkills = (sheetData.combatSkills || []).filter((_, i) => i !== index);
     const updated = { ...sheetData, combatSkills: newCombatSkills };
     setIsInternalUpdate(true);
     setSheetData(updated);
@@ -667,52 +728,130 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
                 <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>成長</th>
                 <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>その他</th>
                 <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>合計</th>
+                <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>操作</th>
               </tr>
             </thead>
             <tbody>
-              {(sheetData.combatSkills || []).map((skill, index) => (
-                <tr key={`combat-${index}`} style={{ borderBottom: '1px solid #dee2e6' }}>
-                  <td style={{ padding: '0.75rem', fontWeight: 'bold' }}>{skill.name}</td>
-                  <td style={{ padding: '0.75rem', textAlign: 'center' }}>{skill.baseValue}</td>
-                  <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                    <input
-                      type="number"
-                      value={skill.jobPoints || 0}
-                      onChange={(e) => updateCombatSkill(index, 'jobPoints', parseInt(e.target.value) || 0)}
-                      min="0"
-                      style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
-                    />
-                  </td>
-                  <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                    <input
-                      type="number"
-                      value={skill.interestPoints || 0}
-                      onChange={(e) => updateCombatSkill(index, 'interestPoints', parseInt(e.target.value) || 0)}
-                      min="0"
-                      style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
-                    />
-                  </td>
-                  <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                    <input
-                      type="number"
-                      value={skill.growth || 0}
-                      onChange={(e) => updateCombatSkill(index, 'growth', parseInt(e.target.value) || 0)}
-                      style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
-                    />
-                  </td>
-                  <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                    <input
-                      type="number"
-                      value={skill.other || 0}
-                      onChange={(e) => updateCombatSkill(index, 'other', parseInt(e.target.value) || 0)}
-                      style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
-                    />
-                  </td>
-                  <td style={{ padding: '0.75rem', textAlign: 'center', fontWeight: 'bold', backgroundColor: '#f8f9fa' }}>
-                    {skill.total || calculateSkillTotal(skill)}
-                  </td>
-                </tr>
-              ))}
+              {(sheetData.combatSkills || []).map((skill, index) => {
+                // isCustomフラグを確実に判定（明示的にtrueの場合のみカスタム技能とみなす）
+                const isCustom = skill.isCustom === true;
+                return (
+                  <tr key={`combat-${index}`} style={{ borderBottom: '1px solid #dee2e6', backgroundColor: isCustom ? '#fffbf0' : undefined }}>
+                    <td style={{ padding: '0.75rem' }}>
+                      {isCustom ? (
+                        <input
+                          type="text"
+                          value={skill.name || ''}
+                          onChange={(e) => updateCombatSkillName(index, e.target.value)}
+                          placeholder="技能名"
+                          style={{ width: '100%', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                        />
+                      ) : (
+                        <span style={{ fontWeight: 'bold' }}>{skill.name}</span>
+                      )}
+                    </td>
+                    <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                      {isCustom ? (
+                        <input
+                          type="number"
+                          value={skill.baseValue || 0}
+                          onChange={(e) => updateCombatSkillBaseValue(index, parseInt(e.target.value) || 0)}
+                          min="0"
+                          style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
+                        />
+                      ) : (
+                        <span>{skill.baseValue}</span>
+                      )}
+                    </td>
+                    <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                      <input
+                        type="number"
+                        value={skill.jobPoints || 0}
+                        onChange={(e) => updateCombatSkill(index, 'jobPoints', parseInt(e.target.value) || 0)}
+                        min="0"
+                        style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
+                      />
+                    </td>
+                    <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                      <input
+                        type="number"
+                        value={skill.interestPoints || 0}
+                        onChange={(e) => updateCombatSkill(index, 'interestPoints', parseInt(e.target.value) || 0)}
+                        min="0"
+                        style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
+                      />
+                    </td>
+                    <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                      <input
+                        type="number"
+                        value={skill.growth || 0}
+                        onChange={(e) => updateCombatSkill(index, 'growth', parseInt(e.target.value) || 0)}
+                        style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
+                      />
+                    </td>
+                    <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                      <input
+                        type="number"
+                        value={skill.other || 0}
+                        onChange={(e) => updateCombatSkill(index, 'other', parseInt(e.target.value) || 0)}
+                        style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
+                      />
+                    </td>
+                    <td style={{ padding: '0.75rem', textAlign: 'center', fontWeight: 'bold', backgroundColor: '#f8f9fa' }}>
+                      {skill.total || calculateSkillTotal(skill)}
+                    </td>
+                    <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                      {isCustom ? (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            removeCombatSkill(index);
+                          }}
+                          style={{
+                            padding: '0.25rem 0.5rem',
+                            backgroundColor: '#dc3545',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '0.75rem',
+                          }}
+                        >
+                          削除
+                        </button>
+                      ) : (
+                        <span>-</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+              {/* 追加ボタン行 */}
+              <tr>
+                <td colSpan={8} style={{ padding: '0.75rem', textAlign: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      addCombatSkill(e);
+                    }}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      backgroundColor: '#28a745',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                    }}
+                  >
+                    + 格闘技能を追加
+                  </button>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>

@@ -3,6 +3,52 @@ import type { CthulhuAttributes, CthulhuDerived, CthulhuSheetData, CthulhuSkill 
 import { DEFAULT_CTHULHU_SKILLS, COMBAT_SKILLS, calculateSkillTotal, calculateTotalJobPoints, calculateTotalInterestPoints } from '../data/cthulhuSkills';
 
 /**
+ * サイコロを振る（フロントエンド用）
+ */
+function rollDice(count: number, sides: number, modifier: number = 0): number {
+  let total = modifier;
+  for (let i = 0; i < count; i++) {
+    total += Math.floor(Math.random() * sides) + 1;
+  }
+  return total;
+}
+
+/**
+ * クトゥルフ神話TRPGの能力値を自動生成（フロントエンド用）
+ */
+export function generateCthulhuAttributes(): { attributes: CthulhuAttributes; derived: CthulhuDerived } {
+  // 基本能力値（3d6）
+  const STR = rollDice(3, 6);
+  const CON = rollDice(3, 6);
+  const POW = rollDice(3, 6);
+  const DEX = rollDice(3, 6);
+  const APP = rollDice(3, 6);
+  
+  // SIZ, INT (2d6+6)
+  const SIZ = rollDice(2, 6, 6);
+  const INT = rollDice(2, 6, 6);
+  
+  // EDU (3d6+3)
+  const EDU = rollDice(3, 6, 3);
+  
+  const attributes: CthulhuAttributes = {
+    STR,
+    CON,
+    POW,
+    DEX,
+    APP,
+    INT,
+    EDU,
+    SIZ,
+  };
+  
+  // 派生値を計算
+  const derived = calculateDerivedValues(attributes);
+  
+  return { attributes, derived };
+}
+
+/**
  * 能力値から派生値を計算
  */
 export function calculateDerivedValues(attributes: CthulhuAttributes): CthulhuDerived {
@@ -112,7 +158,10 @@ export function normalizeSheetData(data: any): CthulhuSheetData {
 
   // combatSkillsが既に存在する場合はそれを使用
   if (data.combatSkills && Array.isArray(data.combatSkills)) {
+    const combatSkillNames = new Set(COMBAT_SKILLS.map(s => s.name));
     combatSkills = data.combatSkills.map((s: any) => {
+      // isCustomフラグを保持、またはデフォルトリストに含まれていない場合はカスタム技能
+      const isCustom = s.isCustom === true || !combatSkillNames.has(s.name);
       const skill: CthulhuSkill = {
         name: s.name,
         baseValue: s.baseValue ?? s.base_value ?? 0,
@@ -120,12 +169,14 @@ export function normalizeSheetData(data: any): CthulhuSheetData {
         interestPoints: s.interestPoints ?? s.interest_points ?? 0,
         growth: s.growth ?? 0,
         other: s.other ?? 0,
-        isCustom: false,
+        isCustom: isCustom,
       };
-      // 動的計算が必要な技能の初期値を更新
-      const dynamicBaseValue = getDynamicBaseValue(skill.name);
-      if (dynamicBaseValue > 0) {
-        skill.baseValue = dynamicBaseValue;
+      // 動的計算が必要な技能の初期値を更新（カスタム技能でない場合のみ）
+      if (!isCustom) {
+        const dynamicBaseValue = getDynamicBaseValue(skill.name);
+        if (dynamicBaseValue > 0) {
+          skill.baseValue = dynamicBaseValue;
+        }
       }
       skill.total = calculateSkillTotal(skill);
       return skill;
@@ -138,6 +189,7 @@ export function normalizeSheetData(data: any): CthulhuSheetData {
       return {
         ...skill,
         baseValue,
+        isCustom: false, // デフォルト技能は明示的にfalse
         total: calculateSkillTotal({ ...skill, baseValue }),
       };
     });
