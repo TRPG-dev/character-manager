@@ -1,8 +1,10 @@
 import { useEffect } from 'react';
 
+export type ToastType = 'success' | 'error' | 'info' | 'warning';
+
 interface ToastProps {
   message: string;
-  type: 'success' | 'error' | 'info';
+  type: ToastType;
   isVisible: boolean;
   onClose: () => void;
   duration?: number;
@@ -20,7 +22,11 @@ export const Toast = ({ message, type, isVisible, onClose, duration = 3000 }: To
 
   if (!isVisible) return null;
 
-  const backgroundColor = type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#007bff';
+  const backgroundColor =
+    type === 'success' ? '#28a745' :
+    type === 'error' ? '#dc3545' :
+    type === 'warning' ? '#ffc107' :
+    '#007bff';
 
   return (
     <div

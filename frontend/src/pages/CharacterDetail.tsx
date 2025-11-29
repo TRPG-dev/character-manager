@@ -11,6 +11,9 @@ import type { ShinobigamiSheetData } from '../types/shinobigami';
 import { normalizeSheetData as normalizeShinobigamiSheetData } from '../utils/shinobigami';
 import { CharacterSheetView } from '../components/CharacterSheetView';
 import { ImageModal } from '../components/ImageModal';
+import { useToast } from '../contexts/ToastContext';
+import { handleApiError, formatErrorMessage } from '../utils/errorHandler';
+import { LoadingSpinner } from '../components/LoadingSpinner';
 
 const SYSTEM_NAMES: Record<SystemEnum, string> = {
   cthulhu: 'クトゥルフ神話TRPG',
@@ -23,6 +26,7 @@ export const CharacterDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { isAuthenticated, getAccessToken } = useAuth();
+  const { showSuccess, showError } = useToast();
   const [character, setCharacter] = useState<Character | null>(null);
   const [loading, setLoading] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
@@ -43,6 +47,8 @@ export const CharacterDetail = () => {
         }
       } catch (error) {
         console.error('Failed to fetch character:', error);
+        const apiError = handleApiError(error);
+        showError(formatErrorMessage(apiError));
       } finally {
         setLoading(false);
       }
@@ -57,11 +63,13 @@ export const CharacterDetail = () => {
       const token = await getAccessToken();
       if (token) {
         await deleteCharacter(token, id);
+        showSuccess('キャラクターを削除しました');
         navigate('/dashboard');
       }
     } catch (error) {
       console.error('Failed to delete character:', error);
-      alert('削除に失敗しました');
+      const apiError = handleApiError(error);
+      showError(formatErrorMessage(apiError));
     }
   };
 
@@ -73,10 +81,12 @@ export const CharacterDetail = () => {
       if (token) {
         const response = await publishCharacter(token, id, !character.is_public);
         setCharacter({ ...character, is_public: response.is_public, share_token: response.share_token });
+        showSuccess(character.is_public ? '非公開にしました' : '公開しました');
       }
     } catch (error) {
       console.error('Failed to toggle publish:', error);
-      alert('公開状態の変更に失敗しました');
+      const apiError = handleApiError(error);
+      showError(formatErrorMessage(apiError));
     }
   };
 
@@ -84,16 +94,34 @@ export const CharacterDetail = () => {
     if (character?.share_token) {
       const shareUrl = `${window.location.origin}/share/${character.share_token}`;
       navigator.clipboard.writeText(shareUrl);
-      alert('共有リンクをコピーしました');
+      showSuccess('共有リンクをコピーしました');
     }
   };
 
   if (loading) {
-    return <div>読み込み中...</div>;
+    return <LoadingSpinner fullScreen message="キャラクターを読み込み中..." />;
   }
 
   if (!character) {
-    return <div>キャラクターが見つかりません</div>;
+    return (
+      <div style={{ padding: '2rem', textAlign: 'center' }}>
+        <h2>キャラクターが見つかりません</h2>
+        <button
+          onClick={() => navigate('/dashboard')}
+          style={{
+            marginTop: '1rem',
+            padding: '0.5rem 1rem',
+            backgroundColor: '#007bff',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+          }}
+        >
+          ダッシュボードに戻る
+        </button>
+      </div>
+    );
   }
 
   return (

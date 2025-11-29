@@ -16,6 +16,9 @@ import { AutoRollAttributes } from '../components/AutoRollAttributes';
 import { CollapsibleSection } from '../components/CollapsibleSection';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { Toast } from '../components/Toast';
+import { useToast } from '../contexts/ToastContext';
+import { handleApiError, formatErrorMessage } from '../utils/errorHandler';
+import { LoadingSpinner } from '../components/LoadingSpinner';
 
 const SYSTEM_NAMES: Record<SystemEnum, string> = {
   cthulhu: 'クトゥルフ神話TRPG',
@@ -28,6 +31,7 @@ export const CharacterEdit = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { getAccessToken } = useAuth();
+  const { showSuccess, showError } = useToast();
   const [character, setCharacter] = useState<Character | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -41,11 +45,6 @@ export const CharacterEdit = () => {
   const [genericSheetData, setGenericSheetData] = useState<Record<string, any> | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info'; isVisible: boolean }>({
-    message: '',
-    type: 'info',
-    isVisible: false,
-  });
   const [nameError, setNameError] = useState<string>('');
 
   useEffect(() => {
@@ -80,6 +79,8 @@ export const CharacterEdit = () => {
         }
       } catch (error) {
         console.error('Failed to fetch character:', error);
+        const apiError = handleApiError(error);
+        showError(formatErrorMessage(apiError));
       } finally {
         setLoading(false);
       }
@@ -167,11 +168,7 @@ export const CharacterEdit = () => {
           try {
             parsedSheetData = JSON.parse(sheetData);
           } catch (error) {
-            setToast({
-              message: 'シートデータが正しいJSON形式ではありません',
-              type: 'error',
-              isVisible: true,
-            });
+            showError('シートデータが正しいJSON形式ではありません');
             setSaving(false);
             return;
           }
@@ -183,39 +180,44 @@ export const CharacterEdit = () => {
           profile_image_url: profileImageUrl,
           sheet_data: parsedSheetData,
         });
-        setToast({
-          message: '更新が完了しました',
-          type: 'success',
-          isVisible: true,
-        });
+        showSuccess('更新が完了しました');
         setTimeout(() => {
           navigate(`/characters/${id}`);
         }, 1000);
       }
     } catch (error: any) {
       console.error('Failed to update character:', error);
-      let errorMessage = '更新に失敗しました';
-      if (error.response?.data?.detail?.error === 'skill_points_limit_exceeded') {
-        errorMessage = `${error.response.data.detail.message}\n${error.response.data.detail.details?.join('\n')}`;
-      } else if (error.response?.data?.detail) {
-        errorMessage = error.response.data.detail;
-      }
-      setToast({
-        message: errorMessage,
-        type: 'error',
-        isVisible: true,
-      });
+      const apiError = handleApiError(error);
+      showError(formatErrorMessage(apiError));
     } finally {
       setSaving(false);
     }
   };
 
   if (loading) {
-    return <div>読み込み中...</div>;
+    return <LoadingSpinner fullScreen message="キャラクターを読み込み中..." />;
   }
 
   if (!character) {
-    return <div>キャラクターが見つかりません</div>;
+    return (
+      <div style={{ padding: '2rem', textAlign: 'center' }}>
+        <h2>キャラクターが見つかりません</h2>
+        <button
+          onClick={() => navigate('/dashboard')}
+          style={{
+            marginTop: '1rem',
+            padding: '0.5rem 1rem',
+            backgroundColor: '#007bff',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+          }}
+        >
+          ダッシュボードに戻る
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -266,18 +268,10 @@ export const CharacterEdit = () => {
                 currentImageUrl={profileImageUrl}
                 onUploadSuccess={(imageUrl) => {
                   setProfileImageUrl(imageUrl);
-                  setToast({
-                    message: '画像のアップロードが完了しました',
-                    type: 'success',
-                    isVisible: true,
-                  });
+                  showSuccess('画像のアップロードが完了しました');
                 }}
                 onError={(error) => {
-                  setToast({
-                    message: `エラー: ${error}`,
-                    type: 'error',
-                    isVisible: true,
-                  });
+                  showError(`エラー: ${error}`);
                 }}
               />
             </div>
@@ -463,12 +457,6 @@ export const CharacterEdit = () => {
         onCancel={() => setShowConfirmDialog(false)}
       />
 
-      <Toast
-        message={toast.message}
-        type={toast.type}
-        isVisible={toast.isVisible}
-        onClose={() => setToast({ ...toast, isVisible: false })}
-      />
     </div>
   );
 };

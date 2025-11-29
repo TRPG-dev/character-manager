@@ -11,6 +11,8 @@ import type { ShinobigamiSheetData } from '../types/shinobigami';
 import { normalizeSheetData as normalizeShinobigamiSheetData } from '../utils/shinobigami';
 import { DiceRoller } from '../components/DiceRoller';
 import { autoRollAttributes } from '../services/api';
+import { useToast } from '../contexts/ToastContext';
+import { handleApiError, formatErrorMessage } from '../utils/errorHandler';
 
 const SYSTEM_NAMES: Record<SystemEnum, string> = {
   cthulhu: 'クトゥルフ神話TRPG',
@@ -22,6 +24,7 @@ const SYSTEM_NAMES: Record<SystemEnum, string> = {
 export const CharacterCreate = () => {
   const { getAccessToken } = useAuth();
   const navigate = useNavigate();
+  const { showSuccess, showError, showWarning } = useToast();
   const [step, setStep] = useState<'select' | 'form'>('select');
   const [selectedSystem, setSelectedSystem] = useState<SystemEnum | null>(null);
   const [name, setName] = useState('');
@@ -217,7 +220,7 @@ export const CharacterCreate = () => {
       const interestPointsLimit = getInterestPointsLimit(cthulhuData.attributes.INT);
 
       if (totalJobPoints > jobPointsLimit || totalInterestPoints > interestPointsLimit) {
-        alert(`ポイントの上限を超えています。\n職業P: ${totalJobPoints}/${jobPointsLimit}\n興味P: ${totalInterestPoints}/${interestPointsLimit}`);
+        showWarning(`ポイントの上限を超えています。\n職業P: ${totalJobPoints}/${jobPointsLimit}\n興味P: ${totalInterestPoints}/${interestPointsLimit}`);
         return;
       }
     }
@@ -226,7 +229,7 @@ export const CharacterCreate = () => {
     try {
       const token = await getAccessToken();
       if (!token) {
-        alert('認証トークンの取得に失敗しました。再度ログインしてください。');
+        showError('認証トークンの取得に失敗しました。再度ログインしてください。');
         setLoading(false);
         return;
       }
@@ -253,7 +256,7 @@ export const CharacterCreate = () => {
             await updateCharacter(token, character.id, {
               sheet_data: updatedSheetData,
             });
-            alert('能力値を自動生成しました');
+            showSuccess('能力値を自動生成しました');
           } catch (error: any) {
             console.error('Failed to auto roll attributes:', error);
             // エラーは無視して続行
@@ -265,25 +268,19 @@ export const CharacterCreate = () => {
       if (selectedImage) {
         try {
           await uploadImageAfterCreate(character.id, selectedImage, token);
-          alert('画像のアップロードが完了しました');
+          showSuccess('画像のアップロードが完了しました');
         } catch (error: any) {
           console.error('Failed to upload image:', error);
-          alert('画像のアップロードに失敗しましたが、キャラクターは作成されました');
+          showWarning('画像のアップロードに失敗しましたが、キャラクターは作成されました');
         }
       }
 
+      showSuccess('キャラクターを作成しました');
       navigate(`/characters/${character.id}`);
     } catch (error: any) {
       console.error('Failed to create character:', error);
-      if (error.response?.status === 401) {
-        const errorDetail = error.response?.data?.detail || '認証に失敗しました';
-        alert(`認証エラー: ${errorDetail}\n再度ログインしてください。`);
-      } else if (error.response?.data?.detail?.error === 'skill_points_limit_exceeded') {
-        alert(`保存に失敗しました: ${error.response.data.detail.message}\n${error.response.data.detail.details?.join('\n')}`);
-      } else {
-        const errorMessage = error.response?.data?.detail || error.message || 'キャラクターの作成に失敗しました';
-        alert(`エラー: ${errorMessage}`);
-      }
+      const apiError = handleApiError(error);
+      showError(formatErrorMessage(apiError));
     } finally {
       setLoading(false);
     }

@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
 import { getCharacters } from '../services/api';
 import type { Character, SystemEnum } from '../services/api';
+import { useToast } from '../contexts/ToastContext';
+import { handleApiError, formatErrorMessage } from '../utils/errorHandler';
+import { LoadingSpinner } from '../components/LoadingSpinner';
 
 const SYSTEM_NAMES: Record<SystemEnum, string> = {
   cthulhu: 'クトゥルフ神話TRPG',
@@ -14,6 +17,7 @@ const SYSTEM_NAMES: Record<SystemEnum, string> = {
 export const Dashboard = () => {
   const { isAuthenticated, getAccessToken } = useAuth();
   const navigate = useNavigate();
+  const { showError } = useToast();
   const [characters, setCharacters] = useState<Character[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -42,6 +46,8 @@ export const Dashboard = () => {
       }
     } catch (error) {
       console.error('Failed to fetch characters:', error);
+      const apiError = handleApiError(error);
+      showError(formatErrorMessage(apiError));
     } finally {
       setLoading(false);
     }
@@ -71,7 +77,7 @@ export const Dashboard = () => {
   };
 
   if (loading && characters.length === 0) {
-    return <div>読み込み中...</div>;
+    return <LoadingSpinner fullScreen message="キャラクターを読み込み中..." />;
   }
 
   return (

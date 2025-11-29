@@ -6,6 +6,7 @@ import { CharacterCreate } from './pages/CharacterCreate';
 import { CharacterDetail } from './pages/CharacterDetail';
 import { CharacterEdit } from './pages/CharacterEdit';
 import { SharedCharacter } from './pages/SharedCharacter';
+import { ToastProvider } from './contexts/ToastContext';
 import './App.css';
 
 function LoginPage() {
@@ -60,7 +61,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function App() {
   return (
-    <Routes>
+    <ToastProvider>
+      <Routes>
       <Route path="/" element={<LoginPage />} />
       <Route
         path="/dashboard"
@@ -97,6 +99,7 @@ function App() {
       <Route path="/share/:token" element={<SharedCharacter />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </ToastProvider>
   );
 }
 
