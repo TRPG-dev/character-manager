@@ -226,131 +226,145 @@ export const CharacterEdit = () => {
       <h1 style={{ marginBottom: '2rem' }}>キャラクター編集</h1>
       <form onSubmit={handleSubmitClick}>
         <CollapsibleSection title="基本情報" defaultOpen={true}>
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              システム
-            </label>
-            <div style={{ padding: '0.75rem', backgroundColor: '#f5f5f5', borderRadius: '4px' }}>
-              {SYSTEM_NAMES[character.system]}
-            </div>
-          </div>
-
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              名前 <span style={{ color: 'red' }}>*</span>
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={handleNameChange}
-              onBlur={() => validateName(name)}
-              required
-              style={{
-                width: '100%',
-                maxWidth: '400px',
-                padding: '0.75rem',
-                fontSize: '1rem',
-                border: nameError ? '1px solid #dc3545' : '1px solid #ddd',
-                borderRadius: '4px',
-              }}
+          {character.system === 'cthulhu' && cthulhuSheetData ? (
+            <BasicInfoForm
+              data={cthulhuSheetData}
+              onChange={(data) => setCthulhuSheetData(data)}
+              system={character.system}
+              name={name}
+              onNameChange={setName}
+              tags={tags}
+              onTagsChange={setTags}
             />
-            {nameError && (
-              <div style={{ color: '#dc3545', fontSize: '0.875rem', marginTop: '0.25rem' }}>
-                {nameError}
+          ) : (
+            <>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                  システム
+                </label>
+                <div style={{ padding: '0.75rem', backgroundColor: '#f5f5f5', borderRadius: '4px' }}>
+                  {SYSTEM_NAMES[character.system]}
+                </div>
               </div>
-            )}
-          </div>
 
-          {id && accessToken && (
-            <div style={{ marginBottom: '1.5rem' }}>
-              <ImageUpload
-                characterId={id}
-                accessToken={accessToken}
-                currentImageUrl={profileImageUrl}
-                onUploadSuccess={(imageUrl) => {
-                  setProfileImageUrl(imageUrl);
-                  showSuccess('画像のアップロードが完了しました');
-                }}
-                onError={(error) => {
-                  showError(`エラー: ${error}`);
-                }}
-              />
-            </div>
-          )}
-
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              タグ
-            </label>
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
-              {tags.map(tag => (
-                <span
-                  key={tag}
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                  名前 <span style={{ color: 'red' }}>*</span>
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={handleNameChange}
+                  onBlur={() => validateName(name)}
+                  required
                   style={{
-                    padding: '0.25rem 0.5rem',
-                    backgroundColor: '#007bff',
-                    color: '#fff',
+                    width: '100%',
+                    maxWidth: '400px',
+                    padding: '0.75rem',
+                    fontSize: '1rem',
+                    border: nameError ? '1px solid #dc3545' : '1px solid #ddd',
                     borderRadius: '4px',
-                    fontSize: '0.875rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
                   }}
-                >
-                  {tag}
+                />
+                {nameError && (
+                  <div style={{ color: '#dc3545', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                    {nameError}
+                  </div>
+                )}
+              </div>
+
+              {id && accessToken && (
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <ImageUpload
+                    characterId={id}
+                    accessToken={accessToken}
+                    currentImageUrl={profileImageUrl}
+                    onUploadSuccess={(imageUrl) => {
+                      setProfileImageUrl(imageUrl);
+                      showSuccess('画像のアップロードが完了しました');
+                    }}
+                    onError={(error) => {
+                      showError(`エラー: ${error}`);
+                    }}
+                  />
+                </div>
+              )}
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                  タグ
+                </label>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
+                  {tags.map(tag => (
+                    <span
+                      key={tag}
+                      style={{
+                        padding: '0.25rem 0.5rem',
+                        backgroundColor: '#007bff',
+                        color: '#fff',
+                        borderRadius: '4px',
+                        fontSize: '0.875rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                      }}
+                    >
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveTag(tag)}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#fff',
+                          cursor: 'pointer',
+                          fontSize: '1rem',
+                        }}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <input
+                    type="text"
+                    placeholder="タグを追加"
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddTag();
+                      }
+                    }}
+                    style={{
+                      padding: '0.5rem',
+                      fontSize: '0.875rem',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      flex: 1,
+                      maxWidth: '300px',
+                    }}
+                  />
                   <button
                     type="button"
-                    onClick={() => handleRemoveTag(tag)}
+                    onClick={handleAddTag}
                     style={{
-                      background: 'none',
-                      border: 'none',
+                      padding: '0.5rem 1rem',
+                      backgroundColor: '#6c757d',
                       color: '#fff',
+                      border: 'none',
+                      borderRadius: '4px',
                       cursor: 'pointer',
-                      fontSize: '1rem',
                     }}
                   >
-                    ×
+                    追加
                   </button>
-                </span>
-              ))}
-            </div>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <input
-                type="text"
-                placeholder="タグを追加"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleAddTag();
-                  }
-                }}
-                style={{
-                  padding: '0.5rem',
-                  fontSize: '0.875rem',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  flex: 1,
-                  maxWidth: '300px',
-                }}
-              />
-              <button
-                type="button"
-                onClick={handleAddTag}
-                style={{
-                  padding: '0.5rem 1rem',
-                  backgroundColor: '#6c757d',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              >
-                追加
-              </button>
-            </div>
-          </div>
+                </div>
+              </div>
+            </>
+          )}
         </CollapsibleSection>
 
         <CollapsibleSection title="ツール" defaultOpen={false}>
@@ -376,14 +390,6 @@ export const CharacterEdit = () => {
           )}
         </CollapsibleSection>
 
-        {character.system === 'cthulhu' && cthulhuSheetData && (
-          <CollapsibleSection title="基本情報" defaultOpen={true}>
-            <BasicInfoForm
-              data={cthulhuSheetData}
-              onChange={(data) => setCthulhuSheetData(data)}
-            />
-          </CollapsibleSection>
-        )}
 
         <CollapsibleSection title="キャラクターシート" defaultOpen={true}>
           {character.system === 'cthulhu' && cthulhuSheetData ? (

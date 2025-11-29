@@ -31,7 +31,6 @@ export const CharacterCreate = () => {
   const [selectedSystem, setSelectedSystem] = useState<SystemEnum | null>(null);
   const [name, setName] = useState('');
   const [tags, setTags] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [sheetData, setSheetData] = useState<CthulhuSheetData | ShinobigamiSheetData | null>(null);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -87,16 +86,6 @@ export const CharacterCreate = () => {
     }
   };
 
-  const handleAddTag = () => {
-    if (tagInput.trim() && !tags.includes(tagInput.trim())) {
-      setTags([...tags, tagInput.trim()]);
-      setTagInput('');
-    }
-  };
-
-  const handleRemoveTag = (tag: string) => {
-    setTags(tags.filter(t => t !== tag));
-  };
 
   const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
   const ALLOWED_MIME_TYPES = ['image/png', 'image/jpeg', 'image/jpg'];
@@ -216,7 +205,7 @@ export const CharacterCreate = () => {
       const { getJobPointsLimit, getInterestPointsLimit } = await import('../utils/cthulhu');
       
       const cthulhuData = sheetData as CthulhuSheetData;
-      const allSkills = [...cthulhuData.skills, ...(cthulhuData.customSkills || [])];
+      const allSkills = [...cthulhuData.skills, ...(cthulhuData.combatSkills || []), ...(cthulhuData.customSkills || [])];
       const totalJobPoints = calculateTotalJobPoints(allSkills);
       const totalInterestPoints = calculateTotalInterestPoints(allSkills);
       const jobPointsLimit = getJobPointsLimit(cthulhuData.attributes.EDU);
@@ -319,213 +308,25 @@ export const CharacterCreate = () => {
     <div>
       <h1>キャラクター作成</h1>
       <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '1.5rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-            システム
-          </label>
-          <div style={{ padding: '0.75rem', backgroundColor: '#f5f5f5', borderRadius: '4px' }}>
-            {selectedSystem && SYSTEM_NAMES[selectedSystem]}
-          </div>
-          <button
-            type="button"
-            onClick={() => setStep('select')}
-            style={{
-              marginTop: '0.5rem',
-              padding: '0.25rem 0.5rem',
-              backgroundColor: '#6c757d',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '0.875rem',
-            }}
-          >
-            変更
-          </button>
-        </div>
-
-        <div style={{ marginBottom: '1.5rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-            名前 <span style={{ color: 'red' }}>*</span>
-          </label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            style={{
-              width: '100%',
-              maxWidth: '400px',
-              padding: '0.75rem',
-              fontSize: '1rem',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-            }}
-          />
-        </div>
-
-        <div style={{ marginBottom: '1.5rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-            タグ
-          </label>
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
-            {tags.map(tag => (
-              <span
-                key={tag}
-                style={{
-                  padding: '0.25rem 0.5rem',
-                  backgroundColor: '#007bff',
-                  color: '#fff',
-                  borderRadius: '4px',
-                  fontSize: '0.875rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                }}
-              >
-                {tag}
-                <button
-                  type="button"
-                  onClick={() => handleRemoveTag(tag)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#fff',
-                    cursor: 'pointer',
-                    fontSize: '1rem',
-                  }}
-                >
-                  ×
-                </button>
-              </span>
-            ))}
-          </div>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <input
-              type="text"
-              placeholder="タグを追加"
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleAddTag();
-                }
-              }}
-              style={{
-                padding: '0.5rem',
-                fontSize: '0.875rem',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                flex: 1,
-                maxWidth: '300px',
-              }}
-            />
-            <button
-              type="button"
-              onClick={handleAddTag}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#6c757d',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-              }}
-            >
-              追加
-            </button>
-          </div>
-        </div>
-
-        <div style={{ marginBottom: '1.5rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-            プロフィール画像
-          </label>
-          {imagePreview && (
-            <div style={{ marginBottom: '1rem', position: 'relative', display: 'inline-block' }}>
-              <img
-                src={imagePreview}
-                alt="プレビュー"
-                style={{
-                  maxWidth: '300px',
-                  maxHeight: '300px',
-                  borderRadius: '8px',
-                  border: '1px solid #ddd',
-                }}
-              />
-              {!uploadingImage && (
-                <button
-                  type="button"
-                  onClick={handleImageRemove}
-                  style={{
-                    position: 'absolute',
-                    top: '0.5rem',
-                    right: '0.5rem',
-                    padding: '0.25rem 0.5rem',
-                    backgroundColor: 'rgba(220, 53, 69, 0.9)',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '0.875rem',
-                  }}
-                >
-                  削除
-                </button>
-              )}
-            </div>
-          )}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/png,image/jpeg,image/jpg"
-            onChange={handleImageSelect}
-            disabled={uploadingImage || loading}
-            style={{
-              padding: '0.5rem',
-              fontSize: '0.875rem',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-            }}
-          />
-          <div style={{ fontSize: '0.75rem', color: '#999', marginTop: '0.5rem' }}>
-            PNG/JPEG形式、最大5MB
-          </div>
-          {uploadingImage && (
-            <div style={{ marginTop: '0.5rem' }}>
-              <div style={{ marginBottom: '0.5rem' }}>画像をアップロード中...</div>
-              <div
-                style={{
-                  width: '100%',
-                  maxWidth: '400px',
-                  height: '8px',
-                  backgroundColor: '#e9ecef',
-                  borderRadius: '4px',
-                  overflow: 'hidden',
-                }}
-              >
-                <div
-                  style={{
-                    width: `${uploadProgress}%`,
-                    height: '100%',
-                    backgroundColor: '#007bff',
-                    transition: 'width 0.3s',
-                  }}
-                />
-              </div>
-              <div style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#6c757d' }}>
-                {Math.round(uploadProgress)}%
-              </div>
-            </div>
-          )}
-        </div>
-
         <CollapsibleSection title="基本情報" defaultOpen={true}>
           {selectedSystem === 'cthulhu' && sheetData && (
             <BasicInfoForm
               data={sheetData as CthulhuSheetData}
               onChange={(data) => setSheetData(data)}
+              system={selectedSystem}
+              name={name}
+              onNameChange={setName}
+              tags={tags}
+              onTagsChange={setTags}
+              selectedImage={selectedImage}
+              imagePreview={imagePreview}
+              onImageSelect={handleImageSelect}
+              onImageRemove={handleImageRemove}
+              uploadingImage={uploadingImage}
+              uploadProgress={uploadProgress}
+              fileInputRef={fileInputRef}
+              loading={loading}
+              onSystemChange={() => setStep('select')}
             />
           )}
         </CollapsibleSection>
