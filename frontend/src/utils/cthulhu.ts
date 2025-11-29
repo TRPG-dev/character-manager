@@ -12,9 +12,8 @@ export function calculateDerivedValues(attributes: CthulhuAttributes): CthulhuDe
   const SAN_max = POW * 5;
   const SAN_current = SAN_max; // 初期値は最大値と同じ
 
-  // HP (耐久力 = (CON+SIZ)/2)
-  const BUILD = Math.floor((CON + SIZ) / 2);
-  const HP_max = BUILD; // HP(最大) = 耐久力
+  // HP (最大) = (CON+SIZ)/2
+  const HP_max = Math.floor((CON + SIZ) / 2);
   const HP_current = HP_max; // 初期値は最大値と同じ
 
   // MP
@@ -64,7 +63,6 @@ export function calculateDerivedValues(attributes: CthulhuAttributes): CthulhuDe
     KNOW,
     LUCK,
     DB,
-    BUILD,
   };
 }
 

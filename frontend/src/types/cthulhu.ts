@@ -22,7 +22,6 @@ export interface CthulhuDerived {
   KNOW?: number; // EDU×5
   LUCK?: number; // POW×5
   DB?: string; // ダメージボーナス
-  BUILD?: number; // 耐久力 (CON+SIZ)/2
 }
 
 export interface CthulhuSkill {

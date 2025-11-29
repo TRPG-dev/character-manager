@@ -31,6 +31,7 @@ export const Auth0ProviderWrapper = ({ children }: Auth0ProviderWrapperProps) =>
       authorizationParams={{
         redirect_uri: redirectUri,
         audience: audience,
+        scope: 'openid profile email', // emailスコープを追加
       }}
       onRedirectCallback={onRedirectCallback}
     >

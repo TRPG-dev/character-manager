@@ -115,9 +115,20 @@ def verify_token(token: str) -> dict:
         )
         return payload
     except JWTError as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"JWT verification failed: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Invalid token: {str(e)}"
+        )
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Token verification error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Token verification failed: {str(e)}"
         )
 
 
@@ -126,19 +137,59 @@ async def get_current_user(
     db: Session = Depends(get_db)
 ) -> User:
     """現在の認証ユーザーを取得"""
-    token = credentials.credentials
-    payload = verify_token(token)
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    try:
+        token = credentials.credentials
+        payload = verify_token(token)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Authentication error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Authentication failed: {str(e)}"
+        )
     
     # Auth0から取得した情報
     auth0_id = payload.get("sub")  # "auth0|xxxxx" 形式
     email = payload.get("email")
-    display_name = payload.get("name") or payload.get("nickname") or email.split("@")[0]
     
+    # トークンのペイロードをログ出力（デバッグ用）
+    logger.info(f"Token payload keys: {list(payload.keys())}")
+    logger.info(f"Token payload email: {email}")
+    logger.info(f"Token payload sub: {auth0_id}")
+    
+    # emailが存在しない場合の処理
     if not email:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Email not found in token"
-        )
+        # emailが存在しない場合、subをベースにemailを生成
+        # ただし、これは一時的な対応で、Auth0の設定を確認する必要がある
+        logger.warning(f"Email not found in token. Available keys: {list(payload.keys())}")
+        logger.warning(f"Full payload: {payload}")
+        
+        # subからemailを推測（実際の運用では推奨されない）
+        if auth0_id and "|" in auth0_id:
+            # auth0_idが "auth0|xxxxx" または "google-oauth2|xxxxx" 形式の場合
+            parts = auth0_id.split("|")
+            if len(parts) > 1:
+                # 一時的なemailとして使用（実際の運用ではAuth0の設定を確認）
+                email = f"{parts[1]}@auth0.local"
+                logger.warning(f"Using temporary email: {email}")
+            else:
+                email = f"{auth0_id}@auth0.local"
+                logger.warning(f"Using temporary email: {email}")
+        elif auth0_id:
+            email = f"{auth0_id}@auth0.local"
+            logger.warning(f"Using temporary email: {email}")
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Email not found in token and unable to generate from sub"
+            )
+    
+    # display_nameの決定
+    display_name = payload.get("name") or payload.get("nickname") or (email.split("@")[0] if email else "User")
     
     # データベースからユーザーを検索または作成
     user = db.query(User).filter(User.email == email).first()

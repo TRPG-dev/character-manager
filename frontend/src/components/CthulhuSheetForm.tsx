@@ -363,17 +363,6 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
           </div>
           <div>
             <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
-              耐久力 ((CON+SIZ)/2)
-            </label>
-            <input
-              type="number"
-              value={sheetData.derived.BUILD || 0}
-              readOnly
-              style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f5f5f5' }}
-            />
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
               ダメージボーナス
             </label>
             <input

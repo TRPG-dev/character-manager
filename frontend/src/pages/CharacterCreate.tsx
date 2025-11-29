@@ -92,21 +92,28 @@ export const CharacterCreate = () => {
     setLoading(true);
     try {
       const token = await getAccessToken();
-      if (token) {
-        const character = await createCharacter(token, {
-          system: selectedSystem,
-          name: name.trim(),
-          tags,
-          sheet_data: selectedSystem === 'cthulhu' && sheetData ? sheetData : undefined,
-        });
-        navigate(`/characters/${character.id}`);
+      if (!token) {
+        alert('認証トークンの取得に失敗しました。再度ログインしてください。');
+        setLoading(false);
+        return;
       }
+      const character = await createCharacter(token, {
+        system: selectedSystem,
+        name: name.trim(),
+        tags,
+        sheet_data: selectedSystem === 'cthulhu' && sheetData ? sheetData : undefined,
+      });
+      navigate(`/characters/${character.id}`);
     } catch (error: any) {
       console.error('Failed to create character:', error);
-      if (error.response?.data?.detail?.error === 'skill_points_limit_exceeded') {
+      if (error.response?.status === 401) {
+        const errorDetail = error.response?.data?.detail || '認証に失敗しました';
+        alert(`認証エラー: ${errorDetail}\n再度ログインしてください。`);
+      } else if (error.response?.data?.detail?.error === 'skill_points_limit_exceeded') {
         alert(`保存に失敗しました: ${error.response.data.detail.message}\n${error.response.data.detail.details?.join('\n')}`);
       } else {
-        alert('キャラクターの作成に失敗しました');
+        const errorMessage = error.response?.data?.detail || error.message || 'キャラクターの作成に失敗しました';
+        alert(`エラー: ${errorMessage}`);
       }
     } finally {
       setLoading(false);

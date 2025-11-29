@@ -18,6 +18,8 @@ services:
       - "8000:8000"
     depends_on:
       - db
+    env_file:
+      - ./backend/.env
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/char_manager
 
