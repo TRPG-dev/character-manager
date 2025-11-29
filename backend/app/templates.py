@@ -22,6 +22,11 @@ def generate_template(system: SystemEnum) -> Dict[str, Any]:
 def generate_cthulhu_template() -> Dict[str, Any]:
     """クトゥルフ神話TRPG用テンプレート"""
     return {
+        "playerName": "",
+        "occupation": "",
+        "age": None,
+        "gender": "",
+        "birthplace": "",
         "attributes": {
             "STR": 0,
             "CON": 0,
@@ -41,7 +46,18 @@ def generate_cthulhu_template() -> Dict[str, Any]:
             "MP_max": 0,
         },
         "skills": [],
+        "combatSkills": [],
+        "customSkills": [],
+        "weapons": [],
+        "items": [],
+        "cash": "",
+        "assets": "",
         "backstory": "",
+        "notes": "",
+        "scenarios": [],
+        "mythosBooks": [],
+        "spells": [],
+        "artifacts": [],
     }
 
 

@@ -52,14 +52,43 @@ export interface CthulhuItem {
   detail: string;
 }
 
+export interface CthulhuScenario {
+  name: string;
+  memo: string;
+}
+
+export interface CthulhuMythosItem {
+  name: string;
+  memo: string;
+}
+
 export interface CthulhuSheetData {
+  // 基本情報
+  playerName?: string; // プレイヤー名
+  occupation?: string; // 職業
+  age?: number; // 年齢
+  gender?: string; // 性別
+  birthplace?: string; // 出身地
+  
   attributes: CthulhuAttributes;
   derived: CthulhuDerived;
   skills: CthulhuSkill[];
+  combatSkills?: CthulhuSkill[]; // 格闘技能
   customSkills?: CthulhuSkill[]; // 追加技能
   weapons?: CthulhuWeapon[];
   items?: CthulhuItem[];
+  
+  // 財産
+  cash?: string; // 現金・財産
+  assets?: string; // 資産
+  
   backstory: string;
   notes?: string;
+  
+  // その他
+  scenarios?: CthulhuScenario[]; // 通過したシナリオ
+  mythosBooks?: CthulhuMythosItem[]; // 魔導書
+  spells?: CthulhuMythosItem[]; // 呪文
+  artifacts?: CthulhuMythosItem[]; // アーティファクト
 }
 

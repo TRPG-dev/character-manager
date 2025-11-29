@@ -21,6 +21,47 @@ export const CthulhuSheetView = ({ data }: CthulhuSheetViewProps) => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+      {/* 基本情報セクション */}
+      {(sheetData.playerName || sheetData.occupation || sheetData.age || sheetData.gender || sheetData.birthplace) && (
+        <section>
+          <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
+            基本情報
+          </h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+            {sheetData.playerName && (
+              <div>
+                <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>プレイヤー名</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>{sheetData.playerName}</div>
+              </div>
+            )}
+            {sheetData.occupation && (
+              <div>
+                <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>職業</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>{sheetData.occupation}</div>
+              </div>
+            )}
+            {sheetData.age && (
+              <div>
+                <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>年齢</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>{sheetData.age}</div>
+              </div>
+            )}
+            {sheetData.gender && (
+              <div>
+                <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>性別</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>{sheetData.gender}</div>
+              </div>
+            )}
+            {sheetData.birthplace && (
+              <div>
+                <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>出身地</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>{sheetData.birthplace}</div>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
       {/* 能力値セクション */}
       <section>
         <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
@@ -150,6 +191,31 @@ export const CthulhuSheetView = ({ data }: CthulhuSheetViewProps) => {
         </section>
       )}
 
+      {/* 格闘技能セクション */}
+      {(sheetData.combatSkills && sheetData.combatSkills.length > 0) && (
+        <section>
+          <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
+            格闘技能
+          </h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '0.75rem' }}>
+            {sheetData.combatSkills.map((skill, index) => (
+              <div
+                key={`combat-${index}`}
+                style={{
+                  padding: '0.75rem',
+                  backgroundColor: '#f0f8ff',
+                  borderRadius: '4px',
+                  border: '1px solid #dee2e6',
+                }}
+              >
+                <div style={{ fontWeight: 'bold', marginBottom: '0.25rem' }}>{skill.name}</div>
+                <div style={{ fontSize: '1.25rem', color: '#007bff' }}>{skill.total || skill.baseValue || 0}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* 武器セクション */}
       {(sheetData.weapons || []).length > 0 && (
         <section>
@@ -235,6 +301,216 @@ export const CthulhuSheetView = ({ data }: CthulhuSheetViewProps) => {
               </div>
             ))}
           </div>
+        </section>
+      )}
+
+      {/* 財産セクション */}
+      {(sheetData.cash || sheetData.assets) && (
+        <section>
+          <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
+            財産
+          </h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+            {sheetData.cash && (
+              <div>
+                <h3 style={{ marginBottom: '0.5rem', fontSize: '1.125rem' }}>現金・財産</h3>
+                <div
+                  style={{
+                    padding: '1rem',
+                    backgroundColor: '#f8f9fa',
+                    borderRadius: '4px',
+                    border: '1px solid #dee2e6',
+                    whiteSpace: 'pre-wrap',
+                    lineHeight: '1.6',
+                  }}
+                >
+                  {sheetData.cash}
+                </div>
+              </div>
+            )}
+            {sheetData.assets && (
+              <div>
+                <h3 style={{ marginBottom: '0.5rem', fontSize: '1.125rem' }}>資産</h3>
+                <div
+                  style={{
+                    padding: '1rem',
+                    backgroundColor: '#f8f9fa',
+                    borderRadius: '4px',
+                    border: '1px solid #dee2e6',
+                    whiteSpace: 'pre-wrap',
+                    lineHeight: '1.6',
+                  }}
+                >
+                  {sheetData.assets}
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* 通過したシナリオセクション */}
+      {(sheetData.scenarios && sheetData.scenarios.length > 0) && (
+        <section>
+          <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
+            通過したシナリオ
+          </h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {sheetData.scenarios.map((scenario, index) => (
+              <div
+                key={index}
+                style={{
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  padding: '1rem',
+                  backgroundColor: '#f8f9fa',
+                }}
+              >
+                <h3 style={{ marginTop: 0, marginBottom: '0.5rem', fontSize: '1.125rem' }}>
+                  {scenario.name || '(無名のシナリオ)'}
+                </h3>
+                {scenario.memo && (
+                  <div
+                    style={{
+                      padding: '0.75rem',
+                      backgroundColor: '#fff',
+                      borderRadius: '4px',
+                      whiteSpace: 'pre-wrap',
+                      lineHeight: '1.6',
+                      fontSize: '0.875rem',
+                    }}
+                  >
+                    {scenario.memo}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* 魔導書・呪文・アーティファクトセクション */}
+      {((sheetData.mythosBooks && sheetData.mythosBooks.length > 0) ||
+        (sheetData.spells && sheetData.spells.length > 0) ||
+        (sheetData.artifacts && sheetData.artifacts.length > 0)) && (
+        <section>
+          <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
+            魔導書・呪文・アーティファクト
+          </h2>
+          
+          {/* 魔導書 */}
+          {(sheetData.mythosBooks && sheetData.mythosBooks.length > 0) && (
+            <div style={{ marginBottom: '2rem' }}>
+              <h3 style={{ marginBottom: '1rem', fontSize: '1.25rem' }}>魔導書</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {sheetData.mythosBooks.map((item, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      padding: '1rem',
+                      backgroundColor: '#f8f9fa',
+                    }}
+                  >
+                    <h4 style={{ marginTop: 0, marginBottom: '0.5rem', fontSize: '1rem' }}>
+                      {item.name || '(無名の魔導書)'}
+                    </h4>
+                    {item.memo && (
+                      <div
+                        style={{
+                          padding: '0.75rem',
+                          backgroundColor: '#fff',
+                          borderRadius: '4px',
+                          whiteSpace: 'pre-wrap',
+                          lineHeight: '1.6',
+                          fontSize: '0.875rem',
+                        }}
+                      >
+                        {item.memo}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 呪文 */}
+          {(sheetData.spells && sheetData.spells.length > 0) && (
+            <div style={{ marginBottom: '2rem' }}>
+              <h3 style={{ marginBottom: '1rem', fontSize: '1.25rem' }}>呪文</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {sheetData.spells.map((item, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      padding: '1rem',
+                      backgroundColor: '#f8f9fa',
+                    }}
+                  >
+                    <h4 style={{ marginTop: 0, marginBottom: '0.5rem', fontSize: '1rem' }}>
+                      {item.name || '(無名の呪文)'}
+                    </h4>
+                    {item.memo && (
+                      <div
+                        style={{
+                          padding: '0.75rem',
+                          backgroundColor: '#fff',
+                          borderRadius: '4px',
+                          whiteSpace: 'pre-wrap',
+                          lineHeight: '1.6',
+                          fontSize: '0.875rem',
+                        }}
+                      >
+                        {item.memo}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* アーティファクト */}
+          {(sheetData.artifacts && sheetData.artifacts.length > 0) && (
+            <div>
+              <h3 style={{ marginBottom: '1rem', fontSize: '1.25rem' }}>アーティファクト</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {sheetData.artifacts.map((item, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      padding: '1rem',
+                      backgroundColor: '#f8f9fa',
+                    }}
+                  >
+                    <h4 style={{ marginTop: 0, marginBottom: '0.5rem', fontSize: '1rem' }}>
+                      {item.name || '(無名のアーティファクト)'}
+                    </h4>
+                    {item.memo && (
+                      <div
+                        style={{
+                          padding: '0.75rem',
+                          backgroundColor: '#fff',
+                          borderRadius: '4px',
+                          whiteSpace: 'pre-wrap',
+                          lineHeight: '1.6',
+                          fontSize: '0.875rem',
+                        }}
+                      >
+                        {item.memo}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </section>
       )}
 

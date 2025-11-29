@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { CthulhuSheetData, CthulhuSkill, CthulhuWeapon, CthulhuItem } from '../types/cthulhu';
+import type { CthulhuSheetData, CthulhuSkill, CthulhuWeapon, CthulhuItem, CthulhuScenario, CthulhuMythosItem } from '../types/cthulhu';
 import { calculateDerivedValues, normalizeSheetData, getJobPointsLimit, getInterestPointsLimit } from '../utils/cthulhu';
 import { calculateSkillTotal, calculateTotalJobPoints, calculateTotalInterestPoints } from '../data/cthulhuSkills';
 import { useAuth } from '../auth/useAuth';
@@ -39,10 +39,6 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
     
     // 動的計算が必要な技能の初期値を更新
     const updatedSkills = sheetData.skills.map(skill => {
-      if (skill.name === '回避') {
-        const baseValue = newAttributes.DEX; // DEX×1
-        return { ...skill, baseValue, total: calculateSkillTotal({ ...skill, baseValue }) };
-      }
       if (skill.name === '母国語') {
         const baseValue = newAttributes.EDU * 5; // EDU×5
         return { ...skill, baseValue, total: calculateSkillTotal({ ...skill, baseValue }) };
@@ -50,7 +46,16 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
       return skill;
     });
     
-    const updated = { ...sheetData, attributes: newAttributes, derived: updatedDerived, skills: updatedSkills };
+    // 格闘技能の動的計算
+    const updatedCombatSkills = (sheetData.combatSkills || []).map(skill => {
+      if (skill.name === '回避') {
+        const baseValue = newAttributes.DEX; // DEX×1
+        return { ...skill, baseValue, total: calculateSkillTotal({ ...skill, baseValue }) };
+      }
+      return skill;
+    });
+    
+    const updated = { ...sheetData, attributes: newAttributes, derived: updatedDerived, skills: updatedSkills, combatSkills: updatedCombatSkills };
     setIsInternalUpdate(true);
     setSheetData(updated);
     onChange(updated);
@@ -109,12 +114,17 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
 
       // 動的計算が必要な技能の初期値を更新
       const updatedSkills = sheetData.skills.map(skill => {
-        if (skill.name === '回避') {
-          const baseValue = newAttributes.DEX;
-          return { ...skill, baseValue, total: calculateSkillTotal({ ...skill, baseValue }) };
-        }
         if (skill.name === '母国語') {
           const baseValue = newAttributes.EDU * 5;
+          return { ...skill, baseValue, total: calculateSkillTotal({ ...skill, baseValue }) };
+        }
+        return skill;
+      });
+
+      // 格闘技能の動的計算
+      const updatedCombatSkills = (sheetData.combatSkills || []).map(skill => {
+        if (skill.name === '回避') {
+          const baseValue = newAttributes.DEX;
           return { ...skill, baseValue, total: calculateSkillTotal({ ...skill, baseValue }) };
         }
         return skill;
@@ -125,6 +135,7 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
         attributes: newAttributes,
         derived: updatedDerived,
         skills: updatedSkills,
+        combatSkills: updatedCombatSkills,
       };
       setIsInternalUpdate(true);
       setSheetData(updated);
@@ -217,13 +228,27 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
   };
 
   // 職業P・興味Pの合計と上限チェック
-  const allSkills = [...sheetData.skills, ...(sheetData.customSkills || [])];
+  const allSkills = [...sheetData.skills, ...(sheetData.combatSkills || []), ...(sheetData.customSkills || [])];
   const totalJobPoints = calculateTotalJobPoints(allSkills);
   const totalInterestPoints = calculateTotalInterestPoints(allSkills);
   const jobPointsLimit = getJobPointsLimit(sheetData.attributes.EDU);
   const interestPointsLimit = getInterestPointsLimit(sheetData.attributes.INT);
   const isJobPointsOverLimit = totalJobPoints > jobPointsLimit;
   const isInterestPointsOverLimit = totalInterestPoints > interestPointsLimit;
+
+  // 格闘技能関連の関数
+  const updateCombatSkill = (index: number, field: 'jobPoints' | 'interestPoints' | 'growth' | 'other', value: number) => {
+    const newCombatSkills = [...(sheetData.combatSkills || [])];
+    newCombatSkills[index] = {
+      ...newCombatSkills[index],
+      [field]: value,
+    };
+    newCombatSkills[index].total = calculateSkillTotal(newCombatSkills[index]);
+    const updated = { ...sheetData, combatSkills: newCombatSkills };
+    setIsInternalUpdate(true);
+    setSheetData(updated);
+    onChange(updated);
+  };
 
   const addWeapon = () => {
     const newWeapons = [...(sheetData.weapons || []), {
@@ -290,6 +315,78 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
     onChange(updated);
   };
 
+  // 基本情報の更新関数
+  const updateBasicInfo = (field: 'playerName' | 'occupation' | 'gender' | 'birthplace', value: string) => {
+    const updated = { ...sheetData, [field]: value };
+    setSheetData(updated);
+    onChange(updated);
+  };
+
+  const updateAge = (value: number | undefined) => {
+    const updated = { ...sheetData, age: value };
+    setSheetData(updated);
+    onChange(updated);
+  };
+
+  // 財産の更新関数
+  const updateCash = (value: string) => {
+    const updated = { ...sheetData, cash: value };
+    setSheetData(updated);
+    onChange(updated);
+  };
+
+  const updateAssets = (value: string) => {
+    const updated = { ...sheetData, assets: value };
+    setSheetData(updated);
+    onChange(updated);
+  };
+
+  // シナリオの更新関数
+  const addScenario = () => {
+    const newScenarios = [...(sheetData.scenarios || []), { name: '', memo: '' }];
+    const updated = { ...sheetData, scenarios: newScenarios };
+    setSheetData(updated);
+    onChange(updated);
+  };
+
+  const updateScenario = (index: number, field: 'name' | 'memo', value: string) => {
+    const newScenarios = [...(sheetData.scenarios || [])];
+    newScenarios[index] = { ...newScenarios[index], [field]: value };
+    const updated = { ...sheetData, scenarios: newScenarios };
+    setSheetData(updated);
+    onChange(updated);
+  };
+
+  const removeScenario = (index: number) => {
+    const newScenarios = (sheetData.scenarios || []).filter((_, i) => i !== index);
+    const updated = { ...sheetData, scenarios: newScenarios };
+    setSheetData(updated);
+    onChange(updated);
+  };
+
+  // 魔導書・呪文・アーティファクトの更新関数
+  const addMythosItem = (type: 'mythosBooks' | 'spells' | 'artifacts') => {
+    const newItems = [...(sheetData[type] || []), { name: '', memo: '' }];
+    const updated = { ...sheetData, [type]: newItems };
+    setSheetData(updated);
+    onChange(updated);
+  };
+
+  const updateMythosItem = (type: 'mythosBooks' | 'spells' | 'artifacts', index: number, field: 'name' | 'memo', value: string) => {
+    const newItems = [...(sheetData[type] || [])];
+    newItems[index] = { ...newItems[index], [field]: value };
+    const updated = { ...sheetData, [type]: newItems };
+    setSheetData(updated);
+    onChange(updated);
+  };
+
+  const removeMythosItem = (type: 'mythosBooks' | 'spells' | 'artifacts', index: number) => {
+    const newItems = (sheetData[type] || []).filter((_, i) => i !== index);
+    const updated = { ...sheetData, [type]: newItems };
+    setSheetData(updated);
+    onChange(updated);
+  };
+
   const attributeLabels: Record<keyof typeof sheetData.attributes, string> = {
     STR: 'STR (筋力)',
     CON: 'CON (体力)',
@@ -303,6 +400,71 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+      {/* 基本情報セクション */}
+      <section>
+        <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
+          基本情報
+        </h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
+              プレイヤー名
+            </label>
+            <input
+              type="text"
+              value={sheetData.playerName || ''}
+              onChange={(e) => updateBasicInfo('playerName', e.target.value)}
+              style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
+              職業
+            </label>
+            <input
+              type="text"
+              value={sheetData.occupation || ''}
+              onChange={(e) => updateBasicInfo('occupation', e.target.value)}
+              style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
+              年齢
+            </label>
+            <input
+              type="number"
+              value={sheetData.age || ''}
+              onChange={(e) => updateAge(e.target.value ? parseInt(e.target.value) : undefined)}
+              min="0"
+              style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
+              性別
+            </label>
+            <input
+              type="text"
+              value={sheetData.gender || ''}
+              onChange={(e) => updateBasicInfo('gender', e.target.value)}
+              style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
+              出身地
+            </label>
+            <input
+              type="text"
+              value={sheetData.birthplace || ''}
+              onChange={(e) => updateBasicInfo('birthplace', e.target.value)}
+              style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+            />
+          </div>
+        </div>
+      </section>
+
       {/* 能力値セクション */}
       <section>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
@@ -668,6 +830,77 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
         </div>
       </section>
 
+      {/* 格闘技能セクション */}
+      <section>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h2 style={{ fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem', margin: 0 }}>
+            格闘技能
+          </h2>
+        </div>
+        
+        {/* 格闘技能テーブル */}
+        <div style={{ overflowX: 'auto', maxHeight: '600px', overflowY: 'auto', border: '1px solid #dee2e6', borderRadius: '4px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+            <thead style={{ backgroundColor: '#f8f9fa', position: 'sticky', top: 0, zIndex: 10 }}>
+              <tr>
+                <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>技能名</th>
+                <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>初期値</th>
+                <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>職業P</th>
+                <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>興味P</th>
+                <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>成長</th>
+                <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>その他</th>
+                <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>合計</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(sheetData.combatSkills || []).map((skill, index) => (
+                <tr key={`combat-${index}`} style={{ borderBottom: '1px solid #dee2e6' }}>
+                  <td style={{ padding: '0.75rem', fontWeight: 'bold' }}>{skill.name}</td>
+                  <td style={{ padding: '0.75rem', textAlign: 'center' }}>{skill.baseValue}</td>
+                  <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                    <input
+                      type="number"
+                      value={skill.jobPoints || 0}
+                      onChange={(e) => updateCombatSkill(index, 'jobPoints', parseInt(e.target.value) || 0)}
+                      min="0"
+                      style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
+                    />
+                  </td>
+                  <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                    <input
+                      type="number"
+                      value={skill.interestPoints || 0}
+                      onChange={(e) => updateCombatSkill(index, 'interestPoints', parseInt(e.target.value) || 0)}
+                      min="0"
+                      style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
+                    />
+                  </td>
+                  <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                    <input
+                      type="number"
+                      value={skill.growth || 0}
+                      onChange={(e) => updateCombatSkill(index, 'growth', parseInt(e.target.value) || 0)}
+                      style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
+                    />
+                  </td>
+                  <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                    <input
+                      type="number"
+                      value={skill.other || 0}
+                      onChange={(e) => updateCombatSkill(index, 'other', parseInt(e.target.value) || 0)}
+                      style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
+                    />
+                  </td>
+                  <td style={{ padding: '0.75rem', textAlign: 'center', fontWeight: 'bold', backgroundColor: '#f8f9fa' }}>
+                    {skill.total || calculateSkillTotal(skill)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       {/* 武器セクション */}
       <section>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
@@ -859,6 +1092,337 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
           {(sheetData.items || []).length === 0 && (
             <p style={{ color: '#6c757d', fontStyle: 'italic' }}>所持品がありません。追加ボタンで追加してください。</p>
           )}
+        </div>
+      </section>
+
+      {/* 財産セクション */}
+      <section>
+        <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
+          財産
+        </h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+              現金・財産
+            </label>
+            <textarea
+              value={sheetData.cash || ''}
+              onChange={(e) => updateCash(e.target.value)}
+              rows={3}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                fontSize: '1rem',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                fontFamily: 'inherit',
+              }}
+              placeholder="現金・財産を記入してください"
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+              資産
+            </label>
+            <textarea
+              value={sheetData.assets || ''}
+              onChange={(e) => updateAssets(e.target.value)}
+              rows={3}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                fontSize: '1rem',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                fontFamily: 'inherit',
+              }}
+              placeholder="資産を記入してください"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* 通過したシナリオセクション */}
+      <section>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h2 style={{ fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem', margin: 0 }}>
+            通過したシナリオ
+          </h2>
+          <button
+            type="button"
+            onClick={addScenario}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: '#28a745',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+            }}
+          >
+            + シナリオを追加
+          </button>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {(sheetData.scenarios || []).map((scenario, index) => (
+            <div key={index} style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <h3 style={{ margin: 0, fontSize: '1rem' }}>シナリオ #{index + 1}</h3>
+                <button
+                  type="button"
+                  onClick={() => removeScenario(index)}
+                  style={{
+                    padding: '0.25rem 0.5rem',
+                    backgroundColor: '#dc3545',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                  }}
+                >
+                  削除
+                </button>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <input
+                  type="text"
+                  placeholder="シナリオ名"
+                  value={scenario.name}
+                  onChange={(e) => updateScenario(index, 'name', e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                />
+                <textarea
+                  placeholder="メモ"
+                  value={scenario.memo}
+                  onChange={(e) => updateScenario(index, 'memo', e.target.value)}
+                  rows={2}
+                  style={{
+                    width: '100%',
+                    padding: '0.5rem',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    fontFamily: 'inherit',
+                  }}
+                />
+              </div>
+            </div>
+          ))}
+          {(sheetData.scenarios || []).length === 0 && (
+            <p style={{ color: '#6c757d', fontStyle: 'italic' }}>通過したシナリオがありません。追加ボタンで追加してください。</p>
+          )}
+        </div>
+      </section>
+
+      {/* 魔導書・呪文・アーティファクトセクション */}
+      <section>
+        <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
+          魔導書・呪文・アーティファクト
+        </h2>
+        
+        {/* 魔導書 */}
+        <div style={{ marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h3 style={{ fontSize: '1.25rem', margin: 0 }}>魔導書</h3>
+            <button
+              type="button"
+              onClick={() => addMythosItem('mythosBooks')}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#28a745',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+              }}
+            >
+              + 魔導書を追加
+            </button>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {(sheetData.mythosBooks || []).map((item, index) => (
+              <div key={index} style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <h4 style={{ margin: 0, fontSize: '0.875rem' }}>#{index + 1}</h4>
+                  <button
+                    type="button"
+                    onClick={() => removeMythosItem('mythosBooks', index)}
+                    style={{
+                      padding: '0.25rem 0.5rem',
+                      backgroundColor: '#dc3545',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                    }}
+                  >
+                    削除
+                  </button>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <input
+                    type="text"
+                    placeholder="名称"
+                    value={item.name}
+                    onChange={(e) => updateMythosItem('mythosBooks', index, 'name', e.target.value)}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  />
+                  <textarea
+                    placeholder="メモ"
+                    value={item.memo}
+                    onChange={(e) => updateMythosItem('mythosBooks', index, 'memo', e.target.value)}
+                    rows={2}
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontFamily: 'inherit',
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 呪文 */}
+        <div style={{ marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h3 style={{ fontSize: '1.25rem', margin: 0 }}>呪文</h3>
+            <button
+              type="button"
+              onClick={() => addMythosItem('spells')}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#28a745',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+              }}
+            >
+              + 呪文を追加
+            </button>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {(sheetData.spells || []).map((item, index) => (
+              <div key={index} style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <h4 style={{ margin: 0, fontSize: '0.875rem' }}>#{index + 1}</h4>
+                  <button
+                    type="button"
+                    onClick={() => removeMythosItem('spells', index)}
+                    style={{
+                      padding: '0.25rem 0.5rem',
+                      backgroundColor: '#dc3545',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                    }}
+                  >
+                    削除
+                  </button>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <input
+                    type="text"
+                    placeholder="名称"
+                    value={item.name}
+                    onChange={(e) => updateMythosItem('spells', index, 'name', e.target.value)}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  />
+                  <textarea
+                    placeholder="メモ"
+                    value={item.memo}
+                    onChange={(e) => updateMythosItem('spells', index, 'memo', e.target.value)}
+                    rows={2}
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontFamily: 'inherit',
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* アーティファクト */}
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h3 style={{ fontSize: '1.25rem', margin: 0 }}>アーティファクト</h3>
+            <button
+              type="button"
+              onClick={() => addMythosItem('artifacts')}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#28a745',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+              }}
+            >
+              + アーティファクトを追加
+            </button>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {(sheetData.artifacts || []).map((item, index) => (
+              <div key={index} style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <h4 style={{ margin: 0, fontSize: '0.875rem' }}>#{index + 1}</h4>
+                  <button
+                    type="button"
+                    onClick={() => removeMythosItem('artifacts', index)}
+                    style={{
+                      padding: '0.25rem 0.5rem',
+                      backgroundColor: '#dc3545',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                    }}
+                  >
+                    削除
+                  </button>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <input
+                    type="text"
+                    placeholder="名称"
+                    value={item.name}
+                    onChange={(e) => updateMythosItem('artifacts', index, 'name', e.target.value)}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  />
+                  <textarea
+                    placeholder="メモ"
+                    value={item.memo}
+                    onChange={(e) => updateMythosItem('artifacts', index, 'memo', e.target.value)}
+                    rows={2}
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontFamily: 'inherit',
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 

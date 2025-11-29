@@ -1,6 +1,6 @@
 // クトゥルフ神話TRPG用のユーティリティ関数
 import type { CthulhuAttributes, CthulhuDerived, CthulhuSheetData, CthulhuSkill } from '../types/cthulhu';
-import { DEFAULT_CTHULHU_SKILLS, calculateSkillTotal, calculateTotalJobPoints, calculateTotalInterestPoints } from '../data/cthulhuSkills';
+import { DEFAULT_CTHULHU_SKILLS, COMBAT_SKILLS, calculateSkillTotal, calculateTotalJobPoints, calculateTotalInterestPoints } from '../data/cthulhuSkills';
 
 /**
  * 能力値から派生値を計算
@@ -96,6 +96,7 @@ export function normalizeSheetData(data: any): CthulhuSheetData {
 
   // 技能データの正規化
   let defaultSkills: CthulhuSkill[] = [];
+  let combatSkills: CthulhuSkill[] = [];
   let customSkills: CthulhuSkill[] = [];
 
   // 動的に計算される技能の初期値を設定
@@ -108,6 +109,39 @@ export function normalizeSheetData(data: any): CthulhuSheetData {
     }
     return 0;
   };
+
+  // combatSkillsが既に存在する場合はそれを使用
+  if (data.combatSkills && Array.isArray(data.combatSkills)) {
+    combatSkills = data.combatSkills.map((s: any) => {
+      const skill: CthulhuSkill = {
+        name: s.name,
+        baseValue: s.baseValue ?? s.base_value ?? 0,
+        jobPoints: s.jobPoints ?? s.job_points ?? 0,
+        interestPoints: s.interestPoints ?? s.interest_points ?? 0,
+        growth: s.growth ?? 0,
+        other: s.other ?? 0,
+        isCustom: false,
+      };
+      // 動的計算が必要な技能の初期値を更新
+      const dynamicBaseValue = getDynamicBaseValue(skill.name);
+      if (dynamicBaseValue > 0) {
+        skill.baseValue = dynamicBaseValue;
+      }
+      skill.total = calculateSkillTotal(skill);
+      return skill;
+    });
+  } else {
+    // 新規作成時はデフォルトの格闘技能を設定
+    combatSkills = COMBAT_SKILLS.map(skill => {
+      const dynamicBaseValue = getDynamicBaseValue(skill.name);
+      const baseValue = dynamicBaseValue > 0 ? dynamicBaseValue : skill.baseValue;
+      return {
+        ...skill,
+        baseValue,
+        total: calculateSkillTotal({ ...skill, baseValue }),
+      };
+    });
+  }
 
   // customSkillsが既に存在する場合はそれを使用
   if (data.customSkills && Array.isArray(data.customSkills)) {
@@ -128,9 +162,9 @@ export function normalizeSheetData(data: any): CthulhuSheetData {
 
   if (data.skills && Array.isArray(data.skills)) {
     // 既存データからデフォルト技能と追加技能を分離
-    const existingSkillNames = new Set(data.skills.map((s: any) => s.name));
+    const combatSkillNames = new Set(COMBAT_SKILLS.map(s => s.name));
     
-    // デフォルト技能をマージ
+    // デフォルト技能をマージ（格闘技能を除外）
     defaultSkills = DEFAULT_CTHULHU_SKILLS.map(defaultSkill => {
       // 動的計算が必要な技能の初期値を更新
       const dynamicBaseValue = getDynamicBaseValue(defaultSkill.name);
@@ -157,7 +191,11 @@ export function normalizeSheetData(data: any): CthulhuSheetData {
     // 追加技能を抽出（customSkillsが存在しない場合のみ）
     if (!data.customSkills || !Array.isArray(data.customSkills)) {
       customSkills = data.skills
-        .filter((s: any) => !DEFAULT_CTHULHU_SKILLS.some(ds => ds.name === s.name))
+        .filter((s: any) => {
+          const isDefault = DEFAULT_CTHULHU_SKILLS.some(ds => ds.name === s.name);
+          const isCombat = combatSkillNames.has(s.name);
+          return !isDefault && !isCombat;
+        })
         .map((s: any) => {
           const skill: CthulhuSkill = {
             name: s.name,
@@ -186,14 +224,26 @@ export function normalizeSheetData(data: any): CthulhuSheetData {
   }
 
   return {
+    playerName: data.playerName ?? '',
+    occupation: data.occupation ?? '',
+    age: data.age ?? undefined,
+    gender: data.gender ?? '',
+    birthplace: data.birthplace ?? '',
     attributes,
     derived: mergedDerived,
     skills: defaultSkills,
+    combatSkills,
     customSkills,
     weapons: data.weapons || [],
     items: data.items || [],
+    cash: data.cash ?? '',
+    assets: data.assets ?? '',
     backstory: data.backstory || '',
     notes: data.notes || '',
+    scenarios: data.scenarios || [],
+    mythosBooks: data.mythosBooks || [],
+    spells: data.spells || [],
+    artifacts: data.artifacts || [],
   };
 }
 
