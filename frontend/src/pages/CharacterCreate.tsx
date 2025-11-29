@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
-import { createCharacter, SystemEnum } from '../services/api';
+import { createCharacter } from '../services/api';
+import type { SystemEnum } from '../services/api';
 
 const SYSTEM_NAMES: Record<SystemEnum, string> = {
   cthulhu: 'クトゥルフ神話TRPG',
