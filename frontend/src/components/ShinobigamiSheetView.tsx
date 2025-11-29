@@ -8,36 +8,8 @@ interface ShinobigamiSheetViewProps {
 export const ShinobigamiSheetView = ({ data }: ShinobigamiSheetViewProps) => {
   const sheetData = normalizeSheetData(data);
 
-  const attributeLabels: Record<keyof typeof sheetData.attributes, string> = {
-    体術: '体術',
-    忍術: '忍術',
-    謀術: '謀術',
-    戦術: '戦術',
-    器術: '器術',
-    心術: '心術',
-  };
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      {/* 能力値セクション */}
-      <section>
-        <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
-          能力値
-        </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
-          {(Object.keys(sheetData.attributes) as Array<keyof typeof sheetData.attributes>).map((key) => (
-            <div key={key}>
-              <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>
-                {attributeLabels[key]}
-              </div>
-              <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>
-                {sheetData.attributes[key]}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
       {/* 流派セクション */}
       {sheetData.school && (
         <section>

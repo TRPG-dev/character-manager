@@ -12,36 +12,43 @@ export const SHINOBI_SCHOOLS = [
 
 export type SchoolType = typeof SHINOBI_SCHOOLS[number]['value'];
 
-// 特技テーブル（簡易版 - 実際のテーブルはより詳細）
-// 各属性ごとの特技リスト
-export const SHINOBI_SKILLS_BY_DOMAIN: Record<string, string[]> = {
-  体術: [
-    '白兵', '回避', '運搬', '運動', '近接武器', '騎乗', '水泳', '身体操術', '走', '投擲', '捕縛', '登攀', '跳躍',
-  ],
-  忍術: [
-    '隠形', '生存', '潜伏', '手裏剣術', '手練', '変装', '変身', '歩法', '絡繰術', '火術', '砲術', '縄術', '遁走術',
-  ],
-  謀術: [
-    '医術', '記憶術', '見敵術', '経済力', '言霊術', '交渉', '調査術', '呪術', '読心', '遊芸', '異形化', '憑依術', '兵糧術',
-  ],
-  戦術: [
-    '異形化', '騎乗', '儀式術', '見敵術', '経済力', '言霊術', '交渉', '拷問術', '作戦', '戦場', '知恵', '地理', '毒術',
-  ],
-  器術: [
-    '縄術', '火術', '砲術', '手裏剣術', '手練', '変装', '変身', '歩法', '絡繰術', '騎乗', '水泳', '身体操術', '走',
-  ],
-  心術: [
-    '記憶術', '見敵術', '経済力', '言霊術', '交渉', '調査術', '呪術', '読心', '遊芸', '異形化', '憑依術', '兵糧術', '儀式術',
-  ],
-  妖術: [
-    '異形化', '憑依術', '兵糧術', '儀式術', '見敵術', '経済力', '言霊術', '交渉', '調査術', '呪術', '読心', '遊芸', '記憶術',
-  ],
+// 特技テーブルの構造
+// 列の順序: [数字, 空, 器術, 空, 体術, 空, 忍術, 空, 謀術, 空, 戦術, 空, 妖術, 空, 数字]
+export const SKILL_TABLE_COLUMNS = [
+  { type: 'number', index: 0 },
+  { type: 'empty', index: 1 },
+  { type: 'skill', domain: '器術', index: 2 },
+  { type: 'empty', index: 3 },
+  { type: 'skill', domain: '体術', index: 4 },
+  { type: 'empty', index: 5 },
+  { type: 'skill', domain: '忍術', index: 6 },
+  { type: 'empty', index: 7 },
+  { type: 'skill', domain: '謀術', index: 8 },
+  { type: 'empty', index: 9 },
+  { type: 'skill', domain: '戦術', index: 10 },
+  { type: 'empty', index: 11 },
+  { type: 'skill', domain: '妖術', index: 12 },
+  { type: 'empty', index: 13 },
+  { type: 'number', index: 14 },
+] as const;
+
+// 特技テーブルのデータ（行ごと）
+export const SKILL_TABLE_DATA: Record<number, Record<string, string>> = {
+  2: { 器術: '絡繰術', 体術: '騎乗術', 忍術: '生存術', 謀術: '医術', 戦術: '兵糧術', 妖術: '異形化' },
+  3: { 器術: '火術', 体術: '砲術', 忍術: '潜伏術', 謀術: '毒術', 戦術: '鳥獣術', 妖術: '召喚術' },
+  4: { 器術: '水術', 体術: '手裏剣術', 忍術: '遁走術', 謀術: '罠術', 戦術: '野戦術', 妖術: '死霊術' },
+  5: { 器術: '針術', 体術: '手練', 忍術: '盗聴術', 謀術: '調査術', 戦術: '地の利', 妖術: '結界術' },
+  6: { 器術: '仕込み', 体術: '身体操術', 忍術: '腹話術', 謀術: '詐術', 戦術: '意気', 妖術: '封術' },
+  7: { 器術: '衣装術', 体術: '歩法', 忍術: '隠形術', 謀術: '対人術', 戦術: '用兵術', 妖術: '言霊術' },
+  8: { 器術: '縄術', 体術: '走法', 忍術: '変装術', 謀術: '遊芸', 戦術: '記憶術', 妖術: '幻術' },
+  9: { 器術: '登術', 体術: '飛術', 忍術: '香術', 謀術: '九ノ一の術', 戦術: '見敵術', 妖術: '瞳術' },
+  10: { 器術: '拷問術', 体術: '骨法術', 忍術: '分身の術', 謀術: '傀儡の術', 戦術: '暗号術', 妖術: '千里眼の術' },
+  11: { 器術: '壊器術', 体術: '刀術', 忍術: '隠蔽術', 謀術: '流言の術', 戦術: '伝達術', 妖術: '憑依術' },
+  12: { 器術: '掘削術', 体術: '怪力', 忍術: '第六感', 謀術: '経済力', 戦術: '人脈', 妖術: '呪術' },
 };
 
-// 全特技のリスト（重複を除く）
-export const ALL_SHINOBI_SKILLS = Array.from(
-  new Set(Object.values(SHINOBI_SKILLS_BY_DOMAIN).flat())
-).sort();
+// 特技の最大取得数
+export const MAX_SKILLS = 6;
 
 /**
  * 流派から特技属性を取得
@@ -52,9 +59,17 @@ export function getDomainFromSchool(school: string): string {
 }
 
 /**
- * 属性から特技リストを取得
+ * 選択された属性の列インデックスを取得
  */
-export function getSkillsByDomain(domain: string): string[] {
-  return SHINOBI_SKILLS_BY_DOMAIN[domain] || [];
+export function getSelectedDomainColumnIndex(domain: string): number {
+  const column = SKILL_TABLE_COLUMNS.find(col => col.type === 'skill' && col.domain === domain);
+  return column?.index ?? 4; // デフォルトは体術
 }
 
+/**
+ * 選択された属性の両サイドの空列のインデックスを取得
+ */
+export function getEmptyColumnIndices(domain: string): [number, number] {
+  const skillIndex = getSelectedDomainColumnIndex(domain);
+  return [skillIndex - 1, skillIndex + 1];
+}
