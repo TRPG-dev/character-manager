@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth
+from app.routers import auth, characters, share, images
 
 app = FastAPI(title="Character Manager API", version="1.0.0")
 
@@ -15,6 +15,9 @@ app.add_middleware(
 
 # ルーターの登録
 app.include_router(auth.router)
+app.include_router(characters.router)
+app.include_router(share.router)
+app.include_router(images.router)
 
 
 @app.get("/")
