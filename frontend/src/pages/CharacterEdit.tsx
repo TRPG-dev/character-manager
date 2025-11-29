@@ -138,7 +138,7 @@ export const CharacterEdit = () => {
       const { calculateTotalJobPoints, calculateTotalInterestPoints } = await import('../data/cthulhuSkills');
       const { getJobPointsLimit, getInterestPointsLimit } = await import('../utils/cthulhu');
       
-      const allSkills = [...cthulhuSheetData.skills, ...(cthulhuSheetData.customSkills || [])];
+      const allSkills = [...cthulhuSheetData.skills, ...(cthulhuSheetData.combatSkills || []), ...(cthulhuSheetData.customSkills || [])];
       const totalJobPoints = calculateTotalJobPoints(allSkills);
       const totalInterestPoints = calculateTotalInterestPoints(allSkills);
       const jobPointsLimit = getJobPointsLimit(cthulhuSheetData.attributes.EDU);
