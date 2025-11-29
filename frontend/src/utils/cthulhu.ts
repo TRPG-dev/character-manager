@@ -12,12 +12,13 @@ export function calculateDerivedValues(attributes: CthulhuAttributes): CthulhuDe
   const SAN_max = POW * 5;
   const SAN_current = SAN_max; // 初期値は最大値と同じ
 
-  // HP
-  const HP_max = Math.ceil((CON + SIZ) / 10);
+  // HP (耐久力 = (CON+SIZ)/2)
+  const BUILD = Math.floor((CON + SIZ) / 2);
+  const HP_max = BUILD; // HP(最大) = 耐久力
   const HP_current = HP_max; // 初期値は最大値と同じ
 
   // MP
-  const MP_max = Math.ceil(POW / 5);
+  const MP_max = POW; // POW×1
   const MP_current = MP_max; // 初期値は最大値と同じ
 
   // アイデア (INT×5)
@@ -28,9 +29,6 @@ export function calculateDerivedValues(attributes: CthulhuAttributes): CthulhuDe
 
   // 幸運 (POW×5)
   const LUCK = POW * 5;
-
-  // 耐久力 ((CON+SIZ)/2)
-  const BUILD = Math.floor((CON + SIZ) / 2);
 
   // ダメージボーナス (STR+SIZの値で計算)
   const strSizSum = STR + SIZ;
@@ -102,17 +100,50 @@ export function normalizeSheetData(data: any): CthulhuSheetData {
   let defaultSkills: CthulhuSkill[] = [];
   let customSkills: CthulhuSkill[] = [];
 
+  // 動的に計算される技能の初期値を設定
+  const getDynamicBaseValue = (skillName: string): number => {
+    if (skillName === '回避') {
+      return attributes.DEX; // DEX×1
+    }
+    if (skillName === '母国語') {
+      return attributes.EDU * 5; // EDU×5
+    }
+    return 0;
+  };
+
+  // customSkillsが既に存在する場合はそれを使用
+  if (data.customSkills && Array.isArray(data.customSkills)) {
+    customSkills = data.customSkills.map((s: any) => {
+      const skill: CthulhuSkill = {
+        name: s.name,
+        baseValue: s.baseValue ?? s.base_value ?? 0,
+        jobPoints: s.jobPoints ?? s.job_points ?? 0,
+        interestPoints: s.interestPoints ?? s.interest_points ?? 0,
+        growth: s.growth ?? 0,
+        other: s.other ?? 0,
+        isCustom: true,
+      };
+      skill.total = calculateSkillTotal(skill);
+      return skill;
+    });
+  }
+
   if (data.skills && Array.isArray(data.skills)) {
     // 既存データからデフォルト技能と追加技能を分離
     const existingSkillNames = new Set(data.skills.map((s: any) => s.name));
     
     // デフォルト技能をマージ
     defaultSkills = DEFAULT_CTHULHU_SKILLS.map(defaultSkill => {
+      // 動的計算が必要な技能の初期値を更新
+      const dynamicBaseValue = getDynamicBaseValue(defaultSkill.name);
+      const baseValue = dynamicBaseValue > 0 ? dynamicBaseValue : defaultSkill.baseValue;
+      
       const existing = data.skills.find((s: any) => s.name === defaultSkill.name);
       if (existing) {
         // 既存データから値を取得
         const skill: CthulhuSkill = {
           ...defaultSkill,
+          baseValue, // 動的計算値を使用
           jobPoints: existing.jobPoints ?? existing.job_points ?? 0,
           interestPoints: existing.interestPoints ?? existing.interest_points ?? 0,
           growth: existing.growth ?? 0,
@@ -121,31 +152,39 @@ export function normalizeSheetData(data: any): CthulhuSheetData {
         skill.total = calculateSkillTotal(skill);
         return skill;
       }
-      return { ...defaultSkill, total: calculateSkillTotal(defaultSkill) };
+      const skill = { ...defaultSkill, baseValue, total: calculateSkillTotal({ ...defaultSkill, baseValue }) };
+      return skill;
     });
 
-    // 追加技能を抽出
-    customSkills = data.skills
-      .filter((s: any) => !DEFAULT_CTHULHU_SKILLS.some(ds => ds.name === s.name))
-      .map((s: any) => {
-        const skill: CthulhuSkill = {
-          name: s.name,
-          baseValue: s.baseValue ?? s.base_value ?? s.value ?? 0,
-          jobPoints: s.jobPoints ?? s.job_points ?? 0,
-          interestPoints: s.interestPoints ?? s.interest_points ?? 0,
-          growth: s.growth ?? 0,
-          other: s.other ?? 0,
-          isCustom: true,
-        };
-        skill.total = calculateSkillTotal(skill);
-        return skill;
-      });
+    // 追加技能を抽出（customSkillsが存在しない場合のみ）
+    if (!data.customSkills || !Array.isArray(data.customSkills)) {
+      customSkills = data.skills
+        .filter((s: any) => !DEFAULT_CTHULHU_SKILLS.some(ds => ds.name === s.name))
+        .map((s: any) => {
+          const skill: CthulhuSkill = {
+            name: s.name,
+            baseValue: s.baseValue ?? s.base_value ?? s.value ?? 0,
+            jobPoints: s.jobPoints ?? s.job_points ?? 0,
+            interestPoints: s.interestPoints ?? s.interest_points ?? 0,
+            growth: s.growth ?? 0,
+            other: s.other ?? 0,
+            isCustom: true,
+          };
+          skill.total = calculateSkillTotal(skill);
+          return skill;
+        });
+    }
   } else {
     // 新規作成時はデフォルト技能のみ
-    defaultSkills = DEFAULT_CTHULHU_SKILLS.map(skill => ({
-      ...skill,
-      total: calculateSkillTotal(skill),
-    }));
+    defaultSkills = DEFAULT_CTHULHU_SKILLS.map(skill => {
+      const dynamicBaseValue = getDynamicBaseValue(skill.name);
+      const baseValue = dynamicBaseValue > 0 ? dynamicBaseValue : skill.baseValue;
+      return {
+        ...skill,
+        baseValue,
+        total: calculateSkillTotal({ ...skill, baseValue }),
+      };
+    });
   }
 
   return {

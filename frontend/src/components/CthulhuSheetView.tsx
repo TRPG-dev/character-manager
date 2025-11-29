@@ -65,7 +65,7 @@ export const CthulhuSheetView = ({ data }: CthulhuSheetViewProps) => {
             </div>
           </div>
           <div>
-            <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>HP (最大)</div>
+            <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>HP (最大) ((CON+SIZ)/2)</div>
             <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>
               {sheetData.derived.HP_max}
             </div>
@@ -77,7 +77,7 @@ export const CthulhuSheetView = ({ data }: CthulhuSheetViewProps) => {
             </div>
           </div>
           <div>
-            <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>MP (最大)</div>
+            <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>MP (最大) (POW×1)</div>
             <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>
               {sheetData.derived.MP_max}
             </div>
@@ -98,12 +98,6 @@ export const CthulhuSheetView = ({ data }: CthulhuSheetViewProps) => {
             <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>幸運 (POW×5)</div>
             <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>
               {sheetData.derived.LUCK || 0}
-            </div>
-          </div>
-          <div>
-            <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>耐久力 ((CON+SIZ)/2)</div>
-            <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>
-              {sheetData.derived.BUILD || 0}
             </div>
           </div>
           <div>

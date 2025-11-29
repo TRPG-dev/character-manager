@@ -10,11 +10,17 @@ interface CthulhuSheetFormProps {
 
 export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
   const [sheetData, setSheetData] = useState<CthulhuSheetData>(normalizeSheetData(data));
+  const [isInternalUpdate, setIsInternalUpdate] = useState(false);
 
   useEffect(() => {
+    // 内部更新の場合はスキップ（無限ループ防止）
+    if (isInternalUpdate) {
+      setIsInternalUpdate(false);
+      return;
+    }
     const normalized = normalizeSheetData(data);
     setSheetData(normalized);
-  }, [data]);
+  }, [data, isInternalUpdate]);
 
   const updateAttributes = (key: keyof typeof sheetData.attributes, value: number) => {
     const newAttributes = { ...sheetData.attributes, [key]: value };
@@ -26,7 +32,22 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
       HP_current: sheetData.derived.HP_current,
       MP_current: sheetData.derived.MP_current,
     };
-    const updated = { ...sheetData, attributes: newAttributes, derived: updatedDerived };
+    
+    // 動的計算が必要な技能の初期値を更新
+    const updatedSkills = sheetData.skills.map(skill => {
+      if (skill.name === '回避') {
+        const baseValue = newAttributes.DEX; // DEX×1
+        return { ...skill, baseValue, total: calculateSkillTotal({ ...skill, baseValue }) };
+      }
+      if (skill.name === '母国語') {
+        const baseValue = newAttributes.EDU * 5; // EDU×5
+        return { ...skill, baseValue, total: calculateSkillTotal({ ...skill, baseValue }) };
+      }
+      return skill;
+    });
+    
+    const updated = { ...sheetData, attributes: newAttributes, derived: updatedDerived, skills: updatedSkills };
+    setIsInternalUpdate(true);
     setSheetData(updated);
     onChange(updated);
   };
@@ -46,6 +67,7 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
     };
     newSkills[index].total = calculateSkillTotal(newSkills[index]);
     const updated = { ...sheetData, skills: newSkills };
+    setIsInternalUpdate(true);
     setSheetData(updated);
     onChange(updated);
   };
@@ -58,6 +80,7 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
     };
     newCustomSkills[index].total = calculateSkillTotal(newCustomSkills[index]);
     const updated = { ...sheetData, customSkills: newCustomSkills };
+    setIsInternalUpdate(true);
     setSheetData(updated);
     onChange(updated);
   };
@@ -75,6 +98,7 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
     };
     const newCustomSkills = [...(sheetData.customSkills || []), newCustomSkill];
     const updated = { ...sheetData, customSkills: newCustomSkills };
+    setIsInternalUpdate(true);
     setSheetData(updated);
     onChange(updated);
   };
@@ -86,6 +110,7 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
       name,
     };
     const updated = { ...sheetData, customSkills: newCustomSkills };
+    setIsInternalUpdate(true);
     setSheetData(updated);
     onChange(updated);
   };
@@ -98,6 +123,7 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
     };
     newCustomSkills[index].total = calculateSkillTotal(newCustomSkills[index]);
     const updated = { ...sheetData, customSkills: newCustomSkills };
+    setIsInternalUpdate(true);
     setSheetData(updated);
     onChange(updated);
   };
@@ -105,6 +131,7 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
   const removeCustomSkill = (index: number) => {
     const newCustomSkills = (sheetData.customSkills || []).filter((_, i) => i !== index);
     const updated = { ...sheetData, customSkills: newCustomSkills };
+    setIsInternalUpdate(true);
     setSheetData(updated);
     onChange(updated);
   };
@@ -268,7 +295,7 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
           </div>
           <div>
             <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
-              HP (最大)
+              HP (最大) ((CON+SIZ)/2)
             </label>
             <input
               type="number"
