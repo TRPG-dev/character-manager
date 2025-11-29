@@ -41,21 +41,21 @@ export const DEFAULT_CTHULHU_SKILLS: CthulhuSkill[] = [
   { name: '歴史', baseValue: 5, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 5, isCustom: false },
 ];
 
-// 格闘技能リスト
+// 格闘技能リスト（50音順）
 export const COMBAT_SKILLS: CthulhuSkill[] = [
   { name: '回避', baseValue: 0, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 0, isCustom: false },
-  { name: 'こぶし/パンチ', baseValue: 50, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 50, isCustom: false },
   { name: 'キック', baseValue: 25, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 25, isCustom: false },
-  { name: '頭突き', baseValue: 10, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 10, isCustom: false },
+  { name: 'こぶし/パンチ', baseValue: 50, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 50, isCustom: false },
   { name: '組み付き', baseValue: 25, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 25, isCustom: false },
-  { name: '投擲', baseValue: 25, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 25, isCustom: false },
-  { name: 'マーシャルアーツ', baseValue: 1, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 1, isCustom: false },
   { name: '拳銃', baseValue: 20, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 20, isCustom: false },
   { name: 'サブマシンガン', baseValue: 15, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 15, isCustom: false },
   { name: 'ショットガン', baseValue: 30, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 30, isCustom: false },
+  { name: '重火器', baseValue: 10, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 10, isCustom: false },
+  { name: '頭突き', baseValue: 10, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 10, isCustom: false },
+  { name: '投擲', baseValue: 25, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 25, isCustom: false },
+  { name: 'マーシャルアーツ', baseValue: 1, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 1, isCustom: false },
   { name: 'マシンガン', baseValue: 10, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 10, isCustom: false },
   { name: 'ライフル', baseValue: 25, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 25, isCustom: false },
-  { name: '重火器', baseValue: 10, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 10, isCustom: false },
 ];
 
 /**

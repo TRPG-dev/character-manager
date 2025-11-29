@@ -14,6 +14,7 @@ import { ImageUpload } from '../components/ImageUpload';
 import { DiceRoller } from '../components/DiceRoller';
 import { AutoRollAttributes } from '../components/AutoRollAttributes';
 import { CollapsibleSection } from '../components/CollapsibleSection';
+import { BasicInfoForm } from '../components/BasicInfoForm';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { Toast } from '../components/Toast';
 import { useToast } from '../contexts/ToastContext';
@@ -374,6 +375,15 @@ export const CharacterEdit = () => {
             </div>
           )}
         </CollapsibleSection>
+
+        {character.system === 'cthulhu' && cthulhuSheetData && (
+          <CollapsibleSection title="基本情報" defaultOpen={true}>
+            <BasicInfoForm
+              data={cthulhuSheetData}
+              onChange={(data) => setCthulhuSheetData(data)}
+            />
+          </CollapsibleSection>
+        )}
 
         <CollapsibleSection title="キャラクターシート" defaultOpen={true}>
           {character.system === 'cthulhu' && cthulhuSheetData ? (

@@ -10,7 +10,9 @@ import { ShinobigamiSheetForm } from '../components/ShinobigamiSheetForm';
 import type { ShinobigamiSheetData } from '../types/shinobigami';
 import { normalizeSheetData as normalizeShinobigamiSheetData } from '../utils/shinobigami';
 import { DiceRoller } from '../components/DiceRoller';
-import { autoRollAttributes } from '../services/api';
+import { AutoRollAttributes } from '../components/AutoRollAttributes';
+import { CollapsibleSection } from '../components/CollapsibleSection';
+import { BasicInfoForm } from '../components/BasicInfoForm';
 import { useToast } from '../contexts/ToastContext';
 import { handleApiError, formatErrorMessage } from '../utils/errorHandler';
 
@@ -36,6 +38,7 @@ export const CharacterCreate = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [createdCharacterId, setCreatedCharacterId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSystemSelect = (system: SystemEnum) => {
@@ -239,30 +242,8 @@ export const CharacterCreate = () => {
         tags,
         sheet_data: (selectedSystem === 'cthulhu' || selectedSystem === 'shinobigami') && sheetData ? sheetData : undefined,
       });
-
-      // クトゥルフの場合、能力値が未設定なら自動生成を提案
-      if (selectedSystem === 'cthulhu' && sheetData && 'attributes' in sheetData) {
-        const cthulhuData = sheetData as CthulhuSheetData;
-        const hasZeroAttributes = Object.values(cthulhuData.attributes).some(val => val === 0);
-        if (hasZeroAttributes) {
-          try {
-            const autoRollResult = await autoRollAttributes(token, character.id, selectedSystem);
-            // 能力値を更新
-            const updatedSheetData = {
-              ...cthulhuData,
-              attributes: autoRollResult.attributes,
-              derived: autoRollResult.derived,
-            };
-            await updateCharacter(token, character.id, {
-              sheet_data: updatedSheetData,
-            });
-            showSuccess('能力値を自動生成しました');
-          } catch (error: any) {
-            console.error('Failed to auto roll attributes:', error);
-            // エラーは無視して続行
-          }
-        }
-      }
+      
+      setCreatedCharacterId(character.id);
 
       // 画像が選択されている場合はアップロード
       if (selectedImage) {
@@ -275,8 +256,7 @@ export const CharacterCreate = () => {
         }
       }
 
-      showSuccess('キャラクターを作成しました');
-      navigate(`/characters/${character.id}`);
+      showSuccess('キャラクターを作成しました。続けて編集できます。');
     } catch (error: any) {
       console.error('Failed to create character:', error);
       const apiError = handleApiError(error);
@@ -541,16 +521,47 @@ export const CharacterCreate = () => {
           )}
         </div>
 
-        <DiceRoller initialFormula="3d6" />
+        <CollapsibleSection title="基本情報" defaultOpen={true}>
+          {selectedSystem === 'cthulhu' && sheetData && (
+            <BasicInfoForm
+              data={sheetData as CthulhuSheetData}
+              onChange={(data) => setSheetData(data)}
+            />
+          )}
+        </CollapsibleSection>
 
-        {selectedSystem === 'cthulhu' && sheetData && (
-          <div style={{ marginTop: '2rem' }}>
+        <CollapsibleSection title="ツール" defaultOpen={false}>
+          <DiceRoller initialFormula="3d6" />
+
+          {createdCharacterId && selectedSystem === 'cthulhu' && (
+            <div style={{ marginTop: '1rem' }}>
+              <AutoRollAttributes
+                characterId={createdCharacterId}
+                system={selectedSystem}
+                onApply={(attributes, derived) => {
+                  if (sheetData && 'attributes' in sheetData) {
+                    const cthulhuData = sheetData as CthulhuSheetData;
+                    const updated = {
+                      ...cthulhuData,
+                      attributes,
+                      derived,
+                    };
+                    setSheetData(updated);
+                  }
+                }}
+              />
+            </div>
+          )}
+        </CollapsibleSection>
+
+        <CollapsibleSection title="キャラクターシート" defaultOpen={true}>
+          {selectedSystem === 'cthulhu' && sheetData && (
             <CthulhuSheetForm
               data={sheetData as CthulhuSheetData}
               onChange={(data) => setSheetData(data)}
             />
-          </div>
-        )}
+          )}
+        </CollapsibleSection>
 
         {selectedSystem === 'shinobigami' && sheetData && (
           <div style={{ marginTop: '2rem' }}>
@@ -562,36 +573,96 @@ export const CharacterCreate = () => {
         )}
 
         <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
-          <button
-            type="submit"
-            disabled={loading || !name.trim()}
-            style={{
-              padding: '0.75rem 2rem',
-              backgroundColor: loading || !name.trim() ? '#ccc' : '#007bff',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: loading || !name.trim() ? 'not-allowed' : 'pointer',
-              fontSize: '1rem',
-            }}
-          >
-            {loading ? '作成中...' : '作成'}
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate('/dashboard')}
-            style={{
-              padding: '0.75rem 2rem',
-              backgroundColor: '#6c757d',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '1rem',
-            }}
-          >
-            キャンセル
-          </button>
+          {!createdCharacterId ? (
+            <>
+              <button
+                type="submit"
+                disabled={loading || !name.trim()}
+                style={{
+                  padding: '0.75rem 2rem',
+                  backgroundColor: loading || !name.trim() ? '#ccc' : '#007bff',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: loading || !name.trim() ? 'not-allowed' : 'pointer',
+                  fontSize: '1rem',
+                }}
+              >
+                {loading ? '作成中...' : '作成'}
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/dashboard')}
+                style={{
+                  padding: '0.75rem 2rem',
+                  backgroundColor: '#6c757d',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                }}
+              >
+                キャンセル
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!createdCharacterId) return;
+                  setLoading(true);
+                  try {
+                    const token = await getAccessToken();
+                    if (!token) {
+                      showError('認証トークンの取得に失敗しました。再度ログインしてください。');
+                      setLoading(false);
+                      return;
+                    }
+                    await updateCharacter(token, createdCharacterId, {
+                      sheet_data: (selectedSystem === 'cthulhu' || selectedSystem === 'shinobigami') && sheetData ? sheetData : undefined,
+                    });
+                    showSuccess('更新が完了しました');
+                    navigate(`/characters/${createdCharacterId}`);
+                  } catch (error: any) {
+                    console.error('Failed to update character:', error);
+                    const apiError = handleApiError(error);
+                    showError(formatErrorMessage(apiError));
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                disabled={loading}
+                style={{
+                  padding: '0.75rem 2rem',
+                  backgroundColor: loading ? '#ccc' : '#28a745',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  fontSize: '1rem',
+                }}
+              >
+                {loading ? '保存中...' : '保存'}
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate(`/characters/${createdCharacterId}`)}
+                style={{
+                  padding: '0.75rem 2rem',
+                  backgroundColor: '#6c757d',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                }}
+              >
+                詳細を見る
+              </button>
+            </>
+          )}
         </div>
       </form>
     </div>
