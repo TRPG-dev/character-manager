@@ -5,3 +5,7 @@ psycopg2-binary
 alembic
 pydantic
 python-dotenv
+python-jose[cryptography]
+python-multipart
+httpx
+cryptography

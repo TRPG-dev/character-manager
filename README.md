@@ -280,6 +280,27 @@ Future (優先度低):
 - Node.js 20+
 - Python 3.11+
 
+### 環境変数の設定
+
+バックエンド用の環境変数を設定します。`backend/.env`ファイルを作成して以下を設定してください：
+
+```bash
+# Database
+DATABASE_URL=postgresql://postgres:postgres@db:5432/char_manager
+
+# Auth0 Configuration
+AUTH0_DOMAIN=your-tenant.auth0.com
+AUTH0_AUDIENCE=your-api-identifier
+```
+
+フロントエンド用の環境変数は`frontend/.env`ファイルに以下を設定してください：
+
+```bash
+VITE_AUTH0_DOMAIN=your-tenant.auth0.com
+VITE_AUTH0_CLIENT_ID=your-client-id
+VITE_AUTH0_AUDIENCE=your-api-identifier
+```
+
 ### 起動方法
 
 ```bash
