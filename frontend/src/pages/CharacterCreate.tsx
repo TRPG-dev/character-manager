@@ -5,7 +5,10 @@ import { createCharacter } from '../services/api';
 import type { SystemEnum } from '../services/api';
 import { CthulhuSheetForm } from '../components/CthulhuSheetForm';
 import type { CthulhuSheetData } from '../types/cthulhu';
-import { normalizeSheetData } from '../utils/cthulhu';
+import { normalizeSheetData as normalizeCthulhuSheetData } from '../utils/cthulhu';
+import { ShinobigamiSheetForm } from '../components/ShinobigamiSheetForm';
+import type { ShinobigamiSheetData } from '../types/shinobigami';
+import { normalizeSheetData as normalizeShinobigamiSheetData } from '../utils/shinobigami';
 
 const SYSTEM_NAMES: Record<SystemEnum, string> = {
   cthulhu: 'クトゥルフ神話TRPG',
@@ -23,14 +26,14 @@ export const CharacterCreate = () => {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [sheetData, setSheetData] = useState<CthulhuSheetData | null>(null);
+  const [sheetData, setSheetData] = useState<CthulhuSheetData | ShinobigamiSheetData | null>(null);
 
   const handleSystemSelect = (system: SystemEnum) => {
     setSelectedSystem(system);
     setStep('form');
-    // クトゥルフの場合、初期シートデータを設定
+    // システムに応じて初期シートデータを設定
     if (system === 'cthulhu') {
-      setSheetData(normalizeSheetData({
+      setSheetData(normalizeCthulhuSheetData({
         attributes: {
           STR: 0,
           CON: 0,
@@ -51,6 +54,20 @@ export const CharacterCreate = () => {
         },
         skills: [],
         backstory: '',
+      }));
+    } else if (system === 'shinobigami') {
+      setSheetData(normalizeShinobigamiSheetData({
+        attributes: {
+          体術: 0,
+          忍術: 0,
+          謀術: 0,
+          戦術: 0,
+          器術: 0,
+          心術: 0,
+        },
+        skills: [],
+        secret_flag: false,
+        background: '',
       }));
     } else {
       setSheetData(null);
@@ -73,15 +90,16 @@ export const CharacterCreate = () => {
     if (!selectedSystem || !name.trim()) return;
 
     // クトゥルフの場合、ポイント上限チェック
-    if (selectedSystem === 'cthulhu' && sheetData) {
+    if (selectedSystem === 'cthulhu' && sheetData && 'customSkills' in sheetData) {
       const { calculateTotalJobPoints, calculateTotalInterestPoints } = await import('../data/cthulhuSkills');
       const { getJobPointsLimit, getInterestPointsLimit } = await import('../utils/cthulhu');
       
-      const allSkills = [...sheetData.skills, ...(sheetData.customSkills || [])];
+      const cthulhuData = sheetData as CthulhuSheetData;
+      const allSkills = [...cthulhuData.skills, ...(cthulhuData.customSkills || [])];
       const totalJobPoints = calculateTotalJobPoints(allSkills);
       const totalInterestPoints = calculateTotalInterestPoints(allSkills);
-      const jobPointsLimit = getJobPointsLimit(sheetData.attributes.EDU);
-      const interestPointsLimit = getInterestPointsLimit(sheetData.attributes.INT);
+      const jobPointsLimit = getJobPointsLimit(cthulhuData.attributes.EDU);
+      const interestPointsLimit = getInterestPointsLimit(cthulhuData.attributes.INT);
 
       if (totalJobPoints > jobPointsLimit || totalInterestPoints > interestPointsLimit) {
         alert(`ポイントの上限を超えています。\n職業P: ${totalJobPoints}/${jobPointsLimit}\n興味P: ${totalInterestPoints}/${interestPointsLimit}`);
@@ -101,7 +119,7 @@ export const CharacterCreate = () => {
         system: selectedSystem,
         name: name.trim(),
         tags,
-        sheet_data: selectedSystem === 'cthulhu' && sheetData ? sheetData : undefined,
+        sheet_data: (selectedSystem === 'cthulhu' || selectedSystem === 'shinobigami') && sheetData ? sheetData : undefined,
       });
       navigate(`/characters/${character.id}`);
     } catch (error: any) {
@@ -295,7 +313,16 @@ export const CharacterCreate = () => {
         {selectedSystem === 'cthulhu' && sheetData && (
           <div style={{ marginTop: '2rem' }}>
             <CthulhuSheetForm
-              data={sheetData}
+              data={sheetData as CthulhuSheetData}
+              onChange={(data) => setSheetData(data)}
+            />
+          </div>
+        )}
+
+        {selectedSystem === 'shinobigami' && sheetData && (
+          <div style={{ marginTop: '2rem' }}>
+            <ShinobigamiSheetForm
+              data={sheetData as ShinobigamiSheetData}
               onChange={(data) => setSheetData(data)}
             />
           </div>

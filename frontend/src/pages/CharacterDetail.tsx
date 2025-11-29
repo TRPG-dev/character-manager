@@ -5,7 +5,10 @@ import { getCharacter, deleteCharacter, publishCharacter } from '../services/api
 import type { Character, SystemEnum } from '../services/api';
 import { CthulhuSheetView } from '../components/CthulhuSheetView';
 import type { CthulhuSheetData } from '../types/cthulhu';
-import { normalizeSheetData } from '../utils/cthulhu';
+import { normalizeSheetData as normalizeCthulhuSheetData } from '../utils/cthulhu';
+import { ShinobigamiSheetView } from '../components/ShinobigamiSheetView';
+import type { ShinobigamiSheetData } from '../types/shinobigami';
+import { normalizeSheetData as normalizeShinobigamiSheetData } from '../utils/shinobigami';
 
 const SYSTEM_NAMES: Record<SystemEnum, string> = {
   cthulhu: 'クトゥルフ神話TRPG',
@@ -205,7 +208,9 @@ export const CharacterDetail = () => {
       <div style={{ marginTop: '2rem' }}>
         <h2>キャラクターシート</h2>
         {character.system === 'cthulhu' ? (
-          <CthulhuSheetView data={normalizeSheetData(character.sheet_data) as CthulhuSheetData} />
+          <CthulhuSheetView data={normalizeCthulhuSheetData(character.sheet_data) as CthulhuSheetData} />
+        ) : character.system === 'shinobigami' ? (
+          <ShinobigamiSheetView data={normalizeShinobigamiSheetData(character.sheet_data) as ShinobigamiSheetData} />
         ) : (
           <pre style={{
             padding: '1rem',

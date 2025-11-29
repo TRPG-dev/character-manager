@@ -5,7 +5,10 @@ import { getCharacter, updateCharacter } from '../services/api';
 import type { Character, SystemEnum } from '../services/api';
 import { CthulhuSheetForm } from '../components/CthulhuSheetForm';
 import type { CthulhuSheetData } from '../types/cthulhu';
-import { normalizeSheetData } from '../utils/cthulhu';
+import { normalizeSheetData as normalizeCthulhuSheetData } from '../utils/cthulhu';
+import { ShinobigamiSheetForm } from '../components/ShinobigamiSheetForm';
+import type { ShinobigamiSheetData } from '../types/shinobigami';
+import { normalizeSheetData as normalizeShinobigamiSheetData } from '../utils/shinobigami';
 
 const SYSTEM_NAMES: Record<SystemEnum, string> = {
   cthulhu: 'クトゥルフ神話TRPG',
@@ -27,6 +30,7 @@ export const CharacterEdit = () => {
   const [profileImageUrl, setProfileImageUrl] = useState<string>('');
   const [sheetData, setSheetData] = useState<string>('');
   const [cthulhuSheetData, setCthulhuSheetData] = useState<CthulhuSheetData | null>(null);
+  const [shinobigamiSheetData, setShinobigamiSheetData] = useState<ShinobigamiSheetData | null>(null);
 
   useEffect(() => {
     const fetchCharacter = async () => {
@@ -42,11 +46,16 @@ export const CharacterEdit = () => {
           setTags(char.tags);
           setProfileImageUrl(char.profile_image_url || '');
           setSheetData(JSON.stringify(char.sheet_data, null, 2));
-          // クトゥルフの場合、シートデータを正規化
+          // システムに応じてシートデータを正規化
           if (char.system === 'cthulhu') {
-            setCthulhuSheetData(normalizeSheetData(char.sheet_data));
+            setCthulhuSheetData(normalizeCthulhuSheetData(char.sheet_data));
+            setShinobigamiSheetData(null);
+          } else if (char.system === 'shinobigami') {
+            setShinobigamiSheetData(normalizeShinobigamiSheetData(char.sheet_data));
+            setCthulhuSheetData(null);
           } else {
             setCthulhuSheetData(null);
+            setShinobigamiSheetData(null);
           }
         }
       } catch (error) {
@@ -98,6 +107,9 @@ export const CharacterEdit = () => {
         if (character.system === 'cthulhu' && cthulhuSheetData) {
           // クトゥルフの場合はフォームデータを使用
           parsedSheetData = cthulhuSheetData;
+        } else if (character.system === 'shinobigami' && shinobigamiSheetData) {
+          // シノビガミの場合はフォームデータを使用
+          parsedSheetData = shinobigamiSheetData;
         } else {
           // その他のシステムはJSONテキストエリアから取得
           try {
@@ -268,6 +280,13 @@ export const CharacterEdit = () => {
             <CthulhuSheetForm
               data={cthulhuSheetData}
               onChange={(data) => setCthulhuSheetData(data)}
+            />
+          </div>
+        ) : character.system === 'shinobigami' && shinobigamiSheetData ? (
+          <div style={{ marginBottom: '1.5rem' }}>
+            <ShinobigamiSheetForm
+              data={shinobigamiSheetData}
+              onChange={(data) => setShinobigamiSheetData(data)}
             />
           </div>
         ) : (
