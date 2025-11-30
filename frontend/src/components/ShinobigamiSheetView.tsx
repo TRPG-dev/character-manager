@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { ShinobigamiSheetData } from '../types/shinobigami';
 import { normalizeSheetData } from '../utils/shinobigami';
 import { CollapsibleSection } from './CollapsibleSection';
-import { SKILL_TABLE_COLUMNS, SKILL_TABLE_DATA, getDomainFromSchool, getEmptyColumnIndices } from '../data/shinobigamiSkills';
+import { SKILL_TABLE_COLUMNS, SKILL_TABLE_DATA, getDomainFromSchool, getEmptyColumnIndices, HENCHO_OPTIONS } from '../data/shinobigamiSkills';
 
 interface ShinobigamiSheetViewProps {
   data: ShinobigamiSheetData;
@@ -289,13 +289,73 @@ export const ShinobigamiSheetView = ({
               特技
             </h2>
             
-            {/* 生命点（HP）表示 */}
-            <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#fff', borderRadius: '4px', border: '1px solid #dee2e6' }}>
-              <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>生命点（HP）</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: currentHp <= 2 ? '#dc3545' : currentHp <= 4 ? '#ffc107' : '#28a745' }}>
-                {currentHp} / 6
+            {/* 生命点（HP）と変調 */}
+            <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#fff', borderRadius: '4px', border: '1px solid #dee2e6', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              {/* 左側: 生命点 */}
+              <div>
+                <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>生命点（HP）</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: currentHp <= 2 ? '#dc3545' : currentHp <= 4 ? '#ffc107' : '#28a745' }}>
+                  {currentHp} / 6
+                </div>
+              </div>
+              {/* 右側: 変調 */}
+              <div>
+                <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.5rem' }}>変調</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
+                  {HENCHO_OPTIONS.map((hencho) => {
+                    const isChecked = (sheetData.hencho || []).includes(hencho);
+                    return (
+                      <label
+                        key={hencho}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.25rem',
+                          fontSize: '0.875rem',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          readOnly
+                          style={{ cursor: 'pointer' }}
+                        />
+                        <span>{hencho}</span>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
             </div>
+            
+            {/* 感情の欄 */}
+            {(sheetData.emotions || []).length > 0 && (
+              <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#fff', borderRadius: '4px', border: '1px solid #dee2e6' }}>
+                <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.5rem', fontWeight: 'bold' }}>感情</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {(sheetData.emotions || []).map((emotion, index) => (
+                    <div
+                      key={index}
+                      style={{
+                        padding: '0.75rem',
+                        backgroundColor: '#f8f9fa',
+                        borderRadius: '4px',
+                        border: '1px solid #dee2e6',
+                        display: 'flex',
+                        gap: '0.5rem',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <div style={{ flex: 1, fontWeight: 'bold' }}>{emotion.pcName || '(PC名未設定)'}</div>
+                      <div style={{ flex: 1, fontSize: '0.875rem', color: '#6c757d' }}>
+                        感情: {emotion.emotion || '(未設定)'}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             
             {/* 特技テーブル */}
             <div style={{ marginBottom: '1rem', overflowX: 'auto' }}>
@@ -848,13 +908,73 @@ export const ShinobigamiSheetView = ({
                   特技
                 </h2>
                 
-                {/* 生命点（HP）表示 */}
-                <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '4px', border: '1px solid #dee2e6' }}>
-                  <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>生命点（HP）</div>
-                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: currentHp <= 2 ? '#dc3545' : currentHp <= 4 ? '#ffc107' : '#28a745' }}>
-                    {currentHp} / 6
+                {/* 生命点（HP）と変調 */}
+                <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '4px', border: '1px solid #dee2e6', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  {/* 左側: 生命点 */}
+                  <div>
+                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>生命点（HP）</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: currentHp <= 2 ? '#dc3545' : currentHp <= 4 ? '#ffc107' : '#28a745' }}>
+                      {currentHp} / 6
+                    </div>
+                  </div>
+                  {/* 右側: 変調 */}
+                  <div>
+                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.5rem' }}>変調</div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
+                      {HENCHO_OPTIONS.map((hencho) => {
+                        const isChecked = (sheetData.hencho || []).includes(hencho);
+                        return (
+                          <label
+                            key={hencho}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.25rem',
+                              fontSize: '0.875rem',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              readOnly
+                              style={{ cursor: 'pointer' }}
+                            />
+                            <span>{hencho}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
+                
+                {/* 感情の欄 */}
+                {(sheetData.emotions || []).length > 0 && (
+                  <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '4px', border: '1px solid #dee2e6' }}>
+                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.5rem', fontWeight: 'bold' }}>感情</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      {(sheetData.emotions || []).map((emotion, index) => (
+                        <div
+                          key={index}
+                          style={{
+                            padding: '0.75rem',
+                            backgroundColor: '#fff',
+                            borderRadius: '4px',
+                            border: '1px solid #dee2e6',
+                            display: 'flex',
+                            gap: '0.5rem',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <div style={{ flex: 1, fontWeight: 'bold' }}>{emotion.pcName || '(PC名未設定)'}</div>
+                          <div style={{ flex: 1, fontSize: '0.875rem', color: '#6c757d' }}>
+                            感情: {emotion.emotion || '(未設定)'}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 
                 {/* 特技テーブル */}
                 <div style={{ marginBottom: '1rem', overflowX: 'auto' }}>
