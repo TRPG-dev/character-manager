@@ -10,41 +10,6 @@ export const ShinobigamiSheetView = ({ data }: ShinobigamiSheetViewProps) => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      {/* 基本情報セクション */}
-      {(sheetData.playerName || sheetData.characterName || sheetData.age || sheetData.gender) && (
-        <section>
-          <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
-            基本情報
-          </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
-            {sheetData.playerName && (
-              <div>
-                <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>プレイヤー名</div>
-                <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.playerName}</div>
-              </div>
-            )}
-            {sheetData.characterName && (
-              <div>
-                <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>キャラクター名</div>
-                <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.characterName}</div>
-              </div>
-            )}
-            {sheetData.age !== undefined && (
-              <div>
-                <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>年齢</div>
-                <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.age}歳</div>
-              </div>
-            )}
-            {sheetData.gender && (
-              <div>
-                <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>性別</div>
-                <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.gender}</div>
-              </div>
-            )}
-          </div>
-        </section>
-      )}
-
       {/* 流派セクション */}
       {(sheetData.school || sheetData.rank || sheetData.ryuugi || sheetData.surfaceFace || sheetData.shinnen || sheetData.koseki !== undefined) && (
         <section>
@@ -93,27 +58,12 @@ export const ShinobigamiSheetView = ({ data }: ShinobigamiSheetViewProps) => {
       )}
 
       {/* 能力値セクション */}
-      <section>
-        <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
-          能力値
-        </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
-          {Object.entries(sheetData.attributes).map(([key, value]) => (
-            <div
-              key={key}
-              style={{
-                padding: '0.75rem',
-                backgroundColor: '#f8f9fa',
-                borderRadius: '4px',
-                border: '1px solid #dee2e6',
-              }}
-            >
-              <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>{key}</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#007bff' }}>{value}</div>
-            </div>
-          ))}
-        </div>
-        {sheetData.hp !== undefined && (
+      {(sheetData.hp !== undefined || (sheetData.hencho || []).length > 0 || (sheetData.emotions || []).length > 0) && (
+        <section>
+          <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
+            能力値
+          </h2>
+          {sheetData.hp !== undefined && (
           <div style={{ marginBottom: '1rem' }}>
             <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>生命点（HP）</div>
             <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#dc3545' }}>
@@ -166,7 +116,8 @@ export const ShinobigamiSheetView = ({ data }: ShinobigamiSheetViewProps) => {
             </div>
           </div>
         )}
-      </section>
+        </section>
+      )}
 
       {/* 特技セクション */}
       {sheetData.skills.length > 0 && (

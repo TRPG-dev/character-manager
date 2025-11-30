@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import type { CthulhuSheetData } from '../types/cthulhu';
+import type { ShinobigamiSheetData } from '../types/shinobigami';
 import type { SystemEnum } from '../services/api';
 
 const SYSTEM_NAMES: Record<SystemEnum, string> = {
@@ -10,8 +11,8 @@ const SYSTEM_NAMES: Record<SystemEnum, string> = {
 };
 
 interface BasicInfoFormProps {
-  data: CthulhuSheetData;
-  onChange: (data: CthulhuSheetData) => void;
+  data: CthulhuSheetData | ShinobigamiSheetData;
+  onChange: (data: CthulhuSheetData | ShinobigamiSheetData) => void;
   // キャラクター基本情報
   system?: SystemEnum | null;
   name: string;
@@ -51,15 +52,6 @@ export const BasicInfoForm = ({
 }: BasicInfoFormProps) => {
   const [tagInput, setTagInput] = useState('');
 
-  const updateBasicInfo = (field: 'playerName' | 'occupation' | 'gender' | 'birthplace', value: string) => {
-    const updated = { ...data, [field]: value };
-    onChange(updated);
-  };
-
-  const updateAge = (value: number | undefined) => {
-    const updated = { ...data, age: value };
-    onChange(updated);
-  };
 
   const handleAddTag = () => {
     if (tagInput.trim() && !tags.includes(tagInput.trim())) {
@@ -292,62 +284,142 @@ export const BasicInfoForm = ({
           キャラクターシート基本情報
         </h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
-              プレイヤー名
-            </label>
-            <input
-              type="text"
-              value={data.playerName || ''}
-              onChange={(e) => updateBasicInfo('playerName', e.target.value)}
-              style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-            />
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
-              職業
-            </label>
-            <input
-              type="text"
-              value={data.occupation || ''}
-              onChange={(e) => updateBasicInfo('occupation', e.target.value)}
-              style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-            />
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
-              年齢
-            </label>
-            <input
-              type="number"
-              value={data.age || ''}
-              onChange={(e) => updateAge(e.target.value ? parseInt(e.target.value) : undefined)}
-              min="0"
-              style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-            />
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
-              性別
-            </label>
-            <input
-              type="text"
-              value={data.gender || ''}
-              onChange={(e) => updateBasicInfo('gender', e.target.value)}
-              style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-            />
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
-              出身地
-            </label>
-            <input
-              type="text"
-              value={data.birthplace || ''}
-              onChange={(e) => updateBasicInfo('birthplace', e.target.value)}
-              style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-            />
-          </div>
+          {system === 'cthulhu' && 'occupation' in data && (
+            <>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
+                  プレイヤー名
+                </label>
+                <input
+                  type="text"
+                  value={(data as CthulhuSheetData).playerName || ''}
+                  onChange={(e) => {
+                    const updated = { ...data, playerName: e.target.value } as CthulhuSheetData;
+                    onChange(updated);
+                  }}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
+                  職業
+                </label>
+                <input
+                  type="text"
+                  value={(data as CthulhuSheetData).occupation || ''}
+                  onChange={(e) => {
+                    const updated = { ...data, occupation: e.target.value } as CthulhuSheetData;
+                    onChange(updated);
+                  }}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
+                  年齢
+                </label>
+                <input
+                  type="number"
+                  value={(data as CthulhuSheetData).age || ''}
+                  onChange={(e) => {
+                    const updated = { ...data, age: e.target.value ? parseInt(e.target.value) : undefined } as CthulhuSheetData;
+                    onChange(updated);
+                  }}
+                  min="0"
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
+                  性別
+                </label>
+                <input
+                  type="text"
+                  value={(data as CthulhuSheetData).gender || ''}
+                  onChange={(e) => {
+                    const updated = { ...data, gender: e.target.value } as CthulhuSheetData;
+                    onChange(updated);
+                  }}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
+                  出身地
+                </label>
+                <input
+                  type="text"
+                  value={(data as CthulhuSheetData).birthplace || ''}
+                  onChange={(e) => {
+                    const updated = { ...data, birthplace: e.target.value } as CthulhuSheetData;
+                    onChange(updated);
+                  }}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                />
+              </div>
+            </>
+          )}
+          {system === 'shinobigami' && 'characterName' in data && (
+            <>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
+                  プレイヤー名
+                </label>
+                <input
+                  type="text"
+                  value={(data as ShinobigamiSheetData).playerName || ''}
+                  onChange={(e) => {
+                    const updated = { ...data, playerName: e.target.value } as ShinobigamiSheetData;
+                    onChange(updated);
+                  }}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
+                  キャラクター名（PC名）
+                </label>
+                <input
+                  type="text"
+                  value={(data as ShinobigamiSheetData).characterName || ''}
+                  onChange={(e) => {
+                    const updated = { ...data, characterName: e.target.value } as ShinobigamiSheetData;
+                    onChange(updated);
+                  }}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
+                  年齢
+                </label>
+                <input
+                  type="number"
+                  value={(data as ShinobigamiSheetData).age || ''}
+                  onChange={(e) => {
+                    const updated = { ...data, age: e.target.value ? parseInt(e.target.value) : undefined } as ShinobigamiSheetData;
+                    onChange(updated);
+                  }}
+                  min="0"
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
+                  性別
+                </label>
+                <input
+                  type="text"
+                  value={(data as ShinobigamiSheetData).gender || ''}
+                  onChange={(e) => {
+                    const updated = { ...data, gender: e.target.value } as ShinobigamiSheetData;
+                    onChange(updated);
+                  }}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                />
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

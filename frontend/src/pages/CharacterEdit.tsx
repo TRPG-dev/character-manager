@@ -236,6 +236,16 @@ export const CharacterEdit = () => {
               tags={tags}
               onTagsChange={setTags}
             />
+          ) : character.system === 'shinobigami' && shinobigamiSheetData ? (
+            <BasicInfoForm
+              data={shinobigamiSheetData}
+              onChange={(data) => setShinobigamiSheetData(data)}
+              system={character.system}
+              name={name}
+              onNameChange={setName}
+              tags={tags}
+              onTagsChange={setTags}
+            />
           ) : (
             <>
               <div style={{ marginBottom: '1.5rem' }}>
@@ -367,28 +377,30 @@ export const CharacterEdit = () => {
           )}
         </CollapsibleSection>
 
-        <CollapsibleSection title="ツール" defaultOpen={false}>
-          <DiceRoller initialFormula="3d6" />
+        {character.system !== 'shinobigami' && (
+          <CollapsibleSection title="ツール" defaultOpen={false}>
+            <DiceRoller initialFormula="3d6" />
 
-          {id && character.system === 'cthulhu' && (
-            <div style={{ marginTop: '1rem' }}>
-              <AutoRollAttributes
-                characterId={id}
-                system={character.system}
-                onApply={(attributes, derived) => {
-                  if (cthulhuSheetData) {
-                    const updated = {
-                      ...cthulhuSheetData,
-                      attributes,
-                      derived,
-                    };
-                    setCthulhuSheetData(updated);
-                  }
-                }}
-              />
-            </div>
-          )}
-        </CollapsibleSection>
+            {id && character.system === 'cthulhu' && (
+              <div style={{ marginTop: '1rem' }}>
+                <AutoRollAttributes
+                  characterId={id}
+                  system={character.system}
+                  onApply={(attributes, derived) => {
+                    if (cthulhuSheetData) {
+                      const updated = {
+                        ...cthulhuSheetData,
+                        attributes,
+                        derived,
+                      };
+                      setCthulhuSheetData(updated);
+                    }
+                  }}
+                />
+              </div>
+            )}
+          </CollapsibleSection>
+        )}
 
 
         <CollapsibleSection title="キャラクターシート" defaultOpen={true}>

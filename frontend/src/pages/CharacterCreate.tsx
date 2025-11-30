@@ -329,31 +329,53 @@ export const CharacterCreate = () => {
               onSystemChange={() => setStep('select')}
             />
           )}
-        </CollapsibleSection>
-
-        <CollapsibleSection title="ツール" defaultOpen={false}>
-          <DiceRoller initialFormula="3d6" />
-
-          {selectedSystem === 'cthulhu' && (
-            <div style={{ marginTop: '1rem' }}>
-              <AutoRollAttributes
-                characterId={createdCharacterId || undefined}
-                system={selectedSystem}
-                onApply={(attributes, derived) => {
-                  if (sheetData && 'attributes' in sheetData) {
-                    const cthulhuData = sheetData as CthulhuSheetData;
-                    const updated = {
-                      ...cthulhuData,
-                      attributes,
-                      derived,
-                    };
-                    setSheetData(updated);
-                  }
-                }}
-              />
-            </div>
+          {selectedSystem === 'shinobigami' && sheetData && (
+            <BasicInfoForm
+              data={sheetData as ShinobigamiSheetData}
+              onChange={(data) => setSheetData(data)}
+              system={selectedSystem}
+              name={name}
+              onNameChange={setName}
+              tags={tags}
+              onTagsChange={setTags}
+              selectedImage={selectedImage}
+              imagePreview={imagePreview}
+              onImageSelect={handleImageSelect}
+              onImageRemove={handleImageRemove}
+              uploadingImage={uploadingImage}
+              uploadProgress={uploadProgress}
+              fileInputRef={fileInputRef}
+              loading={loading}
+              onSystemChange={() => setStep('select')}
+            />
           )}
         </CollapsibleSection>
+
+        {selectedSystem !== 'shinobigami' && (
+          <CollapsibleSection title="ツール" defaultOpen={false}>
+            <DiceRoller initialFormula="3d6" />
+
+            {selectedSystem === 'cthulhu' && (
+              <div style={{ marginTop: '1rem' }}>
+                <AutoRollAttributes
+                  characterId={createdCharacterId || undefined}
+                  system={selectedSystem}
+                  onApply={(attributes, derived) => {
+                    if (sheetData && 'attributes' in sheetData) {
+                      const cthulhuData = sheetData as CthulhuSheetData;
+                      const updated = {
+                        ...cthulhuData,
+                        attributes,
+                        derived,
+                      };
+                      setSheetData(updated);
+                    }
+                  }}
+                />
+              </div>
+            )}
+          </CollapsibleSection>
+        )}
 
         <CollapsibleSection title="キャラクターシート" defaultOpen={true}>
           {selectedSystem === 'cthulhu' && sheetData && (
@@ -364,14 +386,14 @@ export const CharacterCreate = () => {
           )}
         </CollapsibleSection>
 
-        {selectedSystem === 'shinobigami' && sheetData && (
-          <div style={{ marginTop: '2rem' }}>
+        <CollapsibleSection title="キャラクターシート" defaultOpen={true}>
+          {selectedSystem === 'shinobigami' && sheetData && (
             <ShinobigamiSheetForm
               data={sheetData as ShinobigamiSheetData}
               onChange={(data) => setSheetData(data)}
             />
-          </div>
-        )}
+          )}
+        </CollapsibleSection>
 
         <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
           {!createdCharacterId ? (
