@@ -11,3 +11,4 @@ async def get_me(current_user: User = Depends(get_current_user)):
     """現在のユーザー情報を取得"""
     return current_user
 
+

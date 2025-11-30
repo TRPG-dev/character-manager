@@ -35,8 +35,15 @@ export const ShinobigamiSheetView = ({
   // 生命点スロットのチェック状態を管理（HPが6より大きい場合）
   const [hpSlots, setHpSlots] = useState<Set<number>>(new Set());
   
+  // 一時的な変調データを管理（DBに保存されない）
+  const [temporaryHencho, setTemporaryHencho] = useState<Set<string>>(new Set());
+  
   // 表示用の感情データ（元のデータ + 一時的なデータ）
   const displayEmotions = [...(sheetData.emotions || []), ...temporaryEmotions];
+  
+  // 表示用の変調データ（元のデータ + 一時的なデータ）
+  const baseHencho = new Set(sheetData.hencho || []);
+  const displayHencho = new Set([...baseHencho, ...temporaryHencho]);
 
   // PC画面（1024px以上）で2カラムレイアウト、それ以外は1カラム
   const useTwoColumn = isDesktop;
@@ -87,6 +94,24 @@ export const ShinobigamiSheetView = ({
         newSet.delete(index);
       } else {
         newSet.add(index);
+      }
+      return newSet;
+    });
+  };
+  
+  // 変調のチェックボックスの切り替え
+  const toggleHencho = (hencho: string) => {
+    // 元のデータに含まれている場合は変更できない
+    if (baseHencho.has(hencho)) {
+      return;
+    }
+    // 一時的なデータのみを切り替え
+    setTemporaryHencho(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(hencho)) {
+        newSet.delete(hencho);
+      } else {
+        newSet.add(hencho);
       }
       return newSet;
     });
@@ -333,74 +358,6 @@ export const ShinobigamiSheetView = ({
               特技
             </h2>
             
-            {/* 生命点（HP）と変調 */}
-            <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#fff', borderRadius: '4px', border: '1px solid #dee2e6', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              {/* 左側: 生命点 */}
-              <div>
-                <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>生命点（HP）</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: currentHp <= 2 ? '#dc3545' : currentHp <= 4 ? '#ffc107' : '#28a745' }}>
-                    {currentHp} / {baseHp}
-                  </div>
-                  {extraHpSlots > 0 && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginLeft: '0.5rem' }}>
-                      <div style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '0.25rem' }}>生命点スロット</div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
-                        {Array.from({ length: extraHpSlots }, (_, i) => i).map((index) => (
-                          <label
-                            key={index}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '0.25rem',
-                              fontSize: '0.875rem',
-                              cursor: 'pointer',
-                            }}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={hpSlots.has(index)}
-                              onChange={() => toggleHpSlot(index)}
-                              style={{ cursor: 'pointer' }}
-                            />
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-              {/* 右側: 変調 */}
-              <div>
-                <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.5rem' }}>変調</div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
-                  {HENCHO_OPTIONS.map((hencho) => {
-                    const isChecked = (sheetData.hencho || []).includes(hencho);
-                    return (
-                      <label
-                        key={hencho}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.25rem',
-                          fontSize: '0.875rem',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          readOnly
-                          style={{ cursor: 'pointer' }}
-                        />
-                        <span>{hencho}</span>
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-            
             {/* 感情の欄 */}
             <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#fff', borderRadius: '4px', border: '1px solid #dee2e6' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
@@ -509,6 +466,74 @@ export const ShinobigamiSheetView = ({
                     感情が登録されていません。「+ 感情を追加」ボタンで追加できます。
                   </div>
                 )}
+              </div>
+            </div>
+            
+            {/* 生命点（HP）と変調 */}
+            <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#fff', borderRadius: '4px', border: '1px solid #dee2e6', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              {/* 左側: 生命点 */}
+              <div>
+                <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>生命点（HP）</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: currentHp <= 2 ? '#dc3545' : currentHp <= 4 ? '#ffc107' : '#28a745' }}>
+                    {currentHp} / {baseHp}
+                  </div>
+                  {extraHpSlots > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginLeft: '0.5rem' }}>
+                      <div style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '0.25rem' }}>生命点スロット</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
+                        {Array.from({ length: extraHpSlots }, (_, i) => i).map((index) => (
+                          <label
+                            key={index}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.25rem',
+                              fontSize: '0.875rem',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={hpSlots.has(index)}
+                              onChange={() => toggleHpSlot(index)}
+                              style={{ cursor: 'pointer' }}
+                            />
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              {/* 右側: 変調 */}
+              <div>
+                <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.5rem' }}>変調</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
+                  {HENCHO_OPTIONS.map((hencho) => {
+                    const isChecked = displayHencho.has(hencho);
+                    return (
+                      <label
+                        key={hencho}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.25rem',
+                          fontSize: '0.875rem',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => toggleHencho(hencho)}
+                          style={{ cursor: 'pointer' }}
+                        />
+                        <span>{hencho}</span>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
             </div>
             
@@ -1071,74 +1096,6 @@ export const ShinobigamiSheetView = ({
                   特技
                 </h2>
                 
-                {/* 生命点（HP）と変調 */}
-                <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '4px', border: '1px solid #dee2e6', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  {/* 左側: 生命点 */}
-                  <div>
-                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>生命点（HP）</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: currentHp <= 2 ? '#dc3545' : currentHp <= 4 ? '#ffc107' : '#28a745' }}>
-                        {currentHp} / {baseHp}
-                      </div>
-                      {extraHpSlots > 0 && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginLeft: '0.5rem' }}>
-                          <div style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '0.25rem' }}>生命点スロット</div>
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
-                            {Array.from({ length: extraHpSlots }, (_, i) => i).map((index) => (
-                              <label
-                                key={index}
-                                style={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: '0.25rem',
-                                  fontSize: '0.875rem',
-                                  cursor: 'pointer',
-                                }}
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={hpSlots.has(index)}
-                                  onChange={() => toggleHpSlot(index)}
-                                  style={{ cursor: 'pointer' }}
-                                />
-                              </label>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  {/* 右側: 変調 */}
-                  <div>
-                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.5rem' }}>変調</div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
-                      {HENCHO_OPTIONS.map((hencho) => {
-                        const isChecked = (sheetData.hencho || []).includes(hencho);
-                        return (
-                          <label
-                            key={hencho}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '0.25rem',
-                              fontSize: '0.875rem',
-                              cursor: 'pointer',
-                            }}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={isChecked}
-                              readOnly
-                              style={{ cursor: 'pointer' }}
-                            />
-                            <span>{hencho}</span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-                
                 {/* 感情の欄 */}
                 <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '4px', border: '1px solid #dee2e6' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
@@ -1247,6 +1204,74 @@ export const ShinobigamiSheetView = ({
                         感情が登録されていません。「+ 感情を追加」ボタンで追加できます。
                       </div>
                     )}
+                  </div>
+                </div>
+                
+                {/* 生命点（HP）と変調 */}
+                <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '4px', border: '1px solid #dee2e6', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  {/* 左側: 生命点 */}
+                  <div>
+                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>生命点（HP）</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: currentHp <= 2 ? '#dc3545' : currentHp <= 4 ? '#ffc107' : '#28a745' }}>
+                        {currentHp} / {baseHp}
+                      </div>
+                      {extraHpSlots > 0 && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginLeft: '0.5rem' }}>
+                          <div style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '0.25rem' }}>生命点スロット</div>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
+                            {Array.from({ length: extraHpSlots }, (_, i) => i).map((index) => (
+                              <label
+                                key={index}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.25rem',
+                                  fontSize: '0.875rem',
+                                  cursor: 'pointer',
+                                }}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={hpSlots.has(index)}
+                                  onChange={() => toggleHpSlot(index)}
+                                  style={{ cursor: 'pointer' }}
+                                />
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {/* 右側: 変調 */}
+                  <div>
+                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.5rem' }}>変調</div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
+                      {HENCHO_OPTIONS.map((hencho) => {
+                        const isChecked = displayHencho.has(hencho);
+                        return (
+                          <label
+                            key={hencho}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.25rem',
+                              fontSize: '0.875rem',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={() => toggleHencho(hencho)}
+                              style={{ cursor: 'pointer' }}
+                            />
+                            <span>{hencho}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
                 

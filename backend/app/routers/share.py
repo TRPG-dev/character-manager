@@ -30,3 +30,4 @@ async def get_shared_character(
 
     return character
 
+
