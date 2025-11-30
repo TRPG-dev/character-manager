@@ -99,7 +99,7 @@ export const BasicInfoForm = ({
       {/* 名前 */}
       <div>
         <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-          名前 <span style={{ color: 'red' }}>*</span>
+          キャラクター名 <span style={{ color: 'red' }}>*</span>
         </label>
         <input
           type="text"
@@ -370,20 +370,6 @@ export const BasicInfoForm = ({
                   value={(data as ShinobigamiSheetData).playerName || ''}
                   onChange={(e) => {
                     const updated = { ...data, playerName: e.target.value } as ShinobigamiSheetData;
-                    onChange(updated);
-                  }}
-                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
-                  キャラクター名（PC名）
-                </label>
-                <input
-                  type="text"
-                  value={(data as ShinobigamiSheetData).characterName || ''}
-                  onChange={(e) => {
-                    const updated = { ...data, characterName: e.target.value } as ShinobigamiSheetData;
                     onChange(updated);
                   }}
                   style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}

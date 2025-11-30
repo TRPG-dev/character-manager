@@ -384,9 +384,6 @@ export const CharacterCreate = () => {
               onChange={(data) => setSheetData(data)}
             />
           )}
-        </CollapsibleSection>
-
-        <CollapsibleSection title="キャラクターシート" defaultOpen={true}>
           {selectedSystem === 'shinobigami' && sheetData && (
             <ShinobigamiSheetForm
               data={sheetData as ShinobigamiSheetData}
