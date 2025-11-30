@@ -136,7 +136,7 @@ export const CharacterDetail = () => {
   }
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }}>
+    <div style={{ width: '100%', margin: '0 auto', padding: '2rem' }}>
       {/* ヘッダーセクション */}
       <section style={{ marginBottom: '2rem' }}>
         <div style={{ 
