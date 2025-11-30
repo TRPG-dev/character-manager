@@ -91,7 +91,7 @@ export const ShinobigamiSheetView = ({
             <h2 style={{ marginTop: 0, marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #007bff', paddingBottom: '0.5rem' }}>
               流派
             </h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', marginBottom: '1rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
               {sheetData.school && (
                 <div>
                   <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>流派</div>
@@ -122,13 +122,13 @@ export const ShinobigamiSheetView = ({
                   <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.koseki}</div>
                 </div>
               )}
+              {sheetData.ryuugi && (
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>流儀</div>
+                  <div style={{ fontSize: '1.125rem', fontWeight: 'bold', whiteSpace: 'pre-wrap' }}>{sheetData.ryuugi}</div>
+                </div>
+              )}
             </div>
-            {sheetData.ryuugi && (
-              <div style={{ padding: '1rem', backgroundColor: '#fff', borderRadius: '4px', border: '1px solid #dee2e6' }}>
-                <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>流儀</div>
-                <div style={{ fontSize: '1rem', whiteSpace: 'pre-wrap' }}>{sheetData.ryuugi}</div>
-              </div>
-            )}
           </section>
         )}
       </div>
@@ -615,8 +615,7 @@ export const ShinobigamiSheetView = ({
                   <h2 style={{ marginTop: 0, marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #007bff', paddingBottom: '0.5rem' }}>
                     流派
                   </h2>
-                  {/* 流派情報を横並びでコンパクトに表示 */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', marginBottom: '1rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
                     {sheetData.school && (
                       <div>
                         <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>流派</div>
@@ -647,13 +646,13 @@ export const ShinobigamiSheetView = ({
                         <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.koseki}</div>
                       </div>
                     )}
+                    {sheetData.ryuugi && (
+                      <div style={{ gridColumn: '1 / -1' }}>
+                        <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>流儀</div>
+                        <div style={{ fontSize: '1.125rem', fontWeight: 'bold', whiteSpace: 'pre-wrap' }}>{sheetData.ryuugi}</div>
+                      </div>
+                    )}
                   </div>
-                  {sheetData.ryuugi && (
-                    <div style={{ padding: '1rem', backgroundColor: '#fff', borderRadius: '4px', border: '1px solid #dee2e6' }}>
-                      <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>流儀</div>
-                      <div style={{ fontSize: '1rem', whiteSpace: 'pre-wrap' }}>{sheetData.ryuugi}</div>
-                    </div>
-                  )}
                 </section>
               )}
             </div>
@@ -1002,13 +1001,13 @@ export const ShinobigamiSheetView = ({
                     <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.koseki}</div>
                   </div>
                 )}
+                {sheetData.ryuugi && (
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>流儀</div>
+                    <div style={{ fontSize: '1.125rem', fontWeight: 'bold', whiteSpace: 'pre-wrap' }}>{sheetData.ryuugi}</div>
+                  </div>
+                )}
               </div>
-              {sheetData.ryuugi && (
-                <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '4px' }}>
-                  <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>流儀</div>
-                  <div style={{ fontSize: '1rem', whiteSpace: 'pre-wrap' }}>{sheetData.ryuugi}</div>
-                </div>
-              )}
             </section>
           )}
 
