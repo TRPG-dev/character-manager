@@ -417,7 +417,7 @@ export const CharacterDetail = () => {
               />
             </div>
 
-            {/* 右カラム: 技能、格闘技能 */}
+            {/* 右カラム: 技能、格闘技能、武器、所持品 */}
             <div style={{
               display: 'flex',
               flexDirection: 'column',
@@ -425,12 +425,12 @@ export const CharacterDetail = () => {
             }}>
               <CthulhuSheetView 
                 data={normalizeCthulhuSheetData(character.sheet_data) as CthulhuSheetData}
-                showOnlySkills={true}
+                showOnlySkillsAndItems={true}
               />
             </div>
           </div>
 
-          {/* 2カラムレイアウトの下: 武器、所持品、その他 */}
+          {/* 2カラムレイアウトの下: その他 */}
           <CthulhuSheetView 
             data={normalizeCthulhuSheetData(character.sheet_data) as CthulhuSheetData}
             showOnlyOther={true}

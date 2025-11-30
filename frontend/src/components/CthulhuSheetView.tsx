@@ -7,10 +7,11 @@ interface CthulhuSheetViewProps {
   data: CthulhuSheetData;
   showOnlyAttributes?: boolean;
   showOnlySkills?: boolean;
+  showOnlySkillsAndItems?: boolean;
   showOnlyOther?: boolean;
 }
 
-export const CthulhuSheetView = ({ data, showOnlyAttributes, showOnlySkills, showOnlyOther }: CthulhuSheetViewProps) => {
+export const CthulhuSheetView = ({ data, showOnlyAttributes, showOnlySkills, showOnlySkillsAndItems, showOnlyOther }: CthulhuSheetViewProps) => {
   const sheetData = normalizeSheetData(data);
   const [isDesktop, setIsDesktop] = useState(false);
 
@@ -219,102 +220,163 @@ export const CthulhuSheetView = ({ data, showOnlyAttributes, showOnlySkills, sho
       );
     }
 
-  // その他のセクションのみ表示
+  // 技能・格闘技能・武器・所持品を表示
+  if (showOnlySkillsAndItems) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column',
+        gap: '1.5rem',
+      }}>
+        {/* 技能セクション */}
+        {(filteredSkills.length > 0 || (sheetData.customSkills && sheetData.customSkills.length > 0)) && (
+          <CollapsibleSection title="技能" defaultOpen={false}>
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', 
+                gap: '1rem' 
+              }}>
+                {/* デフォルト技能（初期値と変わっているもののみ） */}
+                {filteredSkills.map((skill, index) => (
+                  <div key={`default-${index}`}>
+                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>{skill.name}</div>
+                    <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>
+                      {skill.total ?? skill.baseValue ?? 0}
+                    </div>
+                  </div>
+                ))}
+                {/* 追加技能 */}
+                {(sheetData.customSkills || []).map((skill, index) => (
+                  <div key={`custom-${index}`}>
+                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>{skill.name || '(無名)'}</div>
+                    <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>
+                      {skill.total ?? skill.baseValue ?? 0}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CollapsibleSection>
+          )}
+
+          {/* 格闘技能セクション */}
+          {filteredCombatSkills.length > 0 && (
+            <CollapsibleSection title="格闘技能" defaultOpen={false}>
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', 
+                gap: '1rem' 
+              }}>
+                {filteredCombatSkills.map((skill, index) => (
+                  <div key={`combat-${index}`}>
+                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>{skill.name}</div>
+                    <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>
+                      {skill.total ?? skill.baseValue ?? 0}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CollapsibleSection>
+          )}
+
+          {/* 武器セクション */}
+          {(sheetData.weapons || []).length > 0 && (
+            <CollapsibleSection title="武器" defaultOpen={false}>
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', 
+                gap: '1rem' 
+              }}>
+                {(sheetData.weapons || []).map((weapon, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      padding: '1rem',
+                      backgroundColor: '#f8f9fa',
+                    }}
+                  >
+                    <h3 style={{ marginTop: 0, marginBottom: '0.75rem', fontSize: '1.125rem' }}>
+                      {weapon.name || '(無名の武器)'}
+                    </h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
+                      <div>
+                        <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>技能値</div>
+                        <div style={{ fontWeight: 'bold' }}>{weapon.value}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>ダメージ</div>
+                        <div style={{ fontWeight: 'bold' }}>{weapon.damage || '-'}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>射程</div>
+                        <div style={{ fontWeight: 'bold' }}>{weapon.range || '-'}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>攻撃回数</div>
+                        <div style={{ fontWeight: 'bold' }}>{weapon.attacks}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>装弾数</div>
+                        <div style={{ fontWeight: 'bold' }}>{weapon.ammo}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>故障</div>
+                        <div style={{ fontWeight: 'bold' }}>{weapon.malfunction}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>耐久力</div>
+                        <div style={{ fontWeight: 'bold' }}>{weapon.durability}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CollapsibleSection>
+          )}
+
+          {/* 所持品セクション */}
+          {(sheetData.items || []).length > 0 && (
+            <CollapsibleSection title="所持品" defaultOpen={false}>
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', 
+                gap: '0.75rem' 
+              }}>
+                {(sheetData.items || []).map((item, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      padding: '0.75rem',
+                      backgroundColor: '#f8f9fa',
+                      borderRadius: '4px',
+                      border: '1px solid #dee2e6',
+                    }}
+                  >
+                    <div style={{ fontWeight: 'bold', marginBottom: '0.25rem' }}>
+                      {item.name || '(無名のアイテム)'}
+                    </div>
+                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>
+                      数量: ×{item.quantity}
+                    </div>
+                    {item.detail && (
+                      <div style={{ fontSize: '0.875rem', color: '#495057', marginTop: '0.5rem' }}>
+                        {item.detail}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CollapsibleSection>
+          )}
+        </div>
+      );
+    }
+
+  // その他のセクションのみ表示（武器・所持品を除く）
   if (showOnlyOther) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-        {/* 武器セクション */}
-        {(sheetData.weapons || []).length > 0 && (
-          <CollapsibleSection title="武器" defaultOpen={false}>
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', 
-              gap: '1rem' 
-            }}>
-              {(sheetData.weapons || []).map((weapon, index) => (
-                <div
-                  key={index}
-                  style={{
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
-                    padding: '1rem',
-                    backgroundColor: '#f8f9fa',
-                  }}
-                >
-                  <h3 style={{ marginTop: 0, marginBottom: '0.75rem', fontSize: '1.125rem' }}>
-                    {weapon.name || '(無名の武器)'}
-                  </h3>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
-                    <div>
-                      <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>技能値</div>
-                      <div style={{ fontWeight: 'bold' }}>{weapon.value}</div>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>ダメージ</div>
-                      <div style={{ fontWeight: 'bold' }}>{weapon.damage || '-'}</div>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>射程</div>
-                      <div style={{ fontWeight: 'bold' }}>{weapon.range || '-'}</div>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>攻撃回数</div>
-                      <div style={{ fontWeight: 'bold' }}>{weapon.attacks}</div>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>装弾数</div>
-                      <div style={{ fontWeight: 'bold' }}>{weapon.ammo}</div>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>故障</div>
-                      <div style={{ fontWeight: 'bold' }}>{weapon.malfunction}</div>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>耐久力</div>
-                      <div style={{ fontWeight: 'bold' }}>{weapon.durability}</div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CollapsibleSection>
-        )}
-
-        {/* 所持品セクション */}
-        {(sheetData.items || []).length > 0 && (
-          <CollapsibleSection title="所持品" defaultOpen={false}>
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', 
-              gap: '0.75rem' 
-            }}>
-              {(sheetData.items || []).map((item, index) => (
-                <div
-                  key={index}
-                  style={{
-                    padding: '0.75rem',
-                    backgroundColor: '#f8f9fa',
-                    borderRadius: '4px',
-                    border: '1px solid #dee2e6',
-                  }}
-                >
-                  <div style={{ fontWeight: 'bold', marginBottom: '0.25rem' }}>
-                    {item.name || '(無名のアイテム)'}
-                  </div>
-                  <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>
-                    数量: ×{item.quantity}
-                  </div>
-                  {item.detail && (
-                    <div style={{ fontSize: '0.875rem', color: '#495057', marginTop: '0.5rem' }}>
-                      {item.detail}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </CollapsibleSection>
-        )}
-
         {/* 財産セクション */}
         {(sheetData.cash || sheetData.assets) && (
           <CollapsibleSection title="財産" defaultOpen={false}>
