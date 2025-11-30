@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import type { ShinobigamiSheetData } from '../types/shinobigami';
+import type { ShinobigamiSheetData, ShinobigamiEmotion } from '../types/shinobigami';
 import { normalizeSheetData } from '../utils/shinobigami';
 import { CollapsibleSection } from './CollapsibleSection';
-import { SKILL_TABLE_COLUMNS, SKILL_TABLE_DATA, getDomainFromSchool, getEmptyColumnIndices, HENCHO_OPTIONS } from '../data/shinobigamiSkills';
+import { SKILL_TABLE_COLUMNS, SKILL_TABLE_DATA, getDomainFromSchool, getEmptyColumnIndices, HENCHO_OPTIONS, EMOTION_OPTIONS } from '../data/shinobigamiSkills';
 
 interface ShinobigamiSheetViewProps {
   data: ShinobigamiSheetData;
@@ -28,9 +28,34 @@ export const ShinobigamiSheetView = ({
 
   // ダメージ状態を管理（選択された特技名のセット）
   const [damagedSkills, setDamagedSkills] = useState<Set<string>>(new Set());
+  
+  // 一時的な感情データを管理（DBに保存されない）
+  const [temporaryEmotions, setTemporaryEmotions] = useState<ShinobigamiEmotion[]>([]);
+  
+  // 表示用の感情データ（元のデータ + 一時的なデータ）
+  const displayEmotions = [...(sheetData.emotions || []), ...temporaryEmotions];
 
   // PC画面（1024px以上）で2カラムレイアウト、それ以外は1カラム
   const useTwoColumn = isDesktop;
+  
+  // 感情を追加する関数
+  const addEmotion = () => {
+    setTemporaryEmotions(prev => [...prev, { pcName: '', emotion: '' }]);
+  };
+  
+  // 感情を更新する関数
+  const updateEmotion = (index: number, field: keyof ShinobigamiEmotion, value: string) => {
+    setTemporaryEmotions(prev => {
+      const newEmotions = [...prev];
+      newEmotions[index] = { ...newEmotions[index], [field]: value };
+      return newEmotions;
+    });
+  };
+  
+  // 感情を削除する関数
+  const removeEmotion = (index: number) => {
+    setTemporaryEmotions(prev => prev.filter((_, i) => i !== index));
+  };
   
   // 特技のクリックハンドラ（ダメージ状態の切り替え）
   const handleSkillClick = (skillName: string) => {
@@ -164,7 +189,7 @@ export const ShinobigamiSheetView = ({
         {/* 奥義セクション */}
         {(sheetData.okugi || []).length > 0 && (
           <CollapsibleSection title="奥義" defaultOpen={true}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {(sheetData.okugi || []).map((okugi, index) => (
                 <div
                   key={index}
@@ -179,9 +204,9 @@ export const ShinobigamiSheetView = ({
                   <h3 style={{ marginTop: 0, marginBottom: '0.75rem', fontSize: '1.125rem', color: '#007bff' }}>
                     {okugi.name || '(無名の奥義)'}
                   </h3>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '1rem' }}>
                     <div>
-                      <div style={{ fontSize: '0.75rem', color: '#6c757d' }}>指定特技</div>
+                      <div style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '0.25rem' }}>指定特技</div>
                       <div style={{ fontWeight: 'bold' }}>{okugi.skill || '-'}</div>
                     </div>
                     {okugi.effect && (
@@ -330,32 +355,118 @@ export const ShinobigamiSheetView = ({
             </div>
             
             {/* 感情の欄 */}
-            {(sheetData.emotions || []).length > 0 && (
-              <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#fff', borderRadius: '4px', border: '1px solid #dee2e6' }}>
-                <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.5rem', fontWeight: 'bold' }}>感情</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  {(sheetData.emotions || []).map((emotion, index) => (
-                    <div
-                      key={index}
+            <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#fff', borderRadius: '4px', border: '1px solid #dee2e6' }}>
+              <div style={{ fontSize: '0.875rem', color: '#dc3545', marginBottom: '0.5rem', fontWeight: 'bold', padding: '0.5rem', backgroundColor: '#fff3cd', borderRadius: '4px', border: '1px solid #ffc107' }}>
+                ⚠️ 注意: ここで追加した感情は一時的なもので、データベースに保存されません。ページをリロードすると消えます。
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <div style={{ fontSize: '0.875rem', color: '#6c757d', fontWeight: 'bold' }}>感情</div>
+                <button
+                  onClick={addEmotion}
+                  style={{
+                    padding: '0.375rem 0.75rem',
+                    backgroundColor: '#28a745',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                  }}
+                >
+                  + 感情を追加
+                </button>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {/* 元の感情データ（読み取り専用） */}
+                {(sheetData.emotions || []).map((emotion, index) => (
+                  <div
+                    key={`original-${index}`}
+                    style={{
+                      padding: '0.75rem',
+                      backgroundColor: '#f8f9fa',
+                      borderRadius: '4px',
+                      border: '1px solid #dee2e6',
+                      display: 'flex',
+                      gap: '0.5rem',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <div style={{ flex: 1, fontWeight: 'bold' }}>{emotion.pcName || '(PC名未設定)'}</div>
+                    <div style={{ flex: 1, fontSize: '0.875rem', color: '#6c757d' }}>
+                      感情: {emotion.emotion || '(未設定)'}
+                    </div>
+                  </div>
+                ))}
+                {/* 一時的な感情データ（編集可能） */}
+                {temporaryEmotions.map((emotion, index) => (
+                  <div
+                    key={`temp-${index}`}
+                    style={{
+                      padding: '0.75rem',
+                      backgroundColor: '#fff3cd',
+                      borderRadius: '4px',
+                      border: '1px solid #ffc107',
+                      display: 'flex',
+                      gap: '0.5rem',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <input
+                      type="text"
+                      value={emotion.pcName}
+                      onChange={(e) => updateEmotion(index, 'pcName', e.target.value)}
+                      placeholder="PC名"
                       style={{
-                        padding: '0.75rem',
-                        backgroundColor: '#f8f9fa',
+                        flex: 1,
+                        padding: '0.5rem',
+                        fontSize: '0.875rem',
+                        border: '1px solid #ddd',
                         borderRadius: '4px',
-                        border: '1px solid #dee2e6',
-                        display: 'flex',
-                        gap: '0.5rem',
-                        alignItems: 'center',
+                      }}
+                    />
+                    <select
+                      value={emotion.emotion}
+                      onChange={(e) => updateEmotion(index, 'emotion', e.target.value)}
+                      style={{
+                        flex: 1,
+                        padding: '0.5rem',
+                        fontSize: '0.875rem',
+                        border: '1px solid #ddd',
+                        borderRadius: '4px',
                       }}
                     >
-                      <div style={{ flex: 1, fontWeight: 'bold' }}>{emotion.pcName || '(PC名未設定)'}</div>
-                      <div style={{ flex: 1, fontSize: '0.875rem', color: '#6c757d' }}>
-                        感情: {emotion.emotion || '(未設定)'}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                      <option value="">感情を選択</option>
+                      {EMOTION_OPTIONS.map((emo) => (
+                        <option key={emo} value={emo}>
+                          {emo}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => removeEmotion(index)}
+                      style={{
+                        padding: '0.375rem 0.75rem',
+                        backgroundColor: '#dc3545',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem',
+                      }}
+                    >
+                      削除
+                    </button>
+                  </div>
+                ))}
+                {/* 感情が一つもない場合のメッセージ */}
+                {displayEmotions.length === 0 && (
+                  <div style={{ padding: '0.75rem', textAlign: 'center', color: '#6c757d', fontSize: '0.875rem' }}>
+                    感情が登録されていません。「+ 感情を追加」ボタンで追加できます。
+                  </div>
+                )}
               </div>
-            )}
+            </div>
             
             {/* 特技テーブル */}
             <div style={{ marginBottom: '1rem', overflowX: 'auto' }}>
@@ -600,7 +711,7 @@ export const ShinobigamiSheetView = ({
               {/* 奥義セクション */}
               {(sheetData.okugi || []).length > 0 && (
                 <CollapsibleSection title="奥義" defaultOpen={true}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     {(sheetData.okugi || []).map((okugi, index) => (
                       <div
                         key={index}
@@ -615,9 +726,9 @@ export const ShinobigamiSheetView = ({
                         <h3 style={{ marginTop: 0, marginBottom: '0.75rem', fontSize: '1.125rem', color: '#007bff' }}>
                           {okugi.name || '(無名の奥義)'}
                         </h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '1rem' }}>
                           <div>
-                            <div style={{ fontSize: '0.75rem', color: '#6c757d' }}>指定特技</div>
+                            <div style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '0.25rem' }}>指定特技</div>
                             <div style={{ fontWeight: 'bold' }}>{okugi.skill || '-'}</div>
                           </div>
                           {okugi.effect && (
@@ -949,32 +1060,118 @@ export const ShinobigamiSheetView = ({
                 </div>
                 
                 {/* 感情の欄 */}
-                {(sheetData.emotions || []).length > 0 && (
-                  <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '4px', border: '1px solid #dee2e6' }}>
-                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.5rem', fontWeight: 'bold' }}>感情</div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                      {(sheetData.emotions || []).map((emotion, index) => (
-                        <div
-                          key={index}
+                <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '4px', border: '1px solid #dee2e6' }}>
+                  <div style={{ fontSize: '0.875rem', color: '#dc3545', marginBottom: '0.5rem', fontWeight: 'bold', padding: '0.5rem', backgroundColor: '#fff3cd', borderRadius: '4px', border: '1px solid #ffc107' }}>
+                    ⚠️ 注意: ここで追加した感情は一時的なもので、データベースに保存されません。ページをリロードすると消えます。
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <div style={{ fontSize: '0.875rem', color: '#6c757d', fontWeight: 'bold' }}>感情</div>
+                    <button
+                      onClick={addEmotion}
+                      style={{
+                        padding: '0.375rem 0.75rem',
+                        backgroundColor: '#28a745',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem',
+                        fontWeight: '500',
+                      }}
+                    >
+                      + 感情を追加
+                    </button>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {/* 元の感情データ（読み取り専用） */}
+                    {(sheetData.emotions || []).map((emotion, index) => (
+                      <div
+                        key={`original-${index}`}
+                        style={{
+                          padding: '0.75rem',
+                          backgroundColor: '#fff',
+                          borderRadius: '4px',
+                          border: '1px solid #dee2e6',
+                          display: 'flex',
+                          gap: '0.5rem',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <div style={{ flex: 1, fontWeight: 'bold' }}>{emotion.pcName || '(PC名未設定)'}</div>
+                        <div style={{ flex: 1, fontSize: '0.875rem', color: '#6c757d' }}>
+                          感情: {emotion.emotion || '(未設定)'}
+                        </div>
+                      </div>
+                    ))}
+                    {/* 一時的な感情データ（編集可能） */}
+                    {temporaryEmotions.map((emotion, index) => (
+                      <div
+                        key={`temp-${index}`}
+                        style={{
+                          padding: '0.75rem',
+                          backgroundColor: '#fff3cd',
+                          borderRadius: '4px',
+                          border: '1px solid #ffc107',
+                          display: 'flex',
+                          gap: '0.5rem',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <input
+                          type="text"
+                          value={emotion.pcName}
+                          onChange={(e) => updateEmotion(index, 'pcName', e.target.value)}
+                          placeholder="PC名"
                           style={{
-                            padding: '0.75rem',
-                            backgroundColor: '#fff',
+                            flex: 1,
+                            padding: '0.5rem',
+                            fontSize: '0.875rem',
+                            border: '1px solid #ddd',
                             borderRadius: '4px',
-                            border: '1px solid #dee2e6',
-                            display: 'flex',
-                            gap: '0.5rem',
-                            alignItems: 'center',
+                          }}
+                        />
+                        <select
+                          value={emotion.emotion}
+                          onChange={(e) => updateEmotion(index, 'emotion', e.target.value)}
+                          style={{
+                            flex: 1,
+                            padding: '0.5rem',
+                            fontSize: '0.875rem',
+                            border: '1px solid #ddd',
+                            borderRadius: '4px',
                           }}
                         >
-                          <div style={{ flex: 1, fontWeight: 'bold' }}>{emotion.pcName || '(PC名未設定)'}</div>
-                          <div style={{ flex: 1, fontSize: '0.875rem', color: '#6c757d' }}>
-                            感情: {emotion.emotion || '(未設定)'}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                          <option value="">感情を選択</option>
+                          {EMOTION_OPTIONS.map((emo) => (
+                            <option key={emo} value={emo}>
+                              {emo}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          onClick={() => removeEmotion(index)}
+                          style={{
+                            padding: '0.375rem 0.75rem',
+                            backgroundColor: '#dc3545',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem',
+                          }}
+                        >
+                          削除
+                        </button>
+                      </div>
+                    ))}
+                    {/* 感情が一つもない場合のメッセージ */}
+                    {displayEmotions.length === 0 && (
+                      <div style={{ padding: '0.75rem', textAlign: 'center', color: '#6c757d', fontSize: '0.875rem' }}>
+                        感情が登録されていません。「+ 感情を追加」ボタンで追加できます。
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
                 
                 {/* 特技テーブル */}
                 <div style={{ marginBottom: '1rem', overflowX: 'auto' }}>
@@ -1165,33 +1362,33 @@ export const ShinobigamiSheetView = ({
                     <h3 style={{ marginTop: 0, marginBottom: '0.75rem', fontSize: '1.125rem' }}>
                       {okugi.name || '(無名の奥義)'}
                     </h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.75rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '1rem' }}>
                       <div>
-                        <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>指定特技</div>
+                        <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>指定特技</div>
                         <div style={{ fontWeight: 'bold' }}>{okugi.skill || '-'}</div>
                       </div>
                       {okugi.effect && (
-                        <div style={{ gridColumn: '1 / -1' }}>
-                          <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>効果</div>
-                          <div style={{ whiteSpace: 'pre-wrap' }}>{okugi.effect}</div>
+                        <div>
+                          <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>効果</div>
+                          <div style={{ fontSize: '0.875rem', whiteSpace: 'pre-wrap' }}>{okugi.effect}</div>
                         </div>
                       )}
                       {okugi.strength && (
                         <div>
-                          <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>強み</div>
-                          <div style={{ whiteSpace: 'pre-wrap' }}>{okugi.strength}</div>
+                          <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>強み</div>
+                          <div style={{ fontSize: '0.875rem', whiteSpace: 'pre-wrap' }}>{okugi.strength}</div>
                         </div>
                       )}
                       {okugi.weakness && (
                         <div>
-                          <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>弱み</div>
-                          <div style={{ whiteSpace: 'pre-wrap' }}>{okugi.weakness}</div>
+                          <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>弱み</div>
+                          <div style={{ fontSize: '0.875rem', whiteSpace: 'pre-wrap' }}>{okugi.weakness}</div>
                         </div>
                       )}
                       {okugi.memo && (
-                        <div style={{ gridColumn: '1 / -1' }}>
-                          <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>メモ</div>
-                          <div style={{ whiteSpace: 'pre-wrap' }}>{okugi.memo}</div>
+                        <div>
+                          <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>メモ</div>
+                          <div style={{ fontSize: '0.875rem', whiteSpace: 'pre-wrap' }}>{okugi.memo}</div>
                         </div>
                       )}
                     </div>
