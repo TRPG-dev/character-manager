@@ -222,38 +222,22 @@ export const CthulhuSheetView = ({ data, showOnlyAttributes, showOnlySkills, sho
               <div style={{ 
                 display: 'grid', 
                 gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', 
-                gap: '0.75rem' 
+                gap: '1rem' 
               }}>
                 {/* デフォルト技能（初期値と変わっているもののみ） */}
                 {filteredSkills.map((skill, index) => (
-                  <div
-                    key={`default-${index}`}
-                    style={{
-                      padding: '0.75rem',
-                      backgroundColor: '#f8f9fa',
-                      borderRadius: '4px',
-                      border: '1px solid #dee2e6',
-                    }}
-                  >
-                    <div style={{ fontWeight: 'bold', marginBottom: '0.25rem', fontSize: '0.875rem' }}>{skill.name}</div>
-                    <div style={{ fontSize: '1.25rem', color: '#007bff', fontWeight: 'bold' }}>
+                  <div key={`default-${index}`}>
+                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>{skill.name}</div>
+                    <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>
                       {skill.total ?? skill.baseValue ?? 0}
                     </div>
                   </div>
                 ))}
                 {/* 追加技能 */}
                 {(sheetData.customSkills || []).map((skill, index) => (
-                  <div
-                    key={`custom-${index}`}
-                    style={{
-                      padding: '0.75rem',
-                      backgroundColor: '#fffbf0',
-                      borderRadius: '4px',
-                      border: '1px solid #dee2e6',
-                    }}
-                  >
-                    <div style={{ fontWeight: 'bold', marginBottom: '0.25rem', fontSize: '0.875rem' }}>{skill.name || '(無名)'}</div>
-                    <div style={{ fontSize: '1.25rem', color: '#007bff', fontWeight: 'bold' }}>
+                  <div key={`custom-${index}`}>
+                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>{skill.name || '(無名)'}</div>
+                    <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>
                       {skill.total ?? skill.baseValue ?? 0}
                     </div>
                   </div>
@@ -268,20 +252,12 @@ export const CthulhuSheetView = ({ data, showOnlyAttributes, showOnlySkills, sho
               <div style={{ 
                 display: 'grid', 
                 gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', 
-                gap: '0.75rem' 
+                gap: '1rem' 
               }}>
                 {filteredCombatSkills.map((skill, index) => (
-                  <div
-                    key={`combat-${index}`}
-                    style={{
-                      padding: '0.75rem',
-                      backgroundColor: '#f0f8ff',
-                      borderRadius: '4px',
-                      border: '1px solid #dee2e6',
-                    }}
-                  >
-                    <div style={{ fontWeight: 'bold', marginBottom: '0.25rem', fontSize: '0.875rem' }}>{skill.name}</div>
-                    <div style={{ fontSize: '1.25rem', color: '#007bff', fontWeight: 'bold' }}>
+                  <div key={`combat-${index}`}>
+                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>{skill.name}</div>
+                    <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>
                       {skill.total ?? skill.baseValue ?? 0}
                     </div>
                   </div>
@@ -762,38 +738,22 @@ export const CthulhuSheetView = ({ data, showOnlyAttributes, showOnlySkills, sho
               <div style={{ 
                 display: 'grid', 
                 gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', 
-                gap: '0.75rem' 
+                gap: '1rem' 
               }}>
                 {/* デフォルト技能（初期値と変わっているもののみ） */}
                 {filteredSkills.map((skill, index) => (
-                  <div
-                    key={`default-${index}`}
-                    style={{
-                      padding: '0.75rem',
-                      backgroundColor: '#f8f9fa',
-                      borderRadius: '4px',
-                      border: '1px solid #dee2e6',
-                    }}
-                  >
-                    <div style={{ fontWeight: 'bold', marginBottom: '0.25rem', fontSize: '0.875rem' }}>{skill.name}</div>
-                    <div style={{ fontSize: '1.25rem', color: '#007bff', fontWeight: 'bold' }}>
+                  <div key={`default-${index}`}>
+                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>{skill.name}</div>
+                    <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>
                       {skill.total ?? skill.baseValue ?? 0}
                     </div>
                   </div>
                 ))}
                 {/* 追加技能 */}
                 {(sheetData.customSkills || []).map((skill, index) => (
-                  <div
-                    key={`custom-${index}`}
-                    style={{
-                      padding: '0.75rem',
-                      backgroundColor: '#fffbf0',
-                      borderRadius: '4px',
-                      border: '1px solid #dee2e6',
-                    }}
-                  >
-                    <div style={{ fontWeight: 'bold', marginBottom: '0.25rem', fontSize: '0.875rem' }}>{skill.name || '(無名)'}</div>
-                    <div style={{ fontSize: '1.25rem', color: '#007bff', fontWeight: 'bold' }}>
+                  <div key={`custom-${index}`}>
+                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>{skill.name || '(無名)'}</div>
+                    <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>
                       {skill.total ?? skill.baseValue ?? 0}
                     </div>
                   </div>
@@ -808,20 +768,12 @@ export const CthulhuSheetView = ({ data, showOnlyAttributes, showOnlySkills, sho
               <div style={{ 
                 display: 'grid', 
                 gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', 
-                gap: '0.75rem' 
+                gap: '1rem' 
               }}>
                 {filteredCombatSkills.map((skill, index) => (
-                  <div
-                    key={`combat-${index}`}
-                    style={{
-                      padding: '0.75rem',
-                      backgroundColor: '#f0f8ff',
-                      borderRadius: '4px',
-                      border: '1px solid #dee2e6',
-                    }}
-                  >
-                    <div style={{ fontWeight: 'bold', marginBottom: '0.25rem', fontSize: '0.875rem' }}>{skill.name}</div>
-                    <div style={{ fontSize: '1.25rem', color: '#007bff', fontWeight: 'bold' }}>
+                  <div key={`combat-${index}`}>
+                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>{skill.name}</div>
+                    <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>
                       {skill.total ?? skill.baseValue ?? 0}
                     </div>
                   </div>
