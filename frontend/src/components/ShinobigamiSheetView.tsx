@@ -32,6 +32,9 @@ export const ShinobigamiSheetView = ({
   // 一時的な感情データを管理（DBに保存されない）
   const [temporaryEmotions, setTemporaryEmotions] = useState<ShinobigamiEmotion[]>([]);
   
+  // 生命点スロットのチェック状態を管理（HPが6より大きい場合）
+  const [hpSlots, setHpSlots] = useState<Set<number>>(new Set());
+  
   // 表示用の感情データ（元のデータ + 一時的なデータ）
   const displayEmotions = [...(sheetData.emotions || []), ...temporaryEmotions];
 
@@ -72,9 +75,25 @@ export const ShinobigamiSheetView = ({
     });
   };
   
-  // 生命点の計算（初期HP - ダメージ数）
+  // 生命点の計算（初期HP - ダメージ数 - 生命点スロットのチェック数）
   const baseHp = sheetData.hp !== undefined ? sheetData.hp : 6;
-  const currentHp = Math.max(0, baseHp - damagedSkills.size);
+  const currentHp = Math.max(0, baseHp - damagedSkills.size - hpSlots.size);
+  
+  // 生命点スロットのチェックボックスの切り替え
+  const toggleHpSlot = (index: number) => {
+    setHpSlots(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(index)) {
+        newSet.delete(index);
+      } else {
+        newSet.add(index);
+      }
+      return newSet;
+    });
+  };
+  
+  // HPが6より大きい場合の生命点スロット数
+  const extraHpSlots = baseHp > 6 ? baseHp - 6 : 0;
   
   // 特定のセクションのみを表示する場合
   if (showLeftColumn) {
@@ -319,8 +338,36 @@ export const ShinobigamiSheetView = ({
               {/* 左側: 生命点 */}
               <div>
                 <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>生命点（HP）</div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: currentHp <= 2 ? '#dc3545' : currentHp <= 4 ? '#ffc107' : '#28a745' }}>
-                  {currentHp} / 6
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: currentHp <= 2 ? '#dc3545' : currentHp <= 4 ? '#ffc107' : '#28a745' }}>
+                    {currentHp} / {baseHp}
+                  </div>
+                  {extraHpSlots > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginLeft: '0.5rem' }}>
+                      <div style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '0.25rem' }}>生命点スロット</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
+                        {Array.from({ length: extraHpSlots }, (_, i) => i).map((index) => (
+                          <label
+                            key={index}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.25rem',
+                              fontSize: '0.875rem',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={hpSlots.has(index)}
+                              onChange={() => toggleHpSlot(index)}
+                              style={{ cursor: 'pointer' }}
+                            />
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               {/* 右側: 変調 */}
@@ -356,9 +403,6 @@ export const ShinobigamiSheetView = ({
             
             {/* 感情の欄 */}
             <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#fff', borderRadius: '4px', border: '1px solid #dee2e6' }}>
-              <div style={{ fontSize: '0.875rem', color: '#dc3545', marginBottom: '0.5rem', fontWeight: 'bold', padding: '0.5rem', backgroundColor: '#fff3cd', borderRadius: '4px', border: '1px solid #ffc107' }}>
-                ⚠️ 注意: ここで追加した感情は一時的なもので、データベースに保存されません。ページをリロードすると消えます。
-              </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                 <div style={{ fontSize: '0.875rem', color: '#6c757d', fontWeight: 'bold' }}>感情</div>
                 <button
@@ -466,6 +510,11 @@ export const ShinobigamiSheetView = ({
                   </div>
                 )}
               </div>
+            </div>
+            
+            {/* 注意事項 */}
+            <div style={{ fontSize: '0.875rem', color: '#dc3545', marginBottom: '1rem', fontWeight: 'bold', padding: '0.5rem', backgroundColor: '#fff3cd', borderRadius: '4px', border: '1px solid #ffc107' }}>
+              注意：ここで追加・変更した生命点・変調・感情は一時的なもので、データベースに保存されません。ページをリロードすると消えます。
             </div>
             
             {/* 特技テーブル */}
@@ -830,6 +879,10 @@ export const ShinobigamiSheetView = ({
               <h2 style={{ marginTop: 0, marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #007bff', paddingBottom: '0.5rem' }}>
                 特技
               </h2>
+              {/* 注意事項 */}
+              <div style={{ fontSize: '0.875rem', color: '#dc3545', marginBottom: '1rem', fontWeight: 'bold', padding: '0.5rem', backgroundColor: '#fff3cd', borderRadius: '4px', border: '1px solid #ffc107' }}>
+                注意：ここで追加・変更した生命点・変調・感情は一時的なもので、データベースに保存されません。ページをリロードすると消えます。
+              </div>
               {/* 特技テーブル */}
               <div style={{ marginBottom: '1rem', overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem', minWidth: '800px' }}>
@@ -1023,8 +1076,36 @@ export const ShinobigamiSheetView = ({
                   {/* 左側: 生命点 */}
                   <div>
                     <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>生命点（HP）</div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: currentHp <= 2 ? '#dc3545' : currentHp <= 4 ? '#ffc107' : '#28a745' }}>
-                      {currentHp} / 6
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: currentHp <= 2 ? '#dc3545' : currentHp <= 4 ? '#ffc107' : '#28a745' }}>
+                        {currentHp} / {baseHp}
+                      </div>
+                      {extraHpSlots > 0 && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginLeft: '0.5rem' }}>
+                          <div style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '0.25rem' }}>生命点スロット</div>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
+                            {Array.from({ length: extraHpSlots }, (_, i) => i).map((index) => (
+                              <label
+                                key={index}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.25rem',
+                                  fontSize: '0.875rem',
+                                  cursor: 'pointer',
+                                }}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={hpSlots.has(index)}
+                                  onChange={() => toggleHpSlot(index)}
+                                  style={{ cursor: 'pointer' }}
+                                />
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                   {/* 右側: 変調 */}
@@ -1060,9 +1141,6 @@ export const ShinobigamiSheetView = ({
                 
                 {/* 感情の欄 */}
                 <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '4px', border: '1px solid #dee2e6' }}>
-                  <div style={{ fontSize: '0.875rem', color: '#dc3545', marginBottom: '0.5rem', fontWeight: 'bold', padding: '0.5rem', backgroundColor: '#fff3cd', borderRadius: '4px', border: '1px solid #ffc107' }}>
-                    ⚠️ 注意: ここで追加した感情は一時的なもので、データベースに保存されません。ページをリロードすると消えます。
-                  </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                     <div style={{ fontSize: '0.875rem', color: '#6c757d', fontWeight: 'bold' }}>感情</div>
                     <button
@@ -1170,6 +1248,11 @@ export const ShinobigamiSheetView = ({
                       </div>
                     )}
                   </div>
+                </div>
+                
+                {/* 注意事項 */}
+                <div style={{ fontSize: '0.875rem', color: '#dc3545', marginBottom: '1rem', fontWeight: 'bold', padding: '0.5rem', backgroundColor: '#fff3cd', borderRadius: '4px', border: '1px solid #ffc107' }}>
+                  注意：ここで追加・変更した生命点・変調・感情は一時的なもので、データベースに保存されません。ページをリロードすると消えます。
                 </div>
                 
                 {/* 特技テーブル */}

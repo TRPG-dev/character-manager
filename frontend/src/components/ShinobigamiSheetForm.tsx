@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { ShinobigamiSheetData, ShinobigamiSkill, ShinobigamiNinpo, ShinobigamiOkugi, ShinobigamiEmotion } from '../types/shinobigami';
+import type { ShinobigamiSheetData, ShinobigamiNinpo, ShinobigamiOkugi, ShinobigamiEmotion } from '../types/shinobigami';
 import { normalizeSheetData } from '../utils/shinobigami';
 import { 
   SHINOBI_SCHOOLS, 
@@ -67,22 +67,6 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
     onChange(updated);
   };
 
-  const updateSkill = (index: number, field: 'name' | 'value' | 'domain', value: string | number) => {
-    const newSkills = [...sheetData.skills];
-    newSkills[index] = { ...newSkills[index], [field]: value };
-    const updated = { ...sheetData, skills: newSkills };
-    setIsInternalUpdate(true);
-    setSheetData(updated);
-    onChange(updated);
-  };
-
-  const removeSkill = (index: number) => {
-    const newSkills = sheetData.skills.filter((_, i) => i !== index);
-    const updated = { ...sheetData, skills: newSkills };
-    setIsInternalUpdate(true);
-    setSheetData(updated);
-    onChange(updated);
-  };
 
   const addNinpo = () => {
     const newNinpo: ShinobigamiNinpo = {
@@ -372,20 +356,19 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              生命点（HP）最大値: 6
+              生命点（HP）
             </label>
             <input
               type="number"
               value={sheetData.hp ?? 6}
               onChange={(e) => {
-                const hp = Math.min(6, Math.max(0, parseInt(e.target.value) || 0));
+                const hp = Math.max(0, parseInt(e.target.value) || 0);
                 const updated = { ...sheetData, hp };
                 setIsInternalUpdate(true);
                 setSheetData(updated);
                 onChange(updated);
               }}
               min="0"
-              max="6"
               style={{
                 width: '100%',
                 padding: '0.5rem',
@@ -879,7 +862,11 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
               onChange={(e) => {
                 const updated = {
                   ...sheetData,
-                  ningu: { ...sheetData.ningu, heiryomaru: parseInt(e.target.value) || 0 },
+                  ningu: {
+                    heiryomaru: parseInt(e.target.value) || 0,
+                    jintsumaru: sheetData.ningu?.jintsumaru ?? 0,
+                    tonkofu: sheetData.ningu?.tonkofu ?? 0,
+                  },
                 };
                 setIsInternalUpdate(true);
                 setSheetData(updated);
@@ -905,7 +892,11 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
               onChange={(e) => {
                 const updated = {
                   ...sheetData,
-                  ningu: { ...sheetData.ningu, jintsumaru: parseInt(e.target.value) || 0 },
+                  ningu: {
+                    heiryomaru: sheetData.ningu?.heiryomaru ?? 0,
+                    jintsumaru: parseInt(e.target.value) || 0,
+                    tonkofu: sheetData.ningu?.tonkofu ?? 0,
+                  },
                 };
                 setIsInternalUpdate(true);
                 setSheetData(updated);
@@ -931,7 +922,11 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
               onChange={(e) => {
                 const updated = {
                   ...sheetData,
-                  ningu: { ...sheetData.ningu, tonkofu: parseInt(e.target.value) || 0 },
+                  ningu: {
+                    heiryomaru: sheetData.ningu?.heiryomaru ?? 0,
+                    jintsumaru: sheetData.ningu?.jintsumaru ?? 0,
+                    tonkofu: parseInt(e.target.value) || 0,
+                  },
                 };
                 setIsInternalUpdate(true);
                 setSheetData(updated);
