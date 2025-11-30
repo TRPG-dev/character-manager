@@ -73,3 +73,68 @@ export function getEmptyColumnIndices(domain: string): [number, number] {
   const skillIndex = getSelectedDomainColumnIndex(domain);
   return [skillIndex - 1, skillIndex + 1];
 }
+
+// 流派と流儀の対応関係
+export const SCHOOL_RYUUGI_MAP: Record<string, string> = {
+  '斜歯忍軍': '他の流派の「奥義の内容」を集める',
+  '鞍馬神流': 'シノビガミの復活を阻止する',
+  'ハグレモノ': '誰にも縛られず、自分の意志で戦った',
+  '比良坂機関': '日本の国益を守る',
+  '私立御斎学園': '誰かの秘密を探す',
+  '隠忍の血統': 'シノビガミ復活に関する情報を入手する',
+};
+
+/**
+ * 流派から流儀を取得
+ */
+export function getRyuugiFromSchool(school: string): string {
+  return SCHOOL_RYUUGI_MAP[school] || '';
+}
+
+// 階級の選択肢
+export const RANKS = [
+  '草',
+  '下忍',
+  '下忍頭',
+  '中忍',
+  '中忍頭',
+  '上忍',
+  '上忍頭',
+  '頭領',
+] as const;
+
+// 変調の選択肢
+export const HENCHO_OPTIONS = [
+  '故障',
+  'マヒ',
+  '重症',
+  '行方不明',
+  '忘却',
+  '呪い',
+] as const;
+
+// 感情の選択肢
+export const EMOTION_OPTIONS = [
+  '共感',
+  '不信',
+  '友情',
+  '怒り',
+  '愛情',
+  '妬み',
+  '忠誠',
+  '侮蔑',
+  '憧憬',
+  '劣等感',
+  '狂信',
+  '殺意',
+] as const;
+
+// 信念の選択肢
+export const SHINNEN_OPTIONS = [
+  '凶',
+  '律',
+  '我',
+  '情',
+  '忠',
+  '和',
+] as const;

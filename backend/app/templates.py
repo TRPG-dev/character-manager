@@ -64,6 +64,10 @@ def generate_cthulhu_template() -> Dict[str, Any]:
 def generate_shinobigami_template() -> Dict[str, Any]:
     """シノビガミ用テンプレート"""
     return {
+        "playerName": "",
+        "characterName": "",
+        "age": None,
+        "gender": "",
         "attributes": {
             "体術": 0,
             "忍術": 0,
@@ -72,9 +76,35 @@ def generate_shinobigami_template() -> Dict[str, Any]:
             "器術": 0,
             "心術": 0,
         },
+        "hp": 6,
+        "hencho": [],
+        "emotions": [],
+        "school": "",
+        "rank": "",
+        "ryuugi": "",
+        "surfaceFace": "",
+        "shinnen": "",
+        "koseki": 0,
         "skills": [],
-        "secret_flag": False,
+        "ninpo": [
+            {
+                "name": "接近戦攻撃",
+                "type": "攻撃",
+                "skill": "",
+                "range": "1",
+                "cost": "0",
+                "page": "基78",
+            }
+        ],
+        "okugi": [],
+        "ningu": {
+            "heiryomaru": 0,
+            "jintsumaru": 0,
+            "tonkofu": 0,
+        },
         "background": "",
+        "memo": "",
+        "sessionHistory": [],
     }
 
 
