@@ -81,123 +81,73 @@ export const CthulhuSheetView = ({ data, showOnlyAttributes, showOnlySkills, sho
           <CollapsibleSection title="派生値" defaultOpen={true}>
             <div style={{ 
               display: 'grid', 
-              gridTemplateColumns: 'repeat(2, 1fr)', 
+              gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', 
               gap: '1rem' 
             }}>
-              <div style={{
-                padding: '0.75rem',
-                backgroundColor: '#f8f9fa',
-                borderRadius: '4px',
-                border: '1px solid #dee2e6',
-              }}>
+              <div>
                 <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>SAN (現在)</div>
-                <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>
+                <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>
                   {sheetData.derived.SAN_current}
                 </div>
               </div>
-              <div style={{
-                padding: '0.75rem',
-                backgroundColor: '#f8f9fa',
-                borderRadius: '4px',
-                border: '1px solid #dee2e6',
-              }}>
+              <div>
                 <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>SAN (最大)</div>
-                <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>
+                <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>
                   {sheetData.derived.SAN_max}
                 </div>
               </div>
-              <div style={{
-                padding: '0.75rem',
-                backgroundColor: '#f8f9fa',
-                borderRadius: '4px',
-                border: '1px solid #dee2e6',
-              }}>
+              <div>
                 <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>HP (現在)</div>
-                <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>
+                <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>
                   {sheetData.derived.HP_current}
                 </div>
               </div>
-              <div style={{
-                padding: '0.75rem',
-                backgroundColor: '#f8f9fa',
-                borderRadius: '4px',
-                border: '1px solid #dee2e6',
-              }}>
+              <div>
                 <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>HP (最大)</div>
-                <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>
+                <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>
                   {sheetData.derived.HP_max}
                 </div>
               </div>
-              <div style={{
-                padding: '0.75rem',
-                backgroundColor: '#f8f9fa',
-                borderRadius: '4px',
-                border: '1px solid #dee2e6',
-              }}>
+              <div>
                 <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>MP (現在)</div>
-                <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>
+                <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>
                   {sheetData.derived.MP_current}
                 </div>
               </div>
-              <div style={{
-                padding: '0.75rem',
-                backgroundColor: '#f8f9fa',
-                borderRadius: '4px',
-                border: '1px solid #dee2e6',
-              }}>
+              <div>
                 <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>MP (最大)</div>
-                <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>
+                <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>
                   {sheetData.derived.MP_max}
                 </div>
               </div>
               {sheetData.derived.IDEA !== undefined && (
-                <div style={{
-                  padding: '0.75rem',
-                  backgroundColor: '#f8f9fa',
-                  borderRadius: '4px',
-                  border: '1px solid #dee2e6',
-                }}>
+                <div>
                   <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>アイデア</div>
-                  <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>
+                  <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>
                     {sheetData.derived.IDEA}
                   </div>
                 </div>
               )}
               {sheetData.derived.KNOW !== undefined && (
-                <div style={{
-                  padding: '0.75rem',
-                  backgroundColor: '#f8f9fa',
-                  borderRadius: '4px',
-                  border: '1px solid #dee2e6',
-                }}>
+                <div>
                   <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>知識</div>
-                  <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>
+                  <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>
                     {sheetData.derived.KNOW}
                   </div>
                 </div>
               )}
               {sheetData.derived.LUCK !== undefined && (
-                <div style={{
-                  padding: '0.75rem',
-                  backgroundColor: '#f8f9fa',
-                  borderRadius: '4px',
-                  border: '1px solid #dee2e6',
-                }}>
+                <div>
                   <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>幸運</div>
-                  <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>
+                  <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>
                     {sheetData.derived.LUCK}
                   </div>
                 </div>
               )}
               {sheetData.derived.DB && (
-                <div style={{
-                  padding: '0.75rem',
-                  backgroundColor: '#f8f9fa',
-                  borderRadius: '4px',
-                  border: '1px solid #dee2e6',
-                }}>
+                <div>
                   <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>ダメージボーナス</div>
-                  <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>
+                  <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>
                     {sheetData.derived.DB}
                   </div>
                 </div>
