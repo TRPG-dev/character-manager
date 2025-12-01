@@ -9,6 +9,9 @@ import { normalizeSheetData as normalizeCthulhuSheetData } from '../utils/cthulh
 import { ShinobigamiSheetForm } from '../components/ShinobigamiSheetForm';
 import type { ShinobigamiSheetData } from '../types/shinobigami';
 import { normalizeSheetData as normalizeShinobigamiSheetData } from '../utils/shinobigami';
+import { Sw25SheetForm } from '../components/Sw25SheetForm';
+import type { Sw25SheetData } from '../types/sw25';
+import { normalizeSheetData as normalizeSw25SheetData } from '../utils/sw25';
 import { CharacterSheetForm } from '../components/CharacterSheetForm';
 import { ImageUpload } from '../components/ImageUpload';
 import { DiceRoller } from '../components/DiceRoller';
@@ -43,6 +46,7 @@ export const CharacterEdit = () => {
   const [sheetData, setSheetData] = useState<string>('');
   const [cthulhuSheetData, setCthulhuSheetData] = useState<CthulhuSheetData | null>(null);
   const [shinobigamiSheetData, setShinobigamiSheetData] = useState<ShinobigamiSheetData | null>(null);
+  const [sw25SheetData, setSw25SheetData] = useState<Sw25SheetData | null>(null);
   const [genericSheetData, setGenericSheetData] = useState<Record<string, any> | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
@@ -67,14 +71,22 @@ export const CharacterEdit = () => {
           if (char.system === 'cthulhu') {
             setCthulhuSheetData(normalizeCthulhuSheetData(char.sheet_data));
             setShinobigamiSheetData(null);
+            setSw25SheetData(null);
             setGenericSheetData(null);
           } else if (char.system === 'shinobigami') {
             setShinobigamiSheetData(normalizeShinobigamiSheetData(char.sheet_data));
             setCthulhuSheetData(null);
+            setSw25SheetData(null);
+            setGenericSheetData(null);
+          } else if (char.system === 'sw25') {
+            setSw25SheetData(normalizeSw25SheetData(char.sheet_data));
+            setCthulhuSheetData(null);
+            setShinobigamiSheetData(null);
             setGenericSheetData(null);
           } else {
             setCthulhuSheetData(null);
             setShinobigamiSheetData(null);
+            setSw25SheetData(null);
             setGenericSheetData(char.sheet_data);
           }
         }
@@ -161,8 +173,11 @@ export const CharacterEdit = () => {
         } else if (character.system === 'shinobigami' && shinobigamiSheetData) {
           // シノビガミの場合はフォームデータを使用
           parsedSheetData = shinobigamiSheetData;
+        } else if (character.system === 'sw25' && sw25SheetData) {
+          // ソードワールド2.5の場合はフォームデータを使用
+          parsedSheetData = sw25SheetData;
         } else if (genericSheetData) {
-          // sw25、satasupeの場合はフォームデータを使用
+          // satasupeの場合はフォームデータを使用
           parsedSheetData = genericSheetData;
         } else {
           // フォールバック: JSONテキストエリアから取得
@@ -246,6 +261,134 @@ export const CharacterEdit = () => {
               tags={tags}
               onTagsChange={setTags}
             />
+          ) : character.system === 'sw25' && sw25SheetData ? (
+            <>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                  システム
+                </label>
+                <div style={{ padding: '0.75rem', backgroundColor: '#f5f5f5', borderRadius: '4px' }}>
+                  {SYSTEM_NAMES[character.system]}
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                  名前 <span style={{ color: 'red' }}>*</span>
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={handleNameChange}
+                  onBlur={() => validateName(name)}
+                  required
+                  style={{
+                    width: '100%',
+                    maxWidth: '400px',
+                    padding: '0.75rem',
+                    fontSize: '1rem',
+                    border: nameError ? '1px solid #dc3545' : '1px solid #ddd',
+                    borderRadius: '4px',
+                  }}
+                />
+                {nameError && (
+                  <div style={{ color: '#dc3545', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                    {nameError}
+                  </div>
+                )}
+              </div>
+
+              {id && accessToken && (
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <ImageUpload
+                    characterId={id}
+                    accessToken={accessToken}
+                    currentImageUrl={profileImageUrl}
+                    onUploadSuccess={(imageUrl) => {
+                      setProfileImageUrl(imageUrl);
+                      showSuccess('画像のアップロードが完了しました');
+                    }}
+                    onError={(error) => {
+                      showError(`エラー: ${error}`);
+                    }}
+                  />
+                </div>
+              )}
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                  タグ
+                </label>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
+                  {tags.map(tag => (
+                    <span
+                      key={tag}
+                      style={{
+                        padding: '0.25rem 0.5rem',
+                        backgroundColor: '#007bff',
+                        color: '#fff',
+                        borderRadius: '4px',
+                        fontSize: '0.875rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                      }}
+                    >
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveTag(tag)}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#fff',
+                          cursor: 'pointer',
+                          fontSize: '1rem',
+                        }}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <input
+                    type="text"
+                    placeholder="タグを追加"
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddTag();
+                      }
+                    }}
+                    style={{
+                      padding: '0.5rem',
+                      fontSize: '0.875rem',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      flex: 1,
+                      maxWidth: '300px',
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddTag}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      backgroundColor: '#6c757d',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    追加
+                  </button>
+                </div>
+              </div>
+            </>
           ) : (
             <>
               <div style={{ marginBottom: '1.5rem' }}>
@@ -413,6 +556,11 @@ export const CharacterEdit = () => {
             <ShinobigamiSheetForm
               data={shinobigamiSheetData}
               onChange={(data) => setShinobigamiSheetData(data)}
+            />
+          ) : character.system === 'sw25' && sw25SheetData ? (
+            <Sw25SheetForm
+              data={sw25SheetData}
+              onChange={(data) => setSw25SheetData(data)}
             />
           ) : genericSheetData ? (
             <CharacterSheetForm

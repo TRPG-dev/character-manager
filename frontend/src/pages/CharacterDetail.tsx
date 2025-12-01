@@ -9,6 +9,9 @@ import { normalizeSheetData as normalizeCthulhuSheetData } from '../utils/cthulh
 import { ShinobigamiSheetView } from '../components/ShinobigamiSheetView';
 import type { ShinobigamiSheetData } from '../types/shinobigami';
 import { normalizeSheetData as normalizeShinobigamiSheetData } from '../utils/shinobigami';
+import { Sw25SheetView } from '../components/Sw25SheetView';
+import type { Sw25SheetData } from '../types/sw25';
+import { normalizeSheetData as normalizeSw25SheetData } from '../utils/sw25';
 import { CharacterSheetView } from '../components/CharacterSheetView';
 import { ImageModal } from '../components/ImageModal';
 import { useToast } from '../contexts/ToastContext';
@@ -790,6 +793,154 @@ export const CharacterDetail = () => {
                   </section>
                 </>
               )}
+            </>
+          ) : character.system === 'sw25' ? (
+            <>
+              {/* ソードワールド2.5の場合 */}
+              <section style={{ marginBottom: '2rem' }}>
+                {character.profile_image_url ? (
+                  <div 
+                    style={{ 
+                      marginBottom: '1rem',
+                      cursor: 'pointer',
+                      display: 'inline-block',
+                    }}
+                    onClick={() => setIsImageModalOpen(true)}
+                  >
+                    <img
+                      src={character.profile_image_url}
+                      alt={character.name}
+                      style={{
+                        maxWidth: '100%',
+                        maxHeight: '400px',
+                        width: 'auto',
+                        height: 'auto',
+                        borderRadius: '8px',
+                        border: '2px solid #dee2e6',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                        transition: 'transform 0.2s, box-shadow 0.2s',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'scale(1.02)';
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'scale(1)';
+                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                      }}
+                    />
+                    <div style={{ 
+                      marginTop: '0.5rem', 
+                      fontSize: '0.875rem', 
+                      color: '#6c757d',
+                      textAlign: 'center'
+                    }}>
+                      クリックで拡大表示
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{
+                    width: '100%',
+                    maxWidth: '400px',
+                    height: '300px',
+                    backgroundColor: '#f8f9fa',
+                    border: '2px dashed #dee2e6',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#6c757d',
+                    fontSize: '1rem',
+                  }}>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>🖼️</div>
+                      <div>プロフィール画像なし</div>
+                    </div>
+                  </div>
+                )}
+                {isImageModalOpen && character.profile_image_url && (
+                  <ImageModal
+                    imageUrl={character.profile_image_url}
+                    alt={character.name}
+                    onClose={() => setIsImageModalOpen(false)}
+                  />
+                )}
+              </section>
+
+              {/* 基本情報セクション */}
+              <section style={{ 
+                marginBottom: '2rem',
+                padding: '1.5rem',
+                backgroundColor: '#f8f9fa',
+                borderRadius: '8px',
+                border: '1px solid #dee2e6'
+              }}>
+                <h2 style={{ 
+                  marginTop: 0, 
+                  marginBottom: '1rem', 
+                  fontSize: '1.5rem',
+                  borderBottom: '2px solid #007bff',
+                  paddingBottom: '0.5rem'
+                }}>
+                  基本情報
+                </h2>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+                  <div>
+                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>システム</div>
+                    <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{SYSTEM_NAMES[character.system]}</div>
+                  </div>
+                  {character.tags.length > 0 && (
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.5rem' }}>タグ</div>
+                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        {character.tags.map(tag => (
+                          <span
+                            key={tag}
+                            style={{
+                              padding: '0.375rem 0.75rem',
+                              backgroundColor: '#007bff',
+                              color: '#fff',
+                              borderRadius: '4px',
+                              fontSize: '0.875rem',
+                              fontWeight: '500',
+                            }}
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </section>
+
+              {/* キャラクターシートセクション */}
+              <section style={{ 
+                marginTop: '2rem',
+                padding: '1.5rem',
+                backgroundColor: '#fff',
+                borderRadius: '8px',
+                border: '1px solid #dee2e6'
+              }}>
+                <h2 style={{ 
+                  marginTop: 0, 
+                  marginBottom: '1.5rem', 
+                  fontSize: '1.5rem',
+                  borderBottom: '2px solid #007bff',
+                  paddingBottom: '0.5rem'
+                }}>
+                  キャラクターシート
+                </h2>
+                {(() => {
+                  const normalizedData = normalizeSw25SheetData(character.sheet_data) as Sw25SheetData;
+                  return (
+                    <Sw25SheetView
+                      data={normalizedData}
+                      isDesktop={isDesktop}
+                    />
+                  );
+                })()}
+              </section>
             </>
           ) : (
             <section style={{ 
