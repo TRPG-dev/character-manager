@@ -9,6 +9,9 @@ import { normalizeSheetData as normalizeCthulhuSheetData } from '../utils/cthulh
 import { ShinobigamiSheetForm } from '../components/ShinobigamiSheetForm';
 import type { ShinobigamiSheetData } from '../types/shinobigami';
 import { normalizeSheetData as normalizeShinobigamiSheetData } from '../utils/shinobigami';
+import { Sw25SheetForm } from '../components/Sw25SheetForm';
+import type { Sw25SheetData } from '../types/sw25';
+import { normalizeSheetData as normalizeSw25SheetData } from '../utils/sw25';
 import { DiceRoller } from '../components/DiceRoller';
 import { AutoRollAttributes } from '../components/AutoRollAttributes';
 import { CollapsibleSection } from '../components/CollapsibleSection';
@@ -32,7 +35,7 @@ export const CharacterCreate = () => {
   const [name, setName] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [sheetData, setSheetData] = useState<CthulhuSheetData | ShinobigamiSheetData | null>(null);
+  const [sheetData, setSheetData] = useState<CthulhuSheetData | ShinobigamiSheetData | Sw25SheetData | null>(null);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -79,6 +82,33 @@ export const CharacterCreate = () => {
         },
         skills: [],
         secret_flag: false,
+        background: '',
+      }));
+    } else if (system === 'sw25') {
+      setSheetData(normalizeSw25SheetData({
+        abilities: {
+          技: 0,
+          体: 0,
+          心: 0,
+        },
+        attributes: {
+          器用度: 0,
+          敏捷度: 0,
+          筋力: 0,
+          生命力: 0,
+          知力: 0,
+          精神力: 0,
+          HP: 0,
+          MP: 0,
+          生命抵抗力: 0,
+          精神抵抗力: 0,
+        },
+        classes: [],
+        skills: [],
+        magics: [],
+        weapons: [],
+        armors: [],
+        items: [],
         background: '',
       }));
     } else {
@@ -229,7 +259,7 @@ export const CharacterCreate = () => {
         system: selectedSystem,
         name: name.trim(),
         tags,
-        sheet_data: (selectedSystem === 'cthulhu' || selectedSystem === 'shinobigami') && sheetData ? sheetData : undefined,
+        sheet_data: (selectedSystem === 'cthulhu' || selectedSystem === 'shinobigami' || selectedSystem === 'sw25') && sheetData ? sheetData : undefined,
       });
       
       setCreatedCharacterId(character.id);
@@ -349,6 +379,26 @@ export const CharacterCreate = () => {
               onSystemChange={() => setStep('select')}
             />
           )}
+          {selectedSystem === 'sw25' && sheetData && (
+            <BasicInfoForm
+              data={sheetData as Sw25SheetData}
+              onChange={(data) => setSheetData(data)}
+              system={selectedSystem}
+              name={name}
+              onNameChange={setName}
+              tags={tags}
+              onTagsChange={setTags}
+              selectedImage={selectedImage}
+              imagePreview={imagePreview}
+              onImageSelect={handleImageSelect}
+              onImageRemove={handleImageRemove}
+              uploadingImage={uploadingImage}
+              uploadProgress={uploadProgress}
+              fileInputRef={fileInputRef}
+              loading={loading}
+              onSystemChange={() => setStep('select')}
+            />
+          )}
         </CollapsibleSection>
 
         {selectedSystem !== 'shinobigami' && (
@@ -387,6 +437,12 @@ export const CharacterCreate = () => {
           {selectedSystem === 'shinobigami' && sheetData && (
             <ShinobigamiSheetForm
               data={sheetData as ShinobigamiSheetData}
+              onChange={(data) => setSheetData(data)}
+            />
+          )}
+          {selectedSystem === 'sw25' && sheetData && (
+            <Sw25SheetForm
+              data={sheetData as Sw25SheetData}
               onChange={(data) => setSheetData(data)}
             />
           )}
@@ -441,7 +497,7 @@ export const CharacterCreate = () => {
                       return;
                     }
                     await updateCharacter(token, createdCharacterId, {
-                      sheet_data: (selectedSystem === 'cthulhu' || selectedSystem === 'shinobigami') && sheetData ? sheetData : undefined,
+                      sheet_data: (selectedSystem === 'cthulhu' || selectedSystem === 'shinobigami' || selectedSystem === 'sw25') && sheetData ? sheetData : undefined,
                     });
                     showSuccess('更新が完了しました');
                     navigate(`/characters/${createdCharacterId}`);

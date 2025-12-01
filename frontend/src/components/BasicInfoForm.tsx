@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import type { CthulhuSheetData } from '../types/cthulhu';
 import type { ShinobigamiSheetData } from '../types/shinobigami';
+import type { Sw25SheetData } from '../types/sw25';
 import type { SystemEnum } from '../services/api';
 
 const SYSTEM_NAMES: Record<SystemEnum, string> = {
@@ -11,8 +12,8 @@ const SYSTEM_NAMES: Record<SystemEnum, string> = {
 };
 
 interface BasicInfoFormProps {
-  data: CthulhuSheetData | ShinobigamiSheetData;
-  onChange: (data: CthulhuSheetData | ShinobigamiSheetData) => void;
+  data: CthulhuSheetData | ShinobigamiSheetData | Sw25SheetData;
+  onChange: (data: CthulhuSheetData | ShinobigamiSheetData | Sw25SheetData) => void;
   // キャラクター基本情報
   system?: SystemEnum | null;
   name: string;
