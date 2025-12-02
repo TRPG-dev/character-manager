@@ -129,3 +129,6 @@ export interface Sw25SheetData {
   memo?: string; // メモ
 }
 
+
+
+

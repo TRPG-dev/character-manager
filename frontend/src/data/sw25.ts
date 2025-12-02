@@ -556,3 +556,6 @@ export function getClassesByCategory(category: ClassCategory): Sw25ClassData[] {
   return SW25_CLASSES.filter(cls => cls.category === category);
 }
 
+
+
+
