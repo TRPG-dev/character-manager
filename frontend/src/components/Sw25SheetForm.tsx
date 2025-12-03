@@ -9,9 +9,11 @@ import {
   getRaceByName,
   getClassByName,
   getAvailableBirthsByRace,
+  getAvailableBirthsByRaceFromMapping,
   getClassesByCategory,
   getSkillsByClass,
   getMagicByClass,
+  getBaseAbilitiesByRaceBirth,
 } from '../data/sw25';
 import { CollapsibleSection } from './CollapsibleSection';
 
@@ -86,13 +88,49 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
   // 種族変更時の処理
   const updateRace = (race: string) => {
     const raceData = getRaceByName(race as any);
-    const availableBirths = raceData?.availableBirths || [];
+    // 対応表から利用可能な生まれを取得
+    const availableBirths = getAvailableBirthsByRaceFromMapping(race as any);
     const updated = { 
       ...sheetData, 
       race: race as any,
       // 現在の生まれが利用可能でない場合はクリア
       birth: availableBirths.includes(sheetData.birth as any) ? sheetData.birth : undefined,
     };
+    // 生まれが選択されている場合は基本能力値を自動設定
+    if (updated.birth) {
+      const baseAbilities = getBaseAbilitiesByRaceBirth(race as any, updated.birth as any);
+      if (baseAbilities) {
+        updated.abilities = baseAbilities;
+      }
+    }
+    // 能力値の再計算
+    updated.attributes = calculateAttributes(updated);
+    setIsInternalUpdate(true);
+    setSheetData(updated);
+    onChange(updated);
+  };
+
+  // 生まれ変更時の処理
+  const updateBirth = (birth: string) => {
+    if (!sheetData.race) {
+      // 種族が選択されていない場合は通常の更新のみ
+      updateBasicInfo('birth', birth);
+      return;
+    }
+    
+    const updated = { 
+      ...sheetData, 
+      birth: birth as any,
+    };
+    
+    // 対応表から基本能力値を取得して自動設定
+    if (birth) {
+      const baseAbilities = getBaseAbilitiesByRaceBirth(sheetData.race, birth as any);
+      if (baseAbilities) {
+        updated.abilities = baseAbilities;
+      }
+    }
+    
     // 能力値の再計算
     updated.attributes = calculateAttributes(updated);
     setIsInternalUpdate(true);
@@ -294,8 +332,8 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
   // 冒険者レベルの計算（全技能レベルの合計）
   const totalLevel = sheetData.classes.reduce((sum, cls) => sum + cls.level, 0);
 
-  // 利用可能な生まれのリスト
-  const availableBirths = sheetData.race ? getAvailableBirthsByRace(sheetData.race) : [];
+  // 利用可能な生まれのリスト（対応表から取得）
+  const availableBirths = sheetData.race ? getAvailableBirthsByRaceFromMapping(sheetData.race) : [];
 
   // 技能カテゴリ別のリスト
   const warriorClasses = getClassesByCategory('戦士系');
@@ -350,7 +388,7 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
             </label>
             <select
               value={sheetData.birth || ''}
-              onChange={(e) => updateBasicInfo('birth', e.target.value)}
+              onChange={(e) => updateBirth(e.target.value)}
               disabled={!sheetData.race}
               style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
             >

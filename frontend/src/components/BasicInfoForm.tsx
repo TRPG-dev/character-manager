@@ -3,6 +3,7 @@ import type { CthulhuSheetData } from '../types/cthulhu';
 import type { ShinobigamiSheetData } from '../types/shinobigami';
 import type { Sw25SheetData } from '../types/sw25';
 import type { SystemEnum } from '../services/api';
+import { SW25_RACES, getRaceByName, getAvailableBirthsByRaceFromMapping, getBaseAbilitiesByRaceBirth } from '../data/sw25';
 
 const SYSTEM_NAMES: Record<SystemEnum, string> = {
   cthulhu: 'クトゥルフ神話TRPG',
@@ -400,6 +401,127 @@ export const BasicInfoForm = ({
                   value={(data as ShinobigamiSheetData).gender || ''}
                   onChange={(e) => {
                     const updated = { ...data, gender: e.target.value } as ShinobigamiSheetData;
+                    onChange(updated);
+                  }}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                />
+              </div>
+            </>
+          )}
+          {system === 'sw25' && 'race' in data && (
+            <>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
+                  プレイヤー名
+                </label>
+                <input
+                  type="text"
+                  value={(data as Sw25SheetData).playerName || ''}
+                  onChange={(e) => {
+                    const updated = { ...data, playerName: e.target.value } as Sw25SheetData;
+                    onChange(updated);
+                  }}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
+                  キャラクター名
+                </label>
+                <input
+                  type="text"
+                  value={(data as Sw25SheetData).characterName || ''}
+                  onChange={(e) => {
+                    const updated = { ...data, characterName: e.target.value } as Sw25SheetData;
+                    onChange(updated);
+                  }}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
+                  種族
+                </label>
+                <select
+                  value={(data as Sw25SheetData).race || ''}
+                  onChange={(e) => {
+                    const sw25Data = data as Sw25SheetData;
+                    const race = e.target.value || undefined;
+                    const availableBirths = race ? getAvailableBirthsByRaceFromMapping(race as any) : [];
+                    const updated = { 
+                      ...sw25Data, 
+                      race: race as any,
+                      birth: availableBirths.includes(sw25Data.birth as any) ? sw25Data.birth : undefined,
+                    } as Sw25SheetData;
+                    // 生まれが選択されている場合は基本能力値を自動設定
+                    if (updated.birth && race) {
+                      const baseAbilities = getBaseAbilitiesByRaceBirth(race as any, updated.birth as any);
+                      if (baseAbilities) {
+                        updated.abilities = baseAbilities;
+                      }
+                    }
+                    onChange(updated);
+                  }}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                >
+                  <option value="">選択してください</option>
+                  {SW25_RACES.map(race => (
+                    <option key={race.name} value={race.name}>{race.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
+                  生まれ
+                </label>
+                <select
+                  value={(data as Sw25SheetData).birth || ''}
+                  onChange={(e) => {
+                    const sw25Data = data as Sw25SheetData;
+                    const birth = e.target.value || undefined;
+                    const updated = { ...sw25Data, birth: birth as any } as Sw25SheetData;
+                    // 対応表から基本能力値を取得して自動設定
+                    if (birth && sw25Data.race) {
+                      const baseAbilities = getBaseAbilitiesByRaceBirth(sw25Data.race, birth as any);
+                      if (baseAbilities) {
+                        updated.abilities = baseAbilities;
+                      }
+                    }
+                    onChange(updated);
+                  }}
+                  disabled={!((data as Sw25SheetData).race)}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                >
+                  <option value="">選択してください</option>
+                  {((data as Sw25SheetData).race ? getAvailableBirthsByRaceFromMapping((data as Sw25SheetData).race!) : []).map(birth => (
+                    <option key={birth} value={birth}>{birth}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
+                  年齢
+                </label>
+                <input
+                  type="number"
+                  value={(data as Sw25SheetData).age || ''}
+                  onChange={(e) => {
+                    const updated = { ...data, age: e.target.value ? parseInt(e.target.value) : undefined } as Sw25SheetData;
+                    onChange(updated);
+                  }}
+                  min="0"
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
+                  性別
+                </label>
+                <input
+                  type="text"
+                  value={(data as Sw25SheetData).gender || ''}
+                  onChange={(e) => {
+                    const updated = { ...data, gender: e.target.value } as Sw25SheetData;
                     onChange(updated);
                   }}
                   style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}

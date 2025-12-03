@@ -7,6 +7,25 @@ export interface Sw25Abilities {
   心: number;
 }
 
+// 能力値の初期値と成長値
+export interface Sw25AttributeInitials {
+  器用度: number;
+  敏捷度: number;
+  筋力: number;
+  生命力: number;
+  知力: number;
+  精神力: number;
+}
+
+export interface Sw25AttributeGrowth {
+  器用度: number;
+  敏捷度: number;
+  筋力: number;
+  生命力: number;
+  知力: number;
+  精神力: number;
+}
+
 // 能力値
 export interface Sw25Attributes {
   器用度: number;
@@ -19,6 +38,19 @@ export interface Sw25Attributes {
   MP: number;
   生命抵抗力: number;
   精神抵抗力: number;
+  // 派生値（追加）
+  移動力?: number;
+  全力移動?: number;
+  技巧?: number[];
+  運動?: number[];
+  観察?: number[];
+  知識?: number[];
+  魔物知識?: number;
+  先制力?: number;
+  命中力?: number[];
+  追加ダメージ?: number[];
+  回避力?: number[];
+  防護点?: number;
 }
 
 // 種族
@@ -45,7 +77,22 @@ export type Sw25Birth =
   | '一般人'
   | '傭兵'
   | '神官'
-  | '操霊術士'
+  | '操霊術師'
+  | '剣士'
+  | '薬師'
+  | '戦士'
+  | '拳闘士'
+  | '学者'
+  | '射手'
+  | '密偵'
+  | '野伏'
+  | '商人'
+  | '盗人'
+  | '趣味人'
+  | '妖精使い'
+  | '騎手'
+  | '魔法使い'
+  | '錬金術師'
   | 'その他';
 
 // 技能（クラス）
@@ -80,16 +127,45 @@ export interface Sw25Item {
 // 武器
 export interface Sw25Weapon {
   name: string; // 武器名
+  price?: number; // 価格
+  usage?: string; // 用法
+  requiredStrength?: number; // 必筋
   hit: number; // 命中力
+  power?: string; // 威力
   damage: string; // ダメージ
+  criticalValue?: number; // C値
+  additionalDamage?: number; // 追加ダメージ
+  referencePage?: string; // 参照p
   memo?: string; // 備考
 }
 
 // 防具
 export interface Sw25Armor {
   name: string; // 防具名
+  price?: number; // 価格
+  requiredStrength?: number; // 必筋
+  dodge?: number; // 回避
   defense: number; // 防護点
+  referencePage?: string; // 参照p
   memo?: string; // 備考
+  type?: '鎧' | '盾'; // 装備タイプ
+}
+
+// 装飾品
+export interface Sw25Accessory {
+  name: string; // 装飾品名
+  price?: number; // 価格
+  effect?: string; // 効果
+  referencePage?: string; // 参照p
+  memo?: string; // 備考
+  slot?: '頭' | '耳' | '顔' | '首' | '背中' | '右手' | '左手' | '腰' | '足' | '他'; // 装備スロット
+}
+
+// 言語
+export interface Sw25Language {
+  name: string; // 言語名
+  speak: boolean; // 話
+  read: boolean; // 読
 }
 
 // シートデータ全体
@@ -103,6 +179,8 @@ export interface Sw25SheetData {
   // 能力・能力値
   abilities: Sw25Abilities; // 能力（技、体、心）
   attributes: Sw25Attributes; // 能力値
+  attributeInitials?: Sw25AttributeInitials; // 能力値初期値
+  attributeGrowth?: Sw25AttributeGrowth; // 能力値成長値
   
   // 種族・生まれ
   race?: Sw25Race; // 種族
@@ -110,6 +188,13 @@ export interface Sw25SheetData {
   
   // 技能
   classes: Sw25Class[]; // 技能（クラス）とレベル
+  adventurerLevel?: number; // 冒険者レベル
+  
+  // 経験値
+  initialExperiencePoints?: number; // 初期経験点
+  gainedExperiencePoints?: number; // 獲得経験点
+  experiencePoints?: number; // 経験点
+  honorPoints?: number; // 名誉点
   
   // 戦闘特技
   skills: Sw25Skill[]; // 戦闘特技
@@ -120,9 +205,14 @@ export interface Sw25SheetData {
   // 装備
   weapons: Sw25Weapon[]; // 武器
   armors: Sw25Armor[]; // 防具
+  accessories?: Sw25Accessory[]; // 装飾品
+  money?: number; // 所持金
   
   // アイテム
   items: Sw25Item[]; // アイテム
+  
+  // 言語
+  languages?: Sw25Language[]; // 言語
   
   // その他
   background: string; // 背景・経歴
