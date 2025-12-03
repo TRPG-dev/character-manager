@@ -81,6 +81,35 @@ export function normalizeSheetData(data: any): Sw25SheetData {
       }))
     : [];
 
+  // 能力値初期値と成長値の正規化
+  const attributeInitials = data.attributeInitials || {
+    器用度: 0, 敏捷度: 0, 筋力: 0, 生命力: 0, 知力: 0, 精神力: 0,
+  };
+  const attributeGrowth = data.attributeGrowth || {
+    器用度: 0, 敏捷度: 0, 筋力: 0, 生命力: 0, 知力: 0, 精神力: 0,
+  };
+
+  // 装飾品の正規化
+  const accessories = Array.isArray(data.accessories)
+    ? data.accessories.map((a: any) => ({
+        name: a.name || '',
+        price: typeof a.price === 'number' ? a.price : undefined,
+        effect: a.effect || '',
+        referencePage: a.referencePage || '',
+        memo: a.memo || '',
+        slot: a.slot || undefined,
+      }))
+    : [];
+
+  // 言語の正規化
+  const languages = Array.isArray(data.languages)
+    ? data.languages.map((l: any) => ({
+        name: l.name || '',
+        speak: typeof l.speak === 'boolean' ? l.speak : false,
+        read: typeof l.read === 'boolean' ? l.read : false,
+      }))
+    : [];
+
   return {
     playerName: data.playerName || '',
     characterName: data.characterName || '',
@@ -88,14 +117,24 @@ export function normalizeSheetData(data: any): Sw25SheetData {
     gender: data.gender || '',
     abilities,
     attributes,
+    attributeInitials,
+    attributeGrowth,
     race: data.race || undefined,
     birth: data.birth || undefined,
     classes,
+    adventurerLevel: typeof data.adventurerLevel === 'number' ? data.adventurerLevel : undefined,
+    initialExperiencePoints: typeof data.initialExperiencePoints === 'number' ? data.initialExperiencePoints : undefined,
+    gainedExperiencePoints: typeof data.gainedExperiencePoints === 'number' ? data.gainedExperiencePoints : undefined,
+    experiencePoints: typeof data.experiencePoints === 'number' ? data.experiencePoints : undefined,
+    honorPoints: typeof data.honorPoints === 'number' ? data.honorPoints : undefined,
     skills,
     magics,
     weapons,
     armors,
+    accessories,
+    money: typeof data.money === 'number' ? data.money : undefined,
     items,
+    languages,
     background: data.background || '',
     memo: data.memo || '',
   };

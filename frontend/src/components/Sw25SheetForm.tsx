@@ -1,18 +1,14 @@
 import { useState, useEffect } from 'react';
-import type { Sw25SheetData, Sw25Class, Sw25Skill, Sw25Magic, Sw25Item, Sw25Weapon, Sw25Armor } from '../types/sw25';
+import type { Sw25SheetData, Sw25Class, Sw25Skill, Sw25Magic, Sw25Item, Sw25Weapon, Sw25Armor, Sw25Accessory } from '../types/sw25';
 import { normalizeSheetData } from '../utils/sw25';
 import { 
   SW25_RACES, 
-  SW25_CLASSES, 
   SW25_SKILLS, 
   SW25_MAGICS,
   getRaceByName,
   getClassByName,
-  getAvailableBirthsByRace,
   getAvailableBirthsByRaceFromMapping,
   getClassesByCategory,
-  getSkillsByClass,
-  getMagicByClass,
   getBaseAbilitiesByRaceBirth,
 } from '../data/sw25';
 import { CollapsibleSection } from './CollapsibleSection';
@@ -37,7 +33,7 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
 
   // 能力値の自動計算
   const calculateAttributes = (currentData: Sw25SheetData) => {
-    const { abilities, attributes } = currentData;
+    const { abilities, attributes, attributeInitials, attributeGrowth } = currentData;
     const raceData = currentData.race ? getRaceByName(currentData.race) : null;
     const raceModifiers = raceData?.abilityModifiers || { 技: 0, 体: 0, 心: 0 };
 
@@ -48,21 +44,23 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
       心: abilities.心 + raceModifiers.心,
     };
 
-    // 能力値の計算（技、体、心から派生）
-    // 器用度 = 技 + 器用度初期値
-    // 敏捷度 = 技 + 敏捷度初期値
-    // 筋力 = 体 + 筋力初期値
-    // 生命力 = 体 + 生命力初期値
-    // 知力 = 心 + 知力初期値
-    // 精神力 = 心 + 精神力初期値
+    // 初期値と成長値の取得（デフォルトは0）
+    const initials = attributeInitials || {
+      器用度: 0, 敏捷度: 0, 筋力: 0, 生命力: 0, 知力: 0, 精神力: 0,
+    };
+    const growth = attributeGrowth || {
+      器用度: 0, 敏捷度: 0, 筋力: 0, 生命力: 0, 知力: 0, 精神力: 0,
+    };
+
+    // 能力値の計算（技、体、心 + 初期値 + 成長値）
     const calculatedAttributes = {
       ...attributes,
-      器用度: baseAbilities.技,
-      敏捷度: baseAbilities.技,
-      筋力: baseAbilities.体,
-      生命力: baseAbilities.体,
-      知力: baseAbilities.心,
-      精神力: baseAbilities.心,
+      器用度: baseAbilities.技 + initials.器用度 + growth.器用度,
+      敏捷度: baseAbilities.技 + initials.敏捷度 + growth.敏捷度,
+      筋力: baseAbilities.体 + initials.筋力 + growth.筋力,
+      生命力: baseAbilities.体 + initials.生命力 + growth.生命力,
+      知力: baseAbilities.心 + initials.知力 + growth.知力,
+      精神力: baseAbilities.心 + initials.精神力 + growth.精神力,
     };
 
     // HP = 生命力 + 種族・技能修正（簡易版）
@@ -73,6 +71,18 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
     calculatedAttributes.生命抵抗力 = calculatedAttributes.生命力;
     // 精神抵抗力 = 精神力
     calculatedAttributes.精神抵抗力 = calculatedAttributes.精神力;
+
+    // 派生値の計算
+    // 移動力 = 敏捷度
+    calculatedAttributes.移動力 = calculatedAttributes.敏捷度;
+    // 全力移動 = 敏捷度 × 2
+    calculatedAttributes.全力移動 = calculatedAttributes.敏捷度 * 2;
+    // 先制力 = 敏捷度
+    calculatedAttributes.先制力 = calculatedAttributes.敏捷度;
+    // 魔物知識 = 知力
+    calculatedAttributes.魔物知識 = calculatedAttributes.知力;
+    // 防護点 = 装備している防具の防護点の合計（簡易版、後で改善）
+    calculatedAttributes.防護点 = sheetData.armors.reduce((sum, armor) => sum + armor.defense, 0);
 
     return calculatedAttributes;
   };
@@ -87,7 +97,6 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
 
   // 種族変更時の処理
   const updateRace = (race: string) => {
-    const raceData = getRaceByName(race as any);
     // 対応表から利用可能な生まれを取得
     const availableBirths = getAvailableBirthsByRaceFromMapping(race as any);
     const updated = { 
@@ -149,11 +158,27 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
     onChange(updated);
   };
 
-  // 能力値の更新（初期値の手動入力用、計算値は上書きされる）
-  const updateAttribute = (key: keyof typeof sheetData.attributes, value: number) => {
-    const newAttributes = { ...sheetData.attributes, [key]: value };
-    const updated = { ...sheetData, attributes: newAttributes };
-    // 能力値は自動計算されるため、ここでは手動入力値を保持しない
+  // 能力値初期値の更新
+  const updateAttributeInitial = (key: '器用度' | '敏捷度' | '筋力' | '生命力' | '知力' | '精神力', value: number) => {
+    const currentInitials = sheetData.attributeInitials || {
+      器用度: 0, 敏捷度: 0, 筋力: 0, 生命力: 0, 知力: 0, 精神力: 0,
+    };
+    const newInitials = { ...currentInitials, [key]: value };
+    const updated = { ...sheetData, attributeInitials: newInitials };
+    const calculatedAttributes = calculateAttributes(updated);
+    updated.attributes = calculatedAttributes;
+    setIsInternalUpdate(true);
+    setSheetData(updated);
+    onChange(updated);
+  };
+
+  // 能力値成長値の更新
+  const updateAttributeGrowth = (key: '器用度' | '敏捷度' | '筋力' | '生命力' | '知力' | '精神力', value: number) => {
+    const currentGrowth = sheetData.attributeGrowth || {
+      器用度: 0, 敏捷度: 0, 筋力: 0, 生命力: 0, 知力: 0, 精神力: 0,
+    };
+    const newGrowth = { ...currentGrowth, [key]: value };
+    const updated = { ...sheetData, attributeGrowth: newGrowth };
     const calculatedAttributes = calculateAttributes(updated);
     updated.attributes = calculatedAttributes;
     setIsInternalUpdate(true);
@@ -175,6 +200,28 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
     const newClasses = [...sheetData.classes];
     newClasses[index] = { ...newClasses[index], [field]: value };
     const updated = { ...sheetData, classes: newClasses };
+    
+    // 技能が変更された場合、自動的に戦闘特技を追加
+    if (field === 'name' && value) {
+      const classData = getClassByName(value as string);
+      if (classData && classData.availableSkills) {
+        // 既存の戦闘特技名を取得
+        const existingSkillNames = updated.skills.map(s => s.name);
+        // 新しい戦闘特技を追加（既に存在しないもののみ）
+        const newSkills = classData.availableSkills
+          .filter((skillName: string) => !existingSkillNames.includes(skillName))
+          .map((skillName: string) => {
+            const skillData = SW25_SKILLS.find(s => s.name === skillName);
+            return {
+              name: skillName,
+              effect: skillData?.effect || '',
+              memo: '',
+            };
+          });
+        updated.skills = [...updated.skills, ...newSkills];
+      }
+    }
+    
     setIsInternalUpdate(true);
     setSheetData(updated);
     onChange(updated);
@@ -255,7 +302,7 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
   };
 
   // 武器の更新
-  const updateWeapon = (index: number, field: 'name' | 'hit' | 'damage' | 'memo', value: string | number) => {
+  const updateWeapon = (index: number, field: keyof Sw25Weapon, value: string | number) => {
     const newWeapons = [...sheetData.weapons];
     newWeapons[index] = { ...newWeapons[index], [field]: value };
     const updated = { ...sheetData, weapons: newWeapons };
@@ -283,9 +330,14 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
   };
 
   // 防具の更新
-  const updateArmor = (index: number, field: 'name' | 'defense' | 'memo', value: string | number) => {
+  const updateArmor = (index: number, field: keyof Sw25Armor, value: string | number | undefined) => {
     const newArmors = [...sheetData.armors];
-    newArmors[index] = { ...newArmors[index], [field]: value };
+    if (value === undefined) {
+      const { [field]: _, ...rest } = newArmors[index];
+      newArmors[index] = rest as Sw25Armor;
+    } else {
+      newArmors[index] = { ...newArmors[index], [field]: value };
+    }
     const updated = { ...sheetData, armors: newArmors };
     setIsInternalUpdate(true);
     setSheetData(updated);
@@ -329,8 +381,79 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
     onChange(updated);
   };
 
+  // 装飾品の追加
+  const addAccessory = () => {
+    const newAccessory: Sw25Accessory = { name: '', slot: undefined };
+    const updated = { ...sheetData, accessories: [...(sheetData.accessories || []), newAccessory] };
+    setIsInternalUpdate(true);
+    setSheetData(updated);
+    onChange(updated);
+  };
+
+  // 装飾品の更新
+  const updateAccessory = (index: number, field: keyof Sw25Accessory, value: string | number | undefined) => {
+    const newAccessories = [...(sheetData.accessories || [])];
+    if (value === undefined) {
+      const { [field]: _, ...rest } = newAccessories[index];
+      newAccessories[index] = rest as Sw25Accessory;
+    } else {
+      newAccessories[index] = { ...newAccessories[index], [field]: value };
+    }
+    const updated = { ...sheetData, accessories: newAccessories };
+    setIsInternalUpdate(true);
+    setSheetData(updated);
+    onChange(updated);
+  };
+
+  // 装飾品の削除
+  const removeAccessory = (index: number) => {
+    const newAccessories = (sheetData.accessories || []).filter((_, i) => i !== index);
+    const updated = { ...sheetData, accessories: newAccessories };
+    setIsInternalUpdate(true);
+    setSheetData(updated);
+    onChange(updated);
+  };
+
+  // 言語の追加
+  const addLanguage = () => {
+    const newLanguage = { name: '', speak: false, read: false };
+    const updated = { ...sheetData, languages: [...(sheetData.languages || []), newLanguage] };
+    setIsInternalUpdate(true);
+    setSheetData(updated);
+    onChange(updated);
+  };
+
+  // 言語の更新
+  const updateLanguage = (index: number, field: 'name' | 'speak' | 'read', value: string | boolean) => {
+    const newLanguages = [...(sheetData.languages || [])];
+    newLanguages[index] = { ...newLanguages[index], [field]: value };
+    const updated = { ...sheetData, languages: newLanguages };
+    setIsInternalUpdate(true);
+    setSheetData(updated);
+    onChange(updated);
+  };
+
+  // 言語の削除
+  const removeLanguage = (index: number) => {
+    const newLanguages = (sheetData.languages || []).filter((_, i) => i !== index);
+    const updated = { ...sheetData, languages: newLanguages };
+    setIsInternalUpdate(true);
+    setSheetData(updated);
+    onChange(updated);
+  };
+
   // 冒険者レベルの計算（全技能レベルの合計）
   const totalLevel = sheetData.classes.reduce((sum, cls) => sum + cls.level, 0);
+  
+  // 冒険者レベルを更新
+  useEffect(() => {
+    if (sheetData.adventurerLevel !== totalLevel) {
+      const updated = { ...sheetData, adventurerLevel: totalLevel };
+      setIsInternalUpdate(true);
+      setSheetData(updated);
+      onChange(updated);
+    }
+  }, [totalLevel]);
 
   // 利用可能な生まれのリスト（対応表から取得）
   const availableBirths = sheetData.race ? getAvailableBirthsByRaceFromMapping(sheetData.race) : [];
@@ -475,74 +598,63 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
         </div>
 
         <div style={{ marginBottom: '1.5rem' }}>
-          <h4 style={{ marginBottom: '1rem', fontSize: '1.125rem', fontWeight: 'bold' }}>能力値（自動計算）</h4>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                器用度
-              </label>
-              <input
-                type="number"
-                value={sheetData.attributes.器用度}
-                readOnly
-                style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa' }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                敏捷度
-              </label>
-              <input
-                type="number"
-                value={sheetData.attributes.敏捷度}
-                readOnly
-                style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa' }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                筋力
-              </label>
-              <input
-                type="number"
-                value={sheetData.attributes.筋力}
-                readOnly
-                style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa' }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                生命力
-              </label>
-              <input
-                type="number"
-                value={sheetData.attributes.生命力}
-                readOnly
-                style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa' }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                知力
-              </label>
-              <input
-                type="number"
-                value={sheetData.attributes.知力}
-                readOnly
-                style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa' }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                精神力
-              </label>
-              <input
-                type="number"
-                value={sheetData.attributes.精神力}
-                readOnly
-                style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa' }}
-              />
-            </div>
+          <h4 style={{ marginBottom: '1rem', fontSize: '1.125rem', fontWeight: 'bold' }}>能力値</h4>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #ddd' }}>
+              <thead>
+                <tr style={{ backgroundColor: '#f8f9fa' }}>
+                  <th style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'left' }}>能力値</th>
+                  <th style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'center' }}>基本能力</th>
+                  <th style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'center' }}>初期値</th>
+                  <th style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'center' }}>成長値</th>
+                  <th style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'center' }}>合計</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { key: '器用度' as const, base: '技' as const },
+                  { key: '敏捷度' as const, base: '技' as const },
+                  { key: '筋力' as const, base: '体' as const },
+                  { key: '生命力' as const, base: '体' as const },
+                  { key: '知力' as const, base: '心' as const },
+                  { key: '精神力' as const, base: '心' as const },
+                ].map(({ key, base }) => {
+                  const raceData = sheetData.race ? getRaceByName(sheetData.race) : null;
+                  const raceModifiers = raceData?.abilityModifiers || { 技: 0, 体: 0, 心: 0 };
+                  const baseValue = sheetData.abilities[base] + raceModifiers[base];
+                  const initial = (sheetData.attributeInitials?.[key] || 0);
+                  const growth = (sheetData.attributeGrowth?.[key] || 0);
+                  const total = sheetData.attributes[key];
+                  return (
+                    <tr key={key}>
+                      <td style={{ padding: '0.5rem', border: '1px solid #ddd', fontWeight: 'bold' }}>{key}</td>
+                      <td style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'center', backgroundColor: '#f8f9fa' }}>
+                        {baseValue}
+                      </td>
+                      <td style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'center' }}>
+                        <input
+                          type="number"
+                          value={initial}
+                          onChange={(e) => updateAttributeInitial(key, parseInt(e.target.value) || 0)}
+                          style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
+                        />
+                      </td>
+                      <td style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'center' }}>
+                        <input
+                          type="number"
+                          value={growth}
+                          onChange={(e) => updateAttributeGrowth(key, parseInt(e.target.value) || 0)}
+                          style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
+                        />
+                      </td>
+                      <td style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'center', backgroundColor: '#f8f9fa', fontWeight: 'bold' }}>
+                        {total}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         </div>
 
@@ -593,14 +705,108 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
                 style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa' }}
               />
             </div>
+            {sheetData.attributes.移動力 !== undefined && (
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                  移動力
+                </label>
+                <input
+                  type="number"
+                  value={sheetData.attributes.移動力}
+                  readOnly
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa' }}
+                />
+              </div>
+            )}
+            {sheetData.attributes.全力移動 !== undefined && (
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                  全力移動
+                </label>
+                <input
+                  type="number"
+                  value={sheetData.attributes.全力移動}
+                  readOnly
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa' }}
+                />
+              </div>
+            )}
+            {sheetData.attributes.先制力 !== undefined && (
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                  先制力
+                </label>
+                <input
+                  type="number"
+                  value={sheetData.attributes.先制力}
+                  readOnly
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa' }}
+                />
+              </div>
+            )}
+            {sheetData.attributes.魔物知識 !== undefined && (
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                  魔物知識
+                </label>
+                <input
+                  type="number"
+                  value={sheetData.attributes.魔物知識}
+                  readOnly
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa' }}
+                />
+              </div>
+            )}
+            {sheetData.attributes.防護点 !== undefined && (
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                  防護点
+                </label>
+                <input
+                  type="number"
+                  value={sheetData.attributes.防護点}
+                  readOnly
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa' }}
+                />
+              </div>
+            )}
           </div>
         </div>
       </CollapsibleSection>
 
       {/* 技能セクション */}
       <CollapsibleSection title="技能" defaultOpen={true}>
-        <div style={{ marginBottom: '1rem' }}>
-          <strong>冒険者レベル: {totalLevel}</strong>
+        <div style={{ marginBottom: '1rem', display: 'flex', gap: '2rem', alignItems: 'center' }}>
+          <div>
+            <strong>冒険者レベル: {totalLevel}</strong>
+          </div>
+          <div>
+            <label style={{ display: 'inline-block', marginRight: '0.5rem', fontWeight: 'bold' }}>
+              初期経験点:
+            </label>
+            <input
+              type="number"
+              min="0"
+              value={sheetData.initialExperiencePoints || ''}
+              onChange={(e) => updateBasicInfo('initialExperiencePoints', e.target.value ? parseInt(e.target.value) : undefined)}
+              style={{ width: '100px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px' }}
+            />
+          </div>
+          <div>
+            <label style={{ display: 'inline-block', marginRight: '0.5rem', fontWeight: 'bold' }}>
+              獲得経験点:
+            </label>
+            <input
+              type="number"
+              min="0"
+              value={sheetData.gainedExperiencePoints || ''}
+              onChange={(e) => updateBasicInfo('gainedExperiencePoints', e.target.value ? parseInt(e.target.value) : undefined)}
+              style={{ width: '100px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px' }}
+            />
+          </div>
+          <div>
+            <strong>経験点: {(sheetData.initialExperiencePoints || 0) + (sheetData.gainedExperiencePoints || 0) - (sheetData.experiencePoints || 0)}</strong>
+          </div>
         </div>
         <div style={{ marginBottom: '1rem' }}>
           <button
@@ -695,65 +901,84 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
             + 戦闘特技を追加
           </button>
         </div>
-        {sheetData.skills.map((skill, index) => (
-          <div key={index} style={{ marginBottom: '1rem', padding: '1rem', border: '1px solid #ddd', borderRadius: '4px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '1rem', marginBottom: '0.5rem' }}>
-              <div>
+        {sheetData.skills.map((skill, index) => {
+          const skillData = SW25_SKILLS.find(s => s.name === skill.name);
+          return (
+            <div key={index} style={{ marginBottom: '1rem', padding: '1rem', border: '1px solid #ddd', borderRadius: '4px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '1rem', marginBottom: '0.5rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                    戦闘特技名
+                  </label>
+                  <select
+                    value={skill.name}
+                    onChange={(e) => {
+                      const selectedSkill = SW25_SKILLS.find(s => s.name === e.target.value);
+                      if (selectedSkill) {
+                        updateSkill(index, 'name', e.target.value);
+                        updateSkill(index, 'effect', selectedSkill.effect);
+                      }
+                    }}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  >
+                    <option value="">選択してください</option>
+                    {SW25_SKILLS.map(s => (
+                      <option key={s.name} value={s.name}>
+                        {s.name} {s.requirements ? `(${s.requirements})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                  {skillData && skillData.requirements && (
+                    <div style={{ marginTop: '0.25rem', fontSize: '0.875rem', color: '#666' }}>
+                      習得条件: {skillData.requirements}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => removeSkill(index)}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      backgroundColor: '#dc3545',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      marginTop: '1.5rem',
+                    }}
+                  >
+                    削除
+                  </button>
+                </div>
+              </div>
+              <div style={{ marginBottom: '0.5rem' }}>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                  戦闘特技名
+                  効果
                 </label>
-                <input
-                  type="text"
-                  value={skill.name}
-                  onChange={(e) => updateSkill(index, 'name', e.target.value)}
-                  placeholder="戦闘特技名を入力"
+                <textarea
+                  value={skill.effect}
+                  onChange={(e) => updateSkill(index, 'effect', e.target.value)}
+                  placeholder="効果を入力"
+                  rows={2}
                   style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
                 />
               </div>
               <div>
-                <button
-                  type="button"
-                  onClick={() => removeSkill(index)}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    backgroundColor: '#dc3545',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    marginTop: '1.5rem',
-                  }}
-                >
-                  削除
-                </button>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                  備考
+                </label>
+                <input
+                  type="text"
+                  value={skill.memo || ''}
+                  onChange={(e) => updateSkill(index, 'memo', e.target.value)}
+                  placeholder="備考を入力"
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                />
               </div>
             </div>
-            <div style={{ marginBottom: '0.5rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                効果
-              </label>
-              <textarea
-                value={skill.effect}
-                onChange={(e) => updateSkill(index, 'effect', e.target.value)}
-                placeholder="効果を入力"
-                rows={2}
-                style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                備考
-              </label>
-              <input
-                type="text"
-                value={skill.memo || ''}
-                onChange={(e) => updateSkill(index, 'memo', e.target.value)}
-                placeholder="備考を入力"
-                style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-              />
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </CollapsibleSection>
 
       {/* 魔法・スキルセクション */}
@@ -775,94 +1000,227 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
             + 魔法・スキルを追加
           </button>
         </div>
-        {sheetData.magics.map((magic, index) => (
-          <div key={index} style={{ marginBottom: '1rem', padding: '1rem', border: '1px solid #ddd', borderRadius: '4px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 100px auto', gap: '1rem', marginBottom: '0.5rem' }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                  魔法・スキル名
-                </label>
-                <input
-                  type="text"
-                  value={magic.name}
-                  onChange={(e) => updateMagic(index, 'name', e.target.value)}
-                  placeholder="魔法・スキル名を入力"
-                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                  系統
-                </label>
-                <select
-                  value={magic.system}
-                  onChange={(e) => updateMagic(index, 'system', e.target.value)}
-                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                >
-                  <option value="">選択してください</option>
-                  <option value="精霊魔法">精霊魔法</option>
-                  <option value="神聖魔法">神聖魔法</option>
-                  <option value="呪歌">呪歌</option>
-                  <option value="練技">練技</option>
-                  <option value="その他">その他</option>
-                </select>
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                  消費MP
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={magic.cost}
-                  onChange={(e) => updateMagic(index, 'cost', parseInt(e.target.value) || 0)}
-                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                />
-              </div>
-              <div>
-                <button
-                  type="button"
-                  onClick={() => removeMagic(index)}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    backgroundColor: '#dc3545',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    marginTop: '1.5rem',
-                  }}
-                >
-                  削除
-                </button>
-              </div>
+        {['精霊魔法', '神聖魔法', '呪歌', '練技', 'その他'].map(system => {
+          const systemMagics = sheetData.magics.filter(m => m.system === system);
+          if (systemMagics.length === 0) return null;
+          return (
+            <div key={system} style={{ marginBottom: '1.5rem' }}>
+              <h4 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: 'bold', color: '#666' }}>
+                {system}
+              </h4>
+              {systemMagics.map((magic) => {
+                const originalIndex = sheetData.magics.findIndex(m => m === magic);
+                return (
+                  <div key={originalIndex} style={{ marginBottom: '1rem', padding: '1rem', border: '1px solid #ddd', borderRadius: '4px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 100px auto', gap: '1rem', marginBottom: '0.5rem' }}>
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                          魔法・スキル名
+                        </label>
+                        <select
+                          value={magic.name}
+                          onChange={(e) => {
+                            const selectedMagic = SW25_MAGICS.find(m => m.name === e.target.value);
+                            if (selectedMagic) {
+                              updateMagic(originalIndex, 'name', e.target.value);
+                              updateMagic(originalIndex, 'system', selectedMagic.system);
+                              updateMagic(originalIndex, 'cost', selectedMagic.cost);
+                              updateMagic(originalIndex, 'effect', selectedMagic.effect);
+                            } else {
+                              updateMagic(originalIndex, 'name', e.target.value);
+                            }
+                          }}
+                          style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                        >
+                          <option value="">選択してください</option>
+                          {SW25_MAGICS.filter(m => m.system === system).map(m => (
+                            <option key={m.name} value={m.name}>{m.name}</option>
+                          ))}
+                        </select>
+                        <input
+                          type="text"
+                          value={magic.name}
+                          onChange={(e) => updateMagic(originalIndex, 'name', e.target.value)}
+                          placeholder="または手動入力"
+                          style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', marginTop: '0.5rem' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                          系統
+                        </label>
+                        <select
+                          value={magic.system}
+                          onChange={(e) => updateMagic(originalIndex, 'system', e.target.value)}
+                          style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                        >
+                          <option value="">選択してください</option>
+                          <option value="精霊魔法">精霊魔法</option>
+                          <option value="神聖魔法">神聖魔法</option>
+                          <option value="呪歌">呪歌</option>
+                          <option value="練技">練技</option>
+                          <option value="その他">その他</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                          消費MP
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={magic.cost}
+                          onChange={(e) => updateMagic(originalIndex, 'cost', parseInt(e.target.value) || 0)}
+                          style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                        />
+                      </div>
+                      <div>
+                        <button
+                          type="button"
+                          onClick={() => removeMagic(originalIndex)}
+                          style={{
+                            padding: '0.5rem 1rem',
+                            backgroundColor: '#dc3545',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            marginTop: '1.5rem',
+                          }}
+                        >
+                          削除
+                        </button>
+                      </div>
+                    </div>
+                    <div style={{ marginBottom: '0.5rem' }}>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                        効果
+                      </label>
+                      <textarea
+                        value={magic.effect}
+                        onChange={(e) => updateMagic(originalIndex, 'effect', e.target.value)}
+                        placeholder="効果を入力"
+                        rows={2}
+                        style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                        備考
+                      </label>
+                      <input
+                        type="text"
+                        value={magic.memo || ''}
+                        onChange={(e) => updateMagic(originalIndex, 'memo', e.target.value)}
+                        placeholder="備考を入力"
+                        style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-            <div style={{ marginBottom: '0.5rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                効果
-              </label>
-              <textarea
-                value={magic.effect}
-                onChange={(e) => updateMagic(index, 'effect', e.target.value)}
-                placeholder="効果を入力"
-                rows={2}
-                style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                備考
-              </label>
-              <input
-                type="text"
-                value={magic.memo || ''}
-                onChange={(e) => updateMagic(index, 'memo', e.target.value)}
-                placeholder="備考を入力"
-                style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-              />
-            </div>
+          );
+        })}
+        {/* 系統が未設定の魔法・スキル */}
+        {sheetData.magics.filter(m => !m.system || m.system === '').length > 0 && (
+          <div style={{ marginBottom: '1.5rem' }}>
+            <h4 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: 'bold', color: '#666' }}>
+              未分類
+            </h4>
+              {sheetData.magics
+              .map((magic, idx) => ({ magic, idx }))
+              .filter(({ magic }) => !magic.system || magic.system === '')
+              .map(({ magic, idx: magicIdx }) => (
+                <div key={magicIdx} style={{ marginBottom: '1rem', padding: '1rem', border: '1px solid #ddd', borderRadius: '4px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 100px auto', gap: '1rem', marginBottom: '0.5rem' }}>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                        魔法・スキル名
+                      </label>
+                      <input
+                        type="text"
+                        value={magic.name}
+                        onChange={(e) => updateMagic(magicIdx, 'name', e.target.value)}
+                        placeholder="魔法・スキル名を入力"
+                        style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                        系統
+                      </label>
+                      <select
+                        value={magic.system}
+                        onChange={(e) => updateMagic(magicIdx, 'system', e.target.value)}
+                        style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                      >
+                        <option value="">選択してください</option>
+                        <option value="精霊魔法">精霊魔法</option>
+                        <option value="神聖魔法">神聖魔法</option>
+                        <option value="呪歌">呪歌</option>
+                        <option value="練技">練技</option>
+                        <option value="その他">その他</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                        消費MP
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={magic.cost}
+                        onChange={(e) => updateMagic(magicIdx, 'cost', parseInt(e.target.value) || 0)}
+                        style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                      />
+                    </div>
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => removeMagic(magicIdx)}
+                        style={{
+                          padding: '0.5rem 1rem',
+                          backgroundColor: '#dc3545',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          marginTop: '1.5rem',
+                        }}
+                      >
+                        削除
+                      </button>
+                    </div>
+                  </div>
+                  <div style={{ marginBottom: '0.5rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                      効果
+                    </label>
+                    <textarea
+                      value={magic.effect}
+                      onChange={(e) => updateMagic(magicIdx, 'effect', e.target.value)}
+                      placeholder="効果を入力"
+                      rows={2}
+                      style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                      備考
+                    </label>
+                    <input
+                      type="text"
+                      value={magic.memo || ''}
+                      onChange={(e) => updateMagic(magicIdx, 'memo', e.target.value)}
+                      placeholder="備考を入力"
+                      style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                    />
+                  </div>
+                </div>
+              ))}
           </div>
-        ))}
+        )}
       </CollapsibleSection>
 
       {/* 装備セクション */}
@@ -937,6 +1295,88 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
                   >
                     削除
                   </button>
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginBottom: '0.5rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                    価格
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={weapon.price || 0}
+                    onChange={(e) => updateWeapon(index, 'price', e.target.value ? parseInt(e.target.value) : 0)}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                    用法
+                  </label>
+                  <input
+                    type="text"
+                    value={weapon.usage || ''}
+                    onChange={(e) => updateWeapon(index, 'usage', e.target.value)}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                    必筋
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={weapon.requiredStrength || 0}
+                    onChange={(e) => updateWeapon(index, 'requiredStrength', e.target.value ? parseInt(e.target.value) : 0)}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                    威力
+                  </label>
+                  <input
+                    type="text"
+                    value={weapon.power || ''}
+                    onChange={(e) => updateWeapon(index, 'power', e.target.value)}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                    C値
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={weapon.criticalValue || 0}
+                    onChange={(e) => updateWeapon(index, 'criticalValue', e.target.value ? parseInt(e.target.value) : 0)}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                    追加ダメージ
+                  </label>
+                  <input
+                    type="number"
+                    value={weapon.additionalDamage || 0}
+                    onChange={(e) => updateWeapon(index, 'additionalDamage', e.target.value ? parseInt(e.target.value) : 0)}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                    参照p
+                  </label>
+                  <input
+                    type="text"
+                    value={weapon.referencePage || ''}
+                    onChange={(e) => updateWeapon(index, 'referencePage', e.target.value)}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  />
                 </div>
               </div>
               <div>
@@ -1014,6 +1454,68 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
                   </button>
                 </div>
               </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginBottom: '0.5rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                    価格
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={armor.price || 0}
+                    onChange={(e) => updateArmor(index, 'price', e.target.value ? parseInt(e.target.value) : 0)}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                    必筋
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={armor.requiredStrength || 0}
+                    onChange={(e) => updateArmor(index, 'requiredStrength', e.target.value ? parseInt(e.target.value) : 0)}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                    回避
+                  </label>
+                  <input
+                    type="number"
+                    value={armor.dodge || 0}
+                    onChange={(e) => updateArmor(index, 'dodge', e.target.value ? parseInt(e.target.value) : 0)}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                    タイプ
+                  </label>
+                  <select
+                    value={armor.type || ''}
+                    onChange={(e) => updateArmor(index, 'type', e.target.value ? (e.target.value as '鎧' | '盾') : undefined)}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  >
+                    <option value="">選択してください</option>
+                    <option value="鎧">鎧</option>
+                    <option value="盾">盾</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                    参照p
+                  </label>
+                  <input
+                    type="text"
+                    value={armor.referencePage || ''}
+                    onChange={(e) => updateArmor(index, 'referencePage', e.target.value)}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  />
+                </div>
+              </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                   備考
@@ -1027,6 +1529,144 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
               </div>
             </div>
           ))}
+        </div>
+
+        <div style={{ marginBottom: '1.5rem' }}>
+          <h4 style={{ marginBottom: '1rem', fontSize: '1.125rem', fontWeight: 'bold' }}>装飾品</h4>
+          <button
+            type="button"
+            onClick={addAccessory}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              marginBottom: '1rem',
+            }}
+          >
+            + 装飾品を追加
+          </button>
+          {(sheetData.accessories || []).map((accessory, index) => (
+            <div key={index} style={{ marginBottom: '1rem', padding: '1rem', border: '1px solid #ddd', borderRadius: '4px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 150px auto', gap: '1rem', marginBottom: '0.5rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                    装飾品名
+                  </label>
+                  <input
+                    type="text"
+                    value={accessory.name}
+                    onChange={(e) => updateAccessory(index, 'name', e.target.value)}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                    装備スロット
+                  </label>
+                  <select
+                    value={accessory.slot || ''}
+                    onChange={(e) => updateAccessory(index, 'slot', e.target.value as any || undefined)}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  >
+                    <option value="">選択してください</option>
+                    <option value="頭">頭</option>
+                    <option value="耳">耳</option>
+                    <option value="顔">顔</option>
+                    <option value="首">首</option>
+                    <option value="背中">背中</option>
+                    <option value="右手">右手</option>
+                    <option value="左手">左手</option>
+                    <option value="腰">腰</option>
+                    <option value="足">足</option>
+                    <option value="他">他</option>
+                  </select>
+                </div>
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => removeAccessory(index)}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      backgroundColor: '#dc3545',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      marginTop: '1.5rem',
+                    }}
+                  >
+                    削除
+                  </button>
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginBottom: '0.5rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                    価格
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={accessory.price || 0}
+                    onChange={(e) => updateAccessory(index, 'price', e.target.value ? parseInt(e.target.value) : 0)}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                    参照p
+                  </label>
+                  <input
+                    type="text"
+                    value={accessory.referencePage || ''}
+                    onChange={(e) => updateAccessory(index, 'referencePage', e.target.value)}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  />
+                </div>
+              </div>
+              <div style={{ marginBottom: '0.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                  効果
+                </label>
+                <textarea
+                  value={accessory.effect || ''}
+                  onChange={(e) => updateAccessory(index, 'effect', e.target.value)}
+                  rows={2}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                  備考
+                </label>
+                <input
+                  type="text"
+                  value={accessory.memo || ''}
+                  onChange={(e) => updateAccessory(index, 'memo', e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ marginBottom: '1.5rem' }}>
+          <h4 style={{ marginBottom: '1rem', fontSize: '1.125rem', fontWeight: 'bold' }}>所持金</h4>
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+              所持金（ガメル）
+            </label>
+            <input
+              type="number"
+              min="0"
+              value={sheetData.money || ''}
+              onChange={(e) => updateBasicInfo('money', e.target.value ? parseInt(e.target.value) : undefined)}
+              style={{ width: '200px', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+            />
+          </div>
         </div>
 
         <div>
@@ -1106,8 +1746,111 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
         </div>
       </CollapsibleSection>
 
+      {/* 言語セクション */}
+      <CollapsibleSection title="言語" defaultOpen={false}>
+        <div style={{ marginBottom: '1rem' }}>
+          <button
+            type="button"
+            onClick={addLanguage}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              marginBottom: '1rem',
+            }}
+          >
+            + 言語を追加
+          </button>
+        </div>
+        {(sheetData.languages || []).map((language, index) => (
+          <div key={index} style={{ marginBottom: '1rem', padding: '1rem', border: '1px solid #ddd', borderRadius: '4px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto auto', gap: '1rem', alignItems: 'center' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                  言語名
+                </label>
+                <input
+                  type="text"
+                  value={language.name}
+                  onChange={(e) => updateLanguage(index, 'name', e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={language.speak}
+                    onChange={(e) => updateLanguage(index, 'speak', e.target.checked)}
+                  />
+                  <span>話</span>
+                </label>
+              </div>
+              <div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={language.read}
+                    onChange={(e) => updateLanguage(index, 'read', e.target.checked)}
+                  />
+                  <span>読</span>
+                </label>
+              </div>
+              <div>
+                <button
+                  type="button"
+                  onClick={() => removeLanguage(index)}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    backgroundColor: '#dc3545',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  削除
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </CollapsibleSection>
+
       {/* その他セクション */}
       <CollapsibleSection title="その他" defaultOpen={false}>
+        <div style={{ marginBottom: '1.5rem' }}>
+          <h4 style={{ marginBottom: '1rem', fontSize: '1.125rem', fontWeight: 'bold' }}>経験点・名誉点</h4>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                使用経験点
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={sheetData.experiencePoints || ''}
+                onChange={(e) => updateBasicInfo('experiencePoints', e.target.value ? parseInt(e.target.value) : undefined)}
+                style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                名誉点
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={sheetData.honorPoints || ''}
+                onChange={(e) => updateBasicInfo('honorPoints', e.target.value ? parseInt(e.target.value) : undefined)}
+                style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+              />
+            </div>
+          </div>
+        </div>
         <div style={{ marginBottom: '1.5rem' }}>
           <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
             背景・経歴
