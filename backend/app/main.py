@@ -1,9 +1,39 @@
 import os
+import logging
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import auth, characters, share, images, dice
+from alembic.config import Config
+from alembic import command
 
-app = FastAPI(title="Character Manager API", version="1.0.0")
+logger = logging.getLogger(__name__)
+
+
+def run_migrations():
+    """Run database migrations on startup."""
+    try:
+        logger.info("Running database migrations...")
+        alembic_cfg = Config("alembic.ini")
+        command.upgrade(alembic_cfg, "head")
+        logger.info("Database migrations completed successfully")
+    except Exception as e:
+        logger.error(f"Failed to run migrations: {e}")
+        raise
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan events."""
+    run_migrations()
+    yield
+
+
+app = FastAPI(
+    title="Character Manager API",
+    version="1.0.0",
+    lifespan=lifespan
+)
 
 # CORS設定
 CORS_ORIGINS = os.getenv(
