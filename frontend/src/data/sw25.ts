@@ -443,6 +443,127 @@ export const SW25_SKILLS: Sw25SkillData[] = [
     category: '選択',
     effect: '知識判定に+1される。',
   },
+  // 自動追加される戦闘特技
+  {
+    name: 'タフネス',
+    category: '自動',
+    requirements: 'ファイターLv7以上',
+    effect: 'HPが+5される。',
+  },
+  {
+    name: 'バトルマスター',
+    category: '自動',
+    requirements: 'ファイターLv13以上 または グラップラーLv13以上',
+    effect: '戦闘判定に+2される。',
+  },
+  {
+    name: '追加攻撃',
+    category: '自動',
+    requirements: 'グラップラーLv1以上',
+    effect: '1ターンに2回攻撃できる。',
+  },
+  {
+    name: 'カウンター',
+    category: '自動',
+    requirements: 'グラップラーLv7以上',
+    effect: '回避成功時に反撃できる。',
+  },
+  {
+    name: 'トレジャーハント',
+    category: '自動',
+    requirements: 'スカウトLv5以上',
+    effect: '宝箱発見判定に+2される。',
+  },
+  {
+    name: 'ファストアクション',
+    category: '自動',
+    requirements: 'スカウトLv7以上',
+    effect: '先制判定に+3される。',
+  },
+  {
+    name: '影走り',
+    category: '自動',
+    requirements: 'スカウトLv9以上',
+    effect: '移動力が+3される。',
+  },
+  {
+    name: 'トレジャーマスター',
+    category: '自動',
+    requirements: 'スカウトLv12以上',
+    effect: '宝箱発見判定に+5される。',
+  },
+  {
+    name: '匠の技',
+    category: '自動',
+    requirements: 'スカウトLv15以上',
+    effect: '全ての判定に+1される。',
+  },
+  {
+    name: 'サバイバビリティ',
+    category: '自動',
+    requirements: 'レンジャーLv5以上',
+    effect: '生存判定に+2される。',
+  },
+  {
+    name: '不屈',
+    category: '自動',
+    requirements: 'レンジャーLv7以上',
+    effect: '状態異常への抵抗力が+2される。',
+  },
+  {
+    name: 'ポーションマスター',
+    category: '自動',
+    requirements: 'レンジャーLv9以上',
+    effect: 'ポーションの効果が+1される。',
+  },
+  {
+    name: '縮地',
+    category: '自動',
+    requirements: 'レンジャーLv12以上',
+    effect: '移動力が+5される。',
+  },
+  {
+    name: 'ランアンドガン',
+    category: '自動',
+    requirements: 'レンジャーLv15以上',
+    effect: '移動後でも射撃攻撃が可能。',
+  },
+  {
+    name: '鋭い目',
+    category: '自動',
+    requirements: 'セージLv5以上',
+    effect: '観察判定に+2される。',
+  },
+  {
+    name: '弱点看破',
+    category: '自動',
+    requirements: 'セージLv7以上',
+    effect: '弱点攻撃のダメージが+2される。',
+  },
+  {
+    name: 'マナセーブ',
+    category: '自動',
+    requirements: 'セージLv9以上',
+    effect: 'MP消費が-1される（最低1）。',
+  },
+  {
+    name: 'マナ耐性',
+    category: '自動',
+    requirements: 'セージLv12以上',
+    effect: 'MPダメージへの抵抗力が+2される。',
+  },
+  {
+    name: '賢人の知恵',
+    category: '自動',
+    requirements: 'セージLv15以上',
+    effect: '全ての知識判定に+2される。',
+  },
+  {
+    name: 'ルーンマスター',
+    category: '自動',
+    requirements: '魔法系技能Lv11以上',
+    effect: '魔法の効果が+1される。',
+  },
 ];
 
 // ============================================================================

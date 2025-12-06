@@ -24,6 +24,8 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
       return;
     }
     const normalized = normalizeSheetData(data);
+    // 自動追加される戦闘特技を更新
+    normalized.skills = updateAutoSkills(normalized);
     setSheetData(normalized);
   }, [data, isInternalUpdate]);
 
@@ -36,6 +38,102 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
   const calculateAdventurerLevel = (classes: Sw25Class[]): number => {
     if (classes.length === 0) return 0;
     return Math.max(...classes.map(cls => cls.level));
+  };
+
+  // 修得可能な戦闘特技数の計算（冒険者レベルが奇数の場合に1つずつ増える）
+  const calculateMaxSkills = (adventurerLevel: number): number => {
+    if (adventurerLevel <= 0) return 0;
+    // レベル1で1つ、レベル3で2つ、レベル5で3つ、...
+    return Math.floor((adventurerLevel + 1) / 2);
+  };
+
+  // 自動追加される戦闘特技を更新
+  const updateAutoSkills = (currentData: Sw25SheetData): Sw25Skill[] => {
+    // 自動追加される戦闘特技の対応表
+    const autoSkillMap: Record<string, Array<{ level: number; skillName: string }>> = {
+      'ファイター': [
+        { level: 7, skillName: 'タフネス' },
+        { level: 13, skillName: 'バトルマスター' },
+      ],
+      'グラップラー': [
+        { level: 1, skillName: '追加攻撃' },
+        { level: 7, skillName: 'カウンター' },
+        { level: 13, skillName: 'バトルマスター' },
+      ],
+      'スカウト': [
+        { level: 5, skillName: 'トレジャーハント' },
+        { level: 7, skillName: 'ファストアクション' },
+        { level: 9, skillName: '影走り' },
+        { level: 12, skillName: 'トレジャーマスター' },
+        { level: 15, skillName: '匠の技' },
+      ],
+      'レンジャー': [
+        { level: 5, skillName: 'サバイバビリティ' },
+        { level: 7, skillName: '不屈' },
+        { level: 9, skillName: 'ポーションマスター' },
+        { level: 12, skillName: '縮地' },
+        { level: 15, skillName: 'ランアンドガン' },
+      ],
+      'セージ': [
+        { level: 5, skillName: '鋭い目' },
+        { level: 7, skillName: '弱点看破' },
+        { level: 9, skillName: 'マナセーブ' },
+        { level: 12, skillName: 'マナ耐性' },
+        { level: 15, skillName: '賢人の知恵' },
+      ],
+    };
+
+    // 魔法系技能のルーンマスター（レベル11以上）
+    const magicClasses = currentData.classes.filter(cls => {
+      const classData = getClassByName(cls.name);
+      return classData?.category === '魔法系';
+    });
+    const maxMagicLevel = magicClasses.length > 0 ? Math.max(...magicClasses.map(cls => cls.level)) : 0;
+
+    // 既存の戦闘特技から自動追加されたものを除外（ユーザーが手動で追加したものは保持）
+    const existingSkills = currentData.skills.filter(skill => {
+      const skillData = SW25_SKILLS.find(s => s.name === skill.name);
+      return skillData?.category !== '自動';
+    });
+
+    // 自動追加される戦闘特技を追加
+    const autoSkills: Sw25Skill[] = [];
+
+    // 各技能のレベルに応じて自動追加
+    currentData.classes.forEach(cls => {
+      const autoSkillsForClass = autoSkillMap[cls.name] || [];
+      autoSkillsForClass.forEach(({ level, skillName }) => {
+        if (cls.level >= level) {
+          const skillData = SW25_SKILLS.find(s => s.name === skillName);
+          if (skillData) {
+            autoSkills.push({
+              name: skillName,
+              effect: skillData.effect,
+              memo: '',
+            });
+          }
+        }
+      });
+    });
+
+    // 魔法系技能のルーンマスター
+    if (maxMagicLevel >= 11) {
+      const skillData = SW25_SKILLS.find(s => s.name === 'ルーンマスター');
+      if (skillData) {
+        autoSkills.push({
+          name: 'ルーンマスター',
+          effect: skillData.effect,
+          memo: '',
+        });
+      }
+    }
+
+    // 重複を除去（同じ戦闘特技が複数の技能で追加される可能性があるため）
+    const uniqueAutoSkills = autoSkills.filter((skill, index, self) =>
+      index === self.findIndex(s => s.name === skill.name)
+    );
+
+    return [...existingSkills, ...uniqueAutoSkills];
   };
 
   // 能力値の自動計算
@@ -249,29 +347,12 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
     newClasses[index] = { ...newClasses[index], [field]: value };
     const updated = { ...sheetData, classes: newClasses };
     
-    // 技能が変更された場合、自動的に戦闘特技を追加
-    if (field === 'name' && value) {
-      const classData = getClassByName(value as string);
-      if (classData && classData.availableSkills) {
-        // 既存の戦闘特技名を取得
-        const existingSkillNames = updated.skills.map(s => s.name);
-        // 新しい戦闘特技を追加（既に存在しないもののみ）
-        const newSkills = classData.availableSkills
-          .filter((skillName: string) => !existingSkillNames.includes(skillName))
-          .map((skillName: string) => {
-            const skillData = SW25_SKILLS.find(s => s.name === skillName);
-            return {
-              name: skillName,
-              effect: skillData?.effect || '',
-              memo: '',
-            };
-          });
-        updated.skills = [...updated.skills, ...newSkills];
-      }
-    }
-    
     // 能力値の再計算（冒険者レベルが変化する可能性があるため）
     updated.attributes = calculateAttributes(updated);
+    
+    // 自動追加される戦闘特技を更新
+    updated.skills = updateAutoSkills(updated);
+    
     setIsInternalUpdate(true);
     setSheetData(updated);
     onChange(updated);
@@ -283,6 +364,8 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
     const updated = { ...sheetData, classes: newClasses };
     // 能力値の再計算（冒険者レベルが変化する可能性があるため）
     updated.attributes = calculateAttributes(updated);
+    // 自動追加される戦闘特技を更新
+    updated.skills = updateAutoSkills(updated);
     setIsInternalUpdate(true);
     setSheetData(updated);
     onChange(updated);
@@ -535,11 +618,14 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
       const updated = { ...sheetData, adventurerLevel };
       // 冒険者レベルが変化した場合、派生値も再計算する
       updated.attributes = calculateAttributes(updated);
+      // 自動追加される戦闘特技を更新
+      updated.skills = updateAutoSkills(updated);
       setIsInternalUpdate(true);
       setSheetData(updated);
       onChange(updated);
     }
   }, [adventurerLevel]);
+
 
   // 使用経験点を更新
   useEffect(() => {
@@ -1063,101 +1149,181 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
 
       {/* 戦闘特技セクション */}
       <CollapsibleSection title="戦闘特技" defaultOpen={false}>
-        <div style={{ marginBottom: '1rem' }}>
-          <button
-            type="button"
-            onClick={addSkill}
-            style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: '#007bff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              marginBottom: '1rem',
-            }}
-          >
-            + 戦闘特技を追加
-          </button>
-        </div>
-        {sheetData.skills.map((skill, index) => {
-          const skillData = SW25_SKILLS.find(s => s.name === skill.name);
+        {(() => {
+          const adventurerLevel = calculateAdventurerLevel(sheetData.classes);
+          const maxSkills = calculateMaxSkills(adventurerLevel);
+          const currentSkills = sheetData.skills.length;
+          const canAddSkill = currentSkills < maxSkills;
+
+          // 自動追加された戦闘特技と手動追加された戦闘特技を分ける
+          const autoSkills = sheetData.skills.filter(skill => {
+            const skillData = SW25_SKILLS.find(s => s.name === skill.name);
+            return skillData?.category === '自動';
+          });
+          const manualSkills = sheetData.skills.filter(skill => {
+            const skillData = SW25_SKILLS.find(s => s.name === skill.name);
+            return skillData?.category !== '自動';
+          });
+
           return (
-            <div key={index} style={{ marginBottom: '1rem', padding: '1rem', border: '1px solid #ddd', borderRadius: '4px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '1rem', marginBottom: '0.5rem' }}>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                    戦闘特技名
-                  </label>
-                  <select
-                    value={skill.name}
-                    onChange={(e) => {
-                      const selectedSkill = SW25_SKILLS.find(s => s.name === e.target.value);
-                      if (selectedSkill) {
-                        updateSkill(index, 'name', e.target.value);
-                        updateSkill(index, 'effect', selectedSkill.effect);
-                      }
-                    }}
-                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                  >
-                    <option value="">選択してください</option>
-                    {SW25_SKILLS.map(s => (
-                      <option key={s.name} value={s.name}>
-                        {s.name} {s.requirements ? `(${s.requirements})` : ''}
-                      </option>
-                    ))}
-                  </select>
-                  {skillData && skillData.requirements && (
-                    <div style={{ marginTop: '0.25rem', fontSize: '0.875rem', color: '#666' }}>
-                      習得条件: {skillData.requirements}
-                    </div>
-                  )}
+            <>
+              <div style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#f8f9fa', borderRadius: '4px' }}>
+                <div style={{ marginBottom: '0.5rem' }}>
+                  <strong>冒険者レベル: {adventurerLevel}</strong>
+                </div>
+                <div style={{ marginBottom: '0.5rem' }}>
+                  <strong>修得可能数: {maxSkills}個</strong>（レベル{adventurerLevel % 2 === 1 ? adventurerLevel : adventurerLevel - 1}で{maxSkills}個）
                 </div>
                 <div>
+                  <strong>現在の戦闘特技数: {currentSkills}個</strong>
+                  {autoSkills.length > 0 && (
+                    <span style={{ marginLeft: '0.5rem', fontSize: '0.875rem', color: '#666' }}>
+                      （自動: {autoSkills.length}個、手動: {manualSkills.length}個）
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* 自動追加された戦闘特技 */}
+              {autoSkills.length > 0 && (
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <h4 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: 'bold', color: '#666' }}>
+                    自動追加された戦闘特技
+                  </h4>
+                  {autoSkills.map((skill) => {
+                    const originalIndex = sheetData.skills.findIndex(s => s === skill);
+                    const skillData = SW25_SKILLS.find(s => s.name === skill.name);
+                    return (
+                      <div key={originalIndex} style={{ marginBottom: '1rem', padding: '1rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa' }}>
+                        <div style={{ marginBottom: '0.5rem' }}>
+                          <strong>{skill.name}</strong>
+                          {skillData && skillData.requirements && (
+                            <span style={{ marginLeft: '0.5rem', fontSize: '0.875rem', color: '#666' }}>
+                              ({skillData.requirements})
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ marginBottom: '0.5rem', fontSize: '0.875rem', color: '#666' }}>
+                          {skill.effect}
+                        </div>
+                        {skill.memo && (
+                          <div style={{ fontSize: '0.875rem', color: '#666' }}>
+                            備考: {skill.memo}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* 手動追加された戦闘特技 */}
+              <div style={{ marginBottom: '1rem' }}>
+                {canAddSkill && (
                   <button
                     type="button"
-                    onClick={() => removeSkill(index)}
+                    onClick={addSkill}
                     style={{
                       padding: '0.5rem 1rem',
-                      backgroundColor: '#dc3545',
+                      backgroundColor: '#007bff',
                       color: 'white',
                       border: 'none',
                       borderRadius: '4px',
                       cursor: 'pointer',
-                      marginTop: '1.5rem',
+                      marginBottom: '1rem',
                     }}
                   >
-                    削除
+                    + 戦闘特技を追加（残り{maxSkills - currentSkills}個）
                   </button>
-                </div>
+                )}
+                {!canAddSkill && (
+                  <div style={{ padding: '0.5rem', backgroundColor: '#fff3cd', borderRadius: '4px', marginBottom: '1rem', fontSize: '0.875rem' }}>
+                    修得可能数の上限に達しています。戦闘特技を追加するには冒険者レベルを上げてください。
+                  </div>
+                )}
               </div>
-              <div style={{ marginBottom: '0.5rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                  効果
-                </label>
-                <textarea
-                  value={skill.effect}
-                  onChange={(e) => updateSkill(index, 'effect', e.target.value)}
-                  placeholder="効果を入力"
-                  rows={2}
-                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                  備考
-                </label>
-                <input
-                  type="text"
-                  value={skill.memo || ''}
-                  onChange={(e) => updateSkill(index, 'memo', e.target.value)}
-                  placeholder="備考を入力"
-                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                />
-              </div>
-            </div>
+              {manualSkills.map((skill) => {
+                const originalIndex = sheetData.skills.findIndex(s => s === skill);
+                const skillData = SW25_SKILLS.find(s => s.name === skill.name);
+                return (
+                  <div key={originalIndex} style={{ marginBottom: '1rem', padding: '1rem', border: '1px solid #ddd', borderRadius: '4px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '1rem', marginBottom: '0.5rem' }}>
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                          戦闘特技名
+                        </label>
+                        <select
+                          value={skill.name}
+                          onChange={(e) => {
+                            const selectedSkill = SW25_SKILLS.find(s => s.name === e.target.value);
+                            if (selectedSkill) {
+                              updateSkill(originalIndex, 'name', e.target.value);
+                              updateSkill(originalIndex, 'effect', selectedSkill.effect);
+                            }
+                          }}
+                          style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                        >
+                          <option value="">選択してください</option>
+                          {SW25_SKILLS.filter(s => s.category !== '自動').map(s => (
+                            <option key={s.name} value={s.name}>
+                              {s.name} {s.requirements ? `(${s.requirements})` : ''}
+                            </option>
+                          ))}
+                        </select>
+                        {skillData && skillData.requirements && (
+                          <div style={{ marginTop: '0.25rem', fontSize: '0.875rem', color: '#666' }}>
+                            習得条件: {skillData.requirements}
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <button
+                          type="button"
+                          onClick={() => removeSkill(originalIndex)}
+                          style={{
+                            padding: '0.5rem 1rem',
+                            backgroundColor: '#dc3545',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            marginTop: '1.5rem',
+                          }}
+                        >
+                          削除
+                        </button>
+                      </div>
+                    </div>
+                    <div style={{ marginBottom: '0.5rem' }}>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                        効果
+                      </label>
+                      <textarea
+                        value={skill.effect}
+                        onChange={(e) => updateSkill(originalIndex, 'effect', e.target.value)}
+                        placeholder="効果を入力"
+                        rows={2}
+                        style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                        備考
+                      </label>
+                      <input
+                        type="text"
+                        value={skill.memo || ''}
+                        onChange={(e) => updateSkill(originalIndex, 'memo', e.target.value)}
+                        placeholder="備考を入力"
+                        style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </>
           );
-        })}
+        })()}
       </CollapsibleSection>
 
       {/* 魔法・スキルセクション */}
