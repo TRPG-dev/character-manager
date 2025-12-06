@@ -115,7 +115,6 @@ export function getAvailableBirthsByRaceFromMapping(race: Sw25Race): Sw25Birth[]
 export interface Sw25RaceData {
   name: Sw25Race;
   availableBirths: Sw25Birth[];
-  abilityModifiers: Sw25Abilities; // 能力修正（技、体、心）
   traits: string[]; // 種族特性
   description?: string; // 説明
 }
@@ -124,91 +123,78 @@ export const SW25_RACES: Sw25RaceData[] = [
   {
     name: '人間',
     availableBirths: ['魔動機師', '魔術師', '軽戦士', '一般人', '傭兵', '神官', '操霊術師', 'その他'],
-    abilityModifiers: { 技: 0, 体: 0, 心: 0 },
     traits: ['汎用性が高い'],
     description: '最も一般的な種族。バランスが取れている。',
   },
   {
     name: 'エルフ',
     availableBirths: ['魔術師', '軽戦士', '一般人', '神官', '操霊術師', 'その他'],
-    abilityModifiers: { 技: 1, 体: -1, 心: 1 },
     traits: ['魔法適性が高い', '長命'],
     description: '魔法に適した種族。知性と技術に優れる。',
   },
   {
     name: 'ドワーフ',
     availableBirths: ['魔動機師', '軽戦士', '一般人', '傭兵', 'その他'],
-    abilityModifiers: { 技: 0, 体: 1, 心: -1 },
     traits: ['頑健', '技術に長ける'],
     description: '頑丈な体を持つ種族。物理的な力に優れる。',
   },
   {
     name: 'タビット',
     availableBirths: ['軽戦士', '一般人', '傭兵', 'その他'],
-    abilityModifiers: { 技: 1, 体: 0, 心: 0 },
     traits: ['機敏', '小柄'],
     description: '機敏で小柄な種族。技術に優れる。',
   },
   {
     name: 'ルーンフォーク',
     availableBirths: ['魔術師', '軽戦士', '一般人', '神官', '操霊術師', 'その他'],
-    abilityModifiers: { 技: 0, 体: 0, 心: 1 },
     traits: ['魔法適性が高い', '知性に優れる'],
     description: '魔法に適した種族。知性に優れる。',
   },
   {
     name: 'ナイトメア',
     availableBirths: ['魔術師', '軽戦士', '一般人', '傭兵', 'その他'],
-    abilityModifiers: { 技: 0, 体: 1, 心: 0 },
     traits: ['暗黒適性', '頑健'],
     description: '暗黒の力を持つ種族。',
   },
   {
     name: 'リカント',
     availableBirths: ['軽戦士', '一般人', '傭兵', 'その他'],
-    abilityModifiers: { 技: 0, 体: 1, 心: -1 },
     traits: ['変身能力', '頑健'],
     description: '変身能力を持つ種族。',
   },
   {
     name: 'リルドラケン',
     availableBirths: ['魔術師', '軽戦士', '一般人', '神官', '操霊術師', 'その他'],
-    abilityModifiers: { 技: -1, 体: 0, 心: 1 },
     traits: ['魔法適性が高い', '飛行能力'],
     description: '飛行能力を持つ種族。魔法に適している。',
   },
   {
     name: 'グラスランナー',
     availableBirths: ['軽戦士', '一般人', '傭兵', 'その他'],
-    abilityModifiers: { 技: 1, 体: 1, 心: -1 },
     traits: ['機敏', '頑健'],
     description: '機敏で頑健な種族。',
   },
   {
     name: 'メリア',
     availableBirths: ['魔術師', '軽戦士', '一般人', '神官', '操霊術師', 'その他'],
-    abilityModifiers: { 技: 0, 体: -1, 心: 1 },
     traits: ['魔法適性が高い', '知性に優れる'],
     description: '魔法に適した種族。知性に優れる。',
   },
   {
     name: 'ティエンス',
     availableBirths: ['魔動機師', '魔術師', '軽戦士', '一般人', '傭兵', '神官', '操霊術師', 'その他'],
-    abilityModifiers: { 技: 0, 体: 0, 心: 0 },
     traits: ['汎用性が高い', '適応力が高い'],
     description: '適応力が高い種族。',
   },
   {
     name: 'レプラカーン',
     availableBirths: ['魔術師', '軽戦士', '一般人', '神官', '操霊術師', 'その他'],
-    abilityModifiers: { 技: 1, 体: -1, 心: 1 },
     traits: ['魔法適性が高い', '機敏'],
     description: '魔法に適した種族。機敏で知性に優れる。',
   },
   {
     name: 'その他',
     availableBirths: ['魔動機師', '魔術師', '軽戦士', '一般人', '傭兵', '神官', '操霊術師', 'その他'],
-    abilityModifiers: { 技: 0, 体: 0, 心: 0 },
     traits: [],
     description: 'その他の種族。',
   },

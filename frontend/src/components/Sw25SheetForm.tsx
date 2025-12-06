@@ -34,14 +34,11 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
   // 能力値の自動計算
   const calculateAttributes = (currentData: Sw25SheetData) => {
     const { abilities, attributes, attributeInitials, attributeGrowth } = currentData;
-    const raceData = currentData.race ? getRaceByName(currentData.race) : null;
-    const raceModifiers = raceData?.abilityModifiers || { 技: 0, 体: 0, 心: 0 };
-
-    // 基本能力値（技、体、心）に種族修正を加算
+    // 対応表の値が既に種族修正を含んでいるため、種族修正を加算しない
     const baseAbilities = {
-      技: abilities.技 + raceModifiers.技,
-      体: abilities.体 + raceModifiers.体,
-      心: abilities.心 + raceModifiers.心,
+      技: abilities.技,
+      体: abilities.体,
+      心: abilities.心,
     };
 
     // 初期値と成長値の取得（デフォルトは0）
@@ -619,9 +616,8 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
                   { key: '知力' as const, base: '心' as const },
                   { key: '精神力' as const, base: '心' as const },
                 ].map(({ key, base }) => {
-                  const raceData = sheetData.race ? getRaceByName(sheetData.race) : null;
-                  const raceModifiers = raceData?.abilityModifiers || { 技: 0, 体: 0, 心: 0 };
-                  const baseValue = sheetData.abilities[base] + raceModifiers[base];
+                  // 対応表の値が既に種族修正を含んでいるため、種族修正を加算しない
+                  const baseValue = sheetData.abilities[base];
                   const initial = (sheetData.attributeInitials?.[key] || 0);
                   const growth = (sheetData.attributeGrowth?.[key] || 0);
                   const total = sheetData.attributes[key];
