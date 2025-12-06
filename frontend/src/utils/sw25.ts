@@ -123,7 +123,7 @@ export function normalizeSheetData(data: any): Sw25SheetData {
     birth: data.birth || undefined,
     classes,
     adventurerLevel: typeof data.adventurerLevel === 'number' ? data.adventurerLevel : undefined,
-    initialExperiencePoints: typeof data.initialExperiencePoints === 'number' ? data.initialExperiencePoints : undefined,
+    initialExperiencePoints: typeof data.initialExperiencePoints === 'number' ? data.initialExperiencePoints : 3000,
     gainedExperiencePoints: typeof data.gainedExperiencePoints === 'number' ? data.gainedExperiencePoints : undefined,
     experiencePoints: typeof data.experiencePoints === 'number' ? data.experiencePoints : undefined,
     honorPoints: typeof data.honorPoints === 'number' ? data.honorPoints : undefined,

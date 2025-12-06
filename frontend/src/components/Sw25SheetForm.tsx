@@ -31,6 +31,37 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
     setSheetData(normalized);
   }, [data, isInternalUpdate]);
 
+  // 能力値ボーナスの計算（能力値/6を切り下げ）
+  const calculateAttributeBonus = (value: number): number => {
+    return Math.floor(value / 6);
+  };
+
+  // 冒険者レベルの計算（戦士系、魔法系、その他の最大値）
+  const calculateAdventurerLevel = (classes: Sw25Class[]): number => {
+    const warriorLevel = classes
+      .filter(cls => {
+        const classData = getClassByName(cls.name);
+        return classData?.category === '戦士系';
+      })
+      .reduce((sum, cls) => sum + cls.level, 0);
+    
+    const magicLevel = classes
+      .filter(cls => {
+        const classData = getClassByName(cls.name);
+        return classData?.category === '魔法系';
+      })
+      .reduce((sum, cls) => sum + cls.level, 0);
+    
+    const otherLevel = classes
+      .filter(cls => {
+        const classData = getClassByName(cls.name);
+        return classData?.category === 'その他';
+      })
+      .reduce((sum, cls) => sum + cls.level, 0);
+    
+    return Math.max(warriorLevel, magicLevel, otherLevel);
+  };
+
   // 能力値の自動計算
   const calculateAttributes = (currentData: Sw25SheetData) => {
     const { abilities, attributes, attributeInitials, attributeGrowth } = currentData;
@@ -60,26 +91,108 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
       精神力: baseAbilities.心 + initials.精神力 + growth.精神力,
     };
 
-    // HP = 生命力 + 種族・技能修正（簡易版）
-    calculatedAttributes.HP = calculatedAttributes.生命力;
-    // MP = 精神力 + 種族・技能修正（簡易版）
-    calculatedAttributes.MP = calculatedAttributes.精神力;
-    // 生命抵抗力 = 生命力
-    calculatedAttributes.生命抵抗力 = calculatedAttributes.生命力;
-    // 精神抵抗力 = 精神力
-    calculatedAttributes.精神抵抗力 = calculatedAttributes.精神力;
+    // 能力値ボーナスの計算
+    const dexterityBonus = calculateAttributeBonus(calculatedAttributes.器用度);
+    const agilityBonus = calculateAttributeBonus(calculatedAttributes.敏捷度);
+    const strengthBonus = calculateAttributeBonus(calculatedAttributes.筋力);
+    const vitalityBonus = calculateAttributeBonus(calculatedAttributes.生命力);
+    const intelligenceBonus = calculateAttributeBonus(calculatedAttributes.知力);
+    const spiritBonus = calculateAttributeBonus(calculatedAttributes.精神力);
 
-    // 派生値の計算
+    // 冒険者レベルの取得
+    const adventurerLevel = calculateAdventurerLevel(currentData.classes);
+
+    // HP = 冒険者レベル*3 + 生命力
+    calculatedAttributes.HP = adventurerLevel * 3 + calculatedAttributes.生命力;
+    
+    // MP = 魔法使い系技能レベル合計*3 + 精神力
+    const magicClassLevelSum = currentData.classes
+      .filter(cls => {
+        const classData = getClassByName(cls.name);
+        return classData?.category === '魔法系';
+      })
+      .reduce((sum, cls) => sum + cls.level, 0);
+    calculatedAttributes.MP = magicClassLevelSum * 3 + calculatedAttributes.精神力;
+    
+    // 生命抵抗力 = 冒険者レベル + 生命力ボーナス
+    calculatedAttributes.生命抵抗力 = adventurerLevel + vitalityBonus;
+    
+    // 精神抵抗力 = 冒険者レベル + 精神力ボーナス
+    calculatedAttributes.精神抵抗力 = adventurerLevel + spiritBonus;
+
     // 移動力 = 敏捷度
     calculatedAttributes.移動力 = calculatedAttributes.敏捷度;
-    // 全力移動 = 敏捷度 × 2
-    calculatedAttributes.全力移動 = calculatedAttributes.敏捷度 * 2;
-    // 先制力 = 敏捷度
-    calculatedAttributes.先制力 = calculatedAttributes.敏捷度;
-    // 魔物知識 = 知力
-    calculatedAttributes.魔物知識 = calculatedAttributes.知力;
-    // 防護点 = 装備している防具の防護点の合計（簡易版、後で改善）
-    calculatedAttributes.防護点 = sheetData.armors.reduce((sum, armor) => sum + armor.defense, 0);
+    
+    // 全力移動 = 敏捷度*3
+    calculatedAttributes.全力移動 = calculatedAttributes.敏捷度 * 3;
+    
+    // 先制力 = スカウト技能レベル + 敏捷度ボーナス
+    const scoutLevel = currentData.classes.find(cls => cls.name === 'スカウト')?.level || 0;
+    calculatedAttributes.先制力 = scoutLevel + agilityBonus;
+    
+    // 魔物知識 = セージ技能レベル + 知力ボーナス
+    const sageLevel = currentData.classes.find(cls => cls.name === 'セージ')?.level || 0;
+    calculatedAttributes.魔物知識 = sageLevel + intelligenceBonus;
+
+    // 技巧（スカウト、レンジャー、ライダー技能レベル + 器用度ボーナス）
+    const techniqueSkills = ['スカウト', 'レンジャー', 'ライダー'];
+    calculatedAttributes.技巧 = techniqueSkills
+      .map(skillName => {
+        const skillLevel = currentData.classes.find(cls => cls.name === skillName)?.level || 0;
+        if (skillLevel === 0) return null;
+        return skillLevel + dexterityBonus;
+      })
+      .filter((val): val is number => val !== null);
+
+    // 運動（スカウト、レンジャー、ライダー技能レベル + 敏捷度ボーナス）
+    calculatedAttributes.運動 = techniqueSkills
+      .map(skillName => {
+        const skillLevel = currentData.classes.find(cls => cls.name === skillName)?.level || 0;
+        if (skillLevel === 0) return null;
+        return skillLevel + agilityBonus;
+      })
+      .filter((val): val is number => val !== null);
+
+    // 観察（スカウト、レンジャー、ライダー技能レベル + 知力ボーナス）
+    calculatedAttributes.観察 = techniqueSkills
+      .map(skillName => {
+        const skillLevel = currentData.classes.find(cls => cls.name === skillName)?.level || 0;
+        if (skillLevel === 0) return null;
+        return skillLevel + intelligenceBonus;
+      })
+      .filter((val): val is number => val !== null);
+
+    // 知識（セージ、バード、ライダー、アルケミスト技能レベル + 知力ボーナス）
+    const knowledgeSkills = ['セージ', 'バード', 'ライダー', 'アルケミスト'];
+    calculatedAttributes.知識 = knowledgeSkills
+      .map(skillName => {
+        const skillLevel = currentData.classes.find(cls => cls.name === skillName)?.level || 0;
+        if (skillLevel === 0) return null;
+        return skillLevel + intelligenceBonus;
+      })
+      .filter((val): val is number => val !== null);
+
+    // 命中力（戦士系技能レベル + 器用度ボーナス）
+    const warriorClasses = currentData.classes.filter(cls => {
+      const classData = getClassByName(cls.name);
+      return classData?.category === '戦士系';
+    });
+    calculatedAttributes.命中力 = warriorClasses.map(cls => {
+      return cls.level + dexterityBonus;
+    });
+
+    // 追加ダメージ（戦士系技能レベル + 筋力ボーナス）
+    calculatedAttributes.追加ダメージ = warriorClasses.map(cls => {
+      return cls.level + strengthBonus;
+    });
+
+    // 回避力（戦士系技能レベル + 敏捷度ボーナス）
+    calculatedAttributes.回避力 = warriorClasses.map(cls => {
+      return cls.level + agilityBonus;
+    });
+
+    // 防護点 = 装備している防具の防護点の合計
+    calculatedAttributes.防護点 = currentData.armors.reduce((sum, armor) => sum + armor.defense, 0);
 
     return calculatedAttributes;
   };
@@ -439,18 +552,69 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
     onChange(updated);
   };
 
-  // 冒険者レベルの計算（全技能レベルの合計）
-  const totalLevel = sheetData.classes.reduce((sum, cls) => sum + cls.level, 0);
+  // 経験値テーブル
+  const getExperienceRequiredForLevel = (level: number, isTableA: boolean): number => {
+    if (level === 0) return 0;
+    
+    const tableA = [
+      1000, 1000, 1500, 1500, 2000, 2500, 3000, 4000, 5000, 6000,
+      7500, 9000, 10500, 12000, 13500
+    ];
+    
+    const tableB = [
+      500, 1000, 1000, 1500, 1500, 2000, 2500, 3000, 4000, 5000,
+      6000, 7500, 9000, 10500, 12000
+    ];
+    
+    const table = isTableA ? tableA : tableB;
+    if (level <= table.length) {
+      return table.slice(0, level).reduce((sum, exp) => sum + exp, 0);
+    }
+    return 0;
+  };
+
+  // 技能の経験値テーブル判定
+  const isClassTableA = (className: string): boolean => {
+    const tableAClasses = ['ファイター', 'グラップラー', 'ソーサラー', 'コンジャラー', 'プリースト', 'マギテック', 'フェアリーテイマー'];
+    return tableAClasses.includes(className);
+  };
+
+  // 使用経験点の計算（全技能のレベルに必要な経験点の合計）
+  const calculateUsedExperiencePoints = (classes: Sw25Class[]): number => {
+    return classes.reduce((sum, cls) => {
+      const isTableA = isClassTableA(cls.name);
+      return sum + getExperienceRequiredForLevel(cls.level, isTableA);
+    }, 0);
+  };
+
+  // 冒険者レベルの計算（戦士系、魔法系、その他の最大値）
+  const adventurerLevel = calculateAdventurerLevel(sheetData.classes);
+  
+  // 使用経験点の計算
+  const usedExperiencePoints = calculateUsedExperiencePoints(sheetData.classes);
+  
+  // 残り経験点の計算
+  const remainingExperiencePoints = (sheetData.initialExperiencePoints || 0) + (sheetData.gainedExperiencePoints || 0) - usedExperiencePoints;
   
   // 冒険者レベルを更新
   useEffect(() => {
-    if (sheetData.adventurerLevel !== totalLevel) {
-      const updated = { ...sheetData, adventurerLevel: totalLevel };
+    if (sheetData.adventurerLevel !== adventurerLevel) {
+      const updated = { ...sheetData, adventurerLevel };
       setIsInternalUpdate(true);
       setSheetData(updated);
       onChange(updated);
     }
-  }, [totalLevel]);
+  }, [adventurerLevel]);
+
+  // 使用経験点を更新
+  useEffect(() => {
+    if (sheetData.experiencePoints !== usedExperiencePoints) {
+      const updated = { ...sheetData, experiencePoints: usedExperiencePoints };
+      setIsInternalUpdate(true);
+      setSheetData(updated);
+      onChange(updated);
+    }
+  }, [usedExperiencePoints]);
 
   // 利用可能な生まれのリスト（対応表から取得）
   const availableBirths = sheetData.race ? getAvailableBirthsByRaceFromMapping(sheetData.race) : [];
@@ -605,6 +769,7 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
                   <th style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'center' }}>初期値</th>
                   <th style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'center' }}>成長値</th>
                   <th style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'center' }}>合計</th>
+                  <th style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'center' }}>能力値ボーナス</th>
                 </tr>
               </thead>
               <tbody>
@@ -621,6 +786,7 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
                   const initial = (sheetData.attributeInitials?.[key] || 0);
                   const growth = (sheetData.attributeGrowth?.[key] || 0);
                   const total = sheetData.attributes[key];
+                  const bonus = calculateAttributeBonus(total);
                   return (
                     <tr key={key}>
                       <td style={{ padding: '0.5rem', border: '1px solid #ddd', fontWeight: 'bold' }}>{key}</td>
@@ -645,6 +811,9 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
                       </td>
                       <td style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'center', backgroundColor: '#f8f9fa', fontWeight: 'bold' }}>
                         {total}
+                      </td>
+                      <td style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'center', backgroundColor: '#f8f9fa', fontWeight: 'bold' }}>
+                        {bonus}
                       </td>
                     </tr>
                   );
@@ -767,14 +936,181 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
               </div>
             )}
           </div>
+
+          {/* 技巧、運動、観察、知識の表示 */}
+          {(sheetData.attributes.技巧 && sheetData.attributes.技巧.length > 0) || 
+           (sheetData.attributes.運動 && sheetData.attributes.運動.length > 0) || 
+           (sheetData.attributes.観察 && sheetData.attributes.観察.length > 0) || 
+           (sheetData.attributes.知識 && sheetData.attributes.知識.length > 0) ? (
+            <div style={{ marginTop: '1.5rem' }}>
+              <h5 style={{ marginBottom: '0.75rem', fontSize: '1rem', fontWeight: 'bold' }}>技能別派生値</h5>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                {sheetData.attributes.技巧 && sheetData.attributes.技巧.length > 0 && (
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                      技巧
+                    </label>
+                    <div style={{ padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa' }}>
+                      {['スカウト', 'レンジャー', 'ライダー'].map((skillName) => {
+                        const skillLevel = sheetData.classes.find(cls => cls.name === skillName)?.level || 0;
+                        if (skillLevel === 0) return null;
+                        const dexterityBonus = calculateAttributeBonus(sheetData.attributes.器用度);
+                        const value = skillLevel + dexterityBonus;
+                        return (
+                          <div key={skillName} style={{ marginBottom: '0.25rem' }}>
+                            {skillName}: {value}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                {sheetData.attributes.運動 && sheetData.attributes.運動.length > 0 && (
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                      運動
+                    </label>
+                    <div style={{ padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa' }}>
+                      {['スカウト', 'レンジャー', 'ライダー'].map((skillName) => {
+                        const skillLevel = sheetData.classes.find(cls => cls.name === skillName)?.level || 0;
+                        if (skillLevel === 0) return null;
+                        const agilityBonus = calculateAttributeBonus(sheetData.attributes.敏捷度);
+                        const value = skillLevel + agilityBonus;
+                        return (
+                          <div key={skillName} style={{ marginBottom: '0.25rem' }}>
+                            {skillName}: {value}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                {sheetData.attributes.観察 && sheetData.attributes.観察.length > 0 && (
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                      観察
+                    </label>
+                    <div style={{ padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa' }}>
+                      {['スカウト', 'レンジャー', 'ライダー'].map((skillName) => {
+                        const skillLevel = sheetData.classes.find(cls => cls.name === skillName)?.level || 0;
+                        if (skillLevel === 0) return null;
+                        const intelligenceBonus = calculateAttributeBonus(sheetData.attributes.知力);
+                        const value = skillLevel + intelligenceBonus;
+                        return (
+                          <div key={skillName} style={{ marginBottom: '0.25rem' }}>
+                            {skillName}: {value}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                {sheetData.attributes.知識 && sheetData.attributes.知識.length > 0 && (
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                      知識
+                    </label>
+                    <div style={{ padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa' }}>
+                      {['セージ', 'バード', 'ライダー', 'アルケミスト'].map((skillName) => {
+                        const skillLevel = sheetData.classes.find(cls => cls.name === skillName)?.level || 0;
+                        if (skillLevel === 0) return null;
+                        const intelligenceBonus = calculateAttributeBonus(sheetData.attributes.知力);
+                        const value = skillLevel + intelligenceBonus;
+                        return (
+                          <div key={skillName} style={{ marginBottom: '0.25rem' }}>
+                            {skillName}: {value}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : null}
+
+          {/* 命中力、追加ダメージ、回避力の表示 */}
+          {sheetData.classes.some(cls => {
+            const classData = getClassByName(cls.name);
+            return classData?.category === '戦士系';
+          }) ? (
+            <div style={{ marginTop: '1.5rem' }}>
+              <h5 style={{ marginBottom: '0.75rem', fontSize: '1rem', fontWeight: 'bold' }}>戦士系技能別派生値</h5>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                    命中力
+                  </label>
+                  <div style={{ padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa' }}>
+                    {sheetData.classes
+                      .filter(cls => {
+                        const classData = getClassByName(cls.name);
+                        return classData?.category === '戦士系';
+                      })
+                      .map((cls) => {
+                        const dexterityBonus = calculateAttributeBonus(sheetData.attributes.器用度);
+                        const value = cls.level + dexterityBonus;
+                        return (
+                          <div key={cls.name} style={{ marginBottom: '0.25rem' }}>
+                            {cls.name}: {value}
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                    追加ダメージ
+                  </label>
+                  <div style={{ padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa' }}>
+                    {sheetData.classes
+                      .filter(cls => {
+                        const classData = getClassByName(cls.name);
+                        return classData?.category === '戦士系';
+                      })
+                      .map((cls) => {
+                        const strengthBonus = calculateAttributeBonus(sheetData.attributes.筋力);
+                        const value = cls.level + strengthBonus;
+                        return (
+                          <div key={cls.name} style={{ marginBottom: '0.25rem' }}>
+                            {cls.name}: {value}
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                    回避力
+                  </label>
+                  <div style={{ padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa' }}>
+                    {sheetData.classes
+                      .filter(cls => {
+                        const classData = getClassByName(cls.name);
+                        return classData?.category === '戦士系';
+                      })
+                      .map((cls) => {
+                        const agilityBonus = calculateAttributeBonus(sheetData.attributes.敏捷度);
+                        const value = cls.level + agilityBonus;
+                        return (
+                          <div key={cls.name} style={{ marginBottom: '0.25rem' }}>
+                            {cls.name}: {value}
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : null}
         </div>
       </CollapsibleSection>
 
       {/* 技能セクション */}
       <CollapsibleSection title="技能" defaultOpen={true}>
-        <div style={{ marginBottom: '1rem', display: 'flex', gap: '2rem', alignItems: 'center' }}>
+        <div style={{ marginBottom: '1rem', display: 'flex', gap: '2rem', alignItems: 'center', flexWrap: 'wrap' }}>
           <div>
-            <strong>冒険者レベル: {totalLevel}</strong>
+            <strong>冒険者レベル: {adventurerLevel}</strong>
           </div>
           <div>
             <label style={{ display: 'inline-block', marginRight: '0.5rem', fontWeight: 'bold' }}>
@@ -783,9 +1119,9 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
             <input
               type="number"
               min="0"
-              value={sheetData.initialExperiencePoints || ''}
-              onChange={(e) => updateBasicInfo('initialExperiencePoints', e.target.value ? parseInt(e.target.value) : undefined)}
-              style={{ width: '100px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px' }}
+              value={sheetData.initialExperiencePoints ?? 3000}
+              readOnly
+              style={{ width: '100px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa' }}
             />
           </div>
           <div>
@@ -801,7 +1137,13 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
             />
           </div>
           <div>
-            <strong>経験点: {(sheetData.initialExperiencePoints || 0) + (sheetData.gainedExperiencePoints || 0) - (sheetData.experiencePoints || 0)}</strong>
+            <strong>経験点: {(sheetData.initialExperiencePoints || 3000) + (sheetData.gainedExperiencePoints || 0)}</strong>
+          </div>
+          <div>
+            <strong>使用経験点: {usedExperiencePoints}</strong>
+          </div>
+          <div>
+            <strong>残り経験点: {remainingExperiencePoints}</strong>
           </div>
         </div>
         <div style={{ marginBottom: '1rem' }}>
