@@ -2,14 +2,10 @@ import { useState, useEffect } from 'react';
 import type { Sw25SheetData, Sw25Class, Sw25Skill, Sw25Magic, Sw25Item, Sw25Weapon, Sw25Armor, Sw25Accessory } from '../types/sw25';
 import { normalizeSheetData } from '../utils/sw25';
 import { 
-  SW25_RACES, 
   SW25_SKILLS, 
   SW25_MAGICS,
-  getRaceByName,
   getClassByName,
-  getAvailableBirthsByRaceFromMapping,
   getClassesByCategory,
-  getBaseAbilitiesByRaceBirth,
 } from '../data/sw25';
 import { CollapsibleSection } from './CollapsibleSection';
 
@@ -36,30 +32,10 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
     return Math.floor(value / 6);
   };
 
-  // 冒険者レベルの計算（戦士系、魔法系、その他の最大値）
+  // 冒険者レベルの計算（各技能の技能レベルの最大値）
   const calculateAdventurerLevel = (classes: Sw25Class[]): number => {
-    const warriorLevel = classes
-      .filter(cls => {
-        const classData = getClassByName(cls.name);
-        return classData?.category === '戦士系';
-      })
-      .reduce((sum, cls) => sum + cls.level, 0);
-    
-    const magicLevel = classes
-      .filter(cls => {
-        const classData = getClassByName(cls.name);
-        return classData?.category === '魔法系';
-      })
-      .reduce((sum, cls) => sum + cls.level, 0);
-    
-    const otherLevel = classes
-      .filter(cls => {
-        const classData = getClassByName(cls.name);
-        return classData?.category === 'その他';
-      })
-      .reduce((sum, cls) => sum + cls.level, 0);
-    
-    return Math.max(warriorLevel, magicLevel, otherLevel);
+    if (classes.length === 0) return 0;
+    return Math.max(...classes.map(cls => cls.level));
   };
 
   // 能力値の自動計算
@@ -126,13 +102,24 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
     // 全力移動 = 敏捷度*3
     calculatedAttributes.全力移動 = calculatedAttributes.敏捷度 * 3;
     
-    // 先制力 = スカウト技能レベル + 敏捷度ボーナス
+    // 先制力 = スカウト技能レベル + 敏捷度ボーナス（スカウト技能を取得している場合のみ）
     const scoutLevel = currentData.classes.find(cls => cls.name === 'スカウト')?.level || 0;
-    calculatedAttributes.先制力 = scoutLevel + agilityBonus;
+    if (scoutLevel > 0) {
+      calculatedAttributes.先制力 = scoutLevel + agilityBonus;
+    } else {
+      delete calculatedAttributes.先制力;
+    }
     
-    // 魔物知識 = セージ技能レベル + 知力ボーナス
+    // 魔物知識 = セージ技能レベル + 知力ボーナス（セージ技能かライダー技能を取得している場合のみ）
     const sageLevel = currentData.classes.find(cls => cls.name === 'セージ')?.level || 0;
-    calculatedAttributes.魔物知識 = sageLevel + intelligenceBonus;
+    const riderLevel = currentData.classes.find(cls => cls.name === 'ライダー')?.level || 0;
+    if (sageLevel > 0 || riderLevel > 0) {
+      // セージ技能がある場合はセージ技能レベルを使用、ない場合はライダー技能レベルを使用
+      const monsterKnowledgeLevel = sageLevel > 0 ? sageLevel : riderLevel;
+      calculatedAttributes.魔物知識 = monsterKnowledgeLevel + intelligenceBonus;
+    } else {
+      delete calculatedAttributes.魔物知識;
+    }
 
     // 技巧（スカウト、レンジャー、ライダー技能レベル + 器用度ボーナス）
     const techniqueSkills = ['スカウト', 'レンジャー', 'ライダー'];
@@ -205,57 +192,6 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
     onChange(updated);
   };
 
-  // 種族変更時の処理
-  const updateRace = (race: string) => {
-    // 対応表から利用可能な生まれを取得
-    const availableBirths = getAvailableBirthsByRaceFromMapping(race as any);
-    const updated = { 
-      ...sheetData, 
-      race: race as any,
-      // 現在の生まれが利用可能でない場合はクリア
-      birth: availableBirths.includes(sheetData.birth as any) ? sheetData.birth : undefined,
-    };
-    // 生まれが選択されている場合は基本能力値を自動設定
-    if (updated.birth) {
-      const baseAbilities = getBaseAbilitiesByRaceBirth(race as any, updated.birth as any);
-      if (baseAbilities) {
-        updated.abilities = baseAbilities;
-      }
-    }
-    // 能力値の再計算
-    updated.attributes = calculateAttributes(updated);
-    setIsInternalUpdate(true);
-    setSheetData(updated);
-    onChange(updated);
-  };
-
-  // 生まれ変更時の処理
-  const updateBirth = (birth: string) => {
-    if (!sheetData.race) {
-      // 種族が選択されていない場合は通常の更新のみ
-      updateBasicInfo('birth', birth);
-      return;
-    }
-    
-    const updated = { 
-      ...sheetData, 
-      birth: birth as any,
-    };
-    
-    // 対応表から基本能力値を取得して自動設定
-    if (birth) {
-      const baseAbilities = getBaseAbilitiesByRaceBirth(sheetData.race, birth as any);
-      if (baseAbilities) {
-        updated.abilities = baseAbilities;
-      }
-    }
-    
-    // 能力値の再計算
-    updated.attributes = calculateAttributes(updated);
-    setIsInternalUpdate(true);
-    setSheetData(updated);
-    onChange(updated);
-  };
 
   // 能力値の更新
   const updateAbility = (key: '技' | '体' | '心', value: number) => {
@@ -624,9 +560,6 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
     }
   }, [usedExperiencePoints]);
 
-  // 利用可能な生まれのリスト（対応表から取得）
-  const availableBirths = sheetData.race ? getAvailableBirthsByRaceFromMapping(sheetData.race) : [];
-
   // 技能カテゴリ別のリスト
   const warriorClasses = getClassesByCategory('戦士系');
   const magicClasses = getClassesByCategory('魔法系');
@@ -634,97 +567,6 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
 
   return (
     <div>
-      {/* 基本情報セクション */}
-      <CollapsibleSection title="基本情報" defaultOpen={true}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              プレイヤー名
-            </label>
-            <input
-              type="text"
-              value={sheetData.playerName || ''}
-              onChange={(e) => updateBasicInfo('playerName', e.target.value)}
-              style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-            />
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              キャラクター名
-            </label>
-            <input
-              type="text"
-              value={sheetData.characterName || ''}
-              onChange={(e) => updateBasicInfo('characterName', e.target.value)}
-              style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-            />
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              種族
-            </label>
-            <select
-              value={sheetData.race || ''}
-              onChange={(e) => updateRace(e.target.value)}
-              style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-            >
-              <option value="">選択してください</option>
-              {SW25_RACES.map(race => (
-                <option key={race.name} value={race.name}>{race.name}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              生まれ
-            </label>
-            <select
-              value={sheetData.birth || ''}
-              onChange={(e) => updateBirth(e.target.value)}
-              disabled={!sheetData.race}
-              style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-            >
-              <option value="">選択してください</option>
-              {availableBirths.map(birth => (
-                <option key={birth} value={birth}>{birth}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              年齢
-            </label>
-            <input
-              type="number"
-              value={sheetData.age || ''}
-              onChange={(e) => updateBasicInfo('age', e.target.value ? parseInt(e.target.value) : undefined)}
-              style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-            />
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              性別
-            </label>
-            <input
-              type="text"
-              value={sheetData.gender || ''}
-              onChange={(e) => updateBasicInfo('gender', e.target.value)}
-              style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-            />
-          </div>
-        </div>
-        {sheetData.race && getRaceByName(sheetData.race) && (
-          <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#f8f9fa', borderRadius: '4px' }}>
-            <strong>種族特性:</strong> {getRaceByName(sheetData.race)?.traits.join(', ')}
-            {getRaceByName(sheetData.race)?.description && (
-              <div style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#666' }}>
-                {getRaceByName(sheetData.race)?.description}
-              </div>
-            )}
-          </div>
-        )}
-      </CollapsibleSection>
-
       {/* 能力値セクション */}
       <CollapsibleSection title="能力値" defaultOpen={true}>
         <div style={{ marginBottom: '1.5rem' }}>

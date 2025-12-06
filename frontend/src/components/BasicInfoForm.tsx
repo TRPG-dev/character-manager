@@ -1,9 +1,9 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import type { CthulhuSheetData } from '../types/cthulhu';
 import type { ShinobigamiSheetData } from '../types/shinobigami';
 import type { Sw25SheetData } from '../types/sw25';
 import type { SystemEnum } from '../services/api';
-import { SW25_RACES, getRaceByName, getAvailableBirthsByRaceFromMapping, getBaseAbilitiesByRaceBirth } from '../data/sw25';
+import { SW25_RACES, getAvailableBirthsByRaceFromMapping, getBaseAbilitiesByRaceBirth } from '../data/sw25';
 
 const SYSTEM_NAMES: Record<SystemEnum, string> = {
   cthulhu: 'クトゥルフ神話TRPG',
@@ -419,20 +419,6 @@ export const BasicInfoForm = ({
                   value={(data as Sw25SheetData).playerName || ''}
                   onChange={(e) => {
                     const updated = { ...data, playerName: e.target.value } as Sw25SheetData;
-                    onChange(updated);
-                  }}
-                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
-                  キャラクター名
-                </label>
-                <input
-                  type="text"
-                  value={(data as Sw25SheetData).characterName || ''}
-                  onChange={(e) => {
-                    const updated = { ...data, characterName: e.target.value } as Sw25SheetData;
                     onChange(updated);
                   }}
                   style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
