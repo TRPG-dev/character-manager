@@ -300,6 +300,8 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
   const addClass = () => {
     const newClass: Sw25Class = { name: '', level: 1 };
     const updated = { ...sheetData, classes: [...sheetData.classes, newClass] };
+    // 能力値の再計算（冒険者レベルが変化する可能性があるため）
+    updated.attributes = calculateAttributes(updated);
     setIsInternalUpdate(true);
     setSheetData(updated);
     onChange(updated);
@@ -332,6 +334,8 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
       }
     }
     
+    // 能力値の再計算（冒険者レベルが変化する可能性があるため）
+    updated.attributes = calculateAttributes(updated);
     setIsInternalUpdate(true);
     setSheetData(updated);
     onChange(updated);
@@ -341,6 +345,8 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
   const removeClass = (index: number) => {
     const newClasses = sheetData.classes.filter((_, i) => i !== index);
     const updated = { ...sheetData, classes: newClasses };
+    // 能力値の再計算（冒険者レベルが変化する可能性があるため）
+    updated.attributes = calculateAttributes(updated);
     setIsInternalUpdate(true);
     setSheetData(updated);
     onChange(updated);
@@ -596,10 +602,12 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
   // 残り経験点の計算
   const remainingExperiencePoints = (sheetData.initialExperiencePoints || 0) + (sheetData.gainedExperiencePoints || 0) - usedExperiencePoints;
   
-  // 冒険者レベルを更新
+  // 冒険者レベルを更新（能力値も再計算）
   useEffect(() => {
     if (sheetData.adventurerLevel !== adventurerLevel) {
       const updated = { ...sheetData, adventurerLevel };
+      // 冒険者レベルが変化した場合、派生値も再計算する
+      updated.attributes = calculateAttributes(updated);
       setIsInternalUpdate(true);
       setSheetData(updated);
       onChange(updated);
