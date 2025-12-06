@@ -316,15 +316,6 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
     onChange(updated);
   };
 
-  // 魔法・スキルの追加
-  const addMagic = () => {
-    const newMagic: Sw25Magic = { name: '', system: '', cost: 0, effect: '', memo: '' };
-    const updated = { ...sheetData, magics: [...sheetData.magics, newMagic] };
-    setIsInternalUpdate(true);
-    setSheetData(updated);
-    onChange(updated);
-  };
-
   // 魔法・スキルの更新
   const updateMagic = (index: number, field: 'name' | 'system' | 'cost' | 'effect' | 'memo', value: string | number) => {
     const newMagics = [...sheetData.magics];
@@ -1171,32 +1162,72 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
 
       {/* 魔法・スキルセクション */}
       <CollapsibleSection title="魔法・スキル" defaultOpen={false}>
-        <div style={{ marginBottom: '1rem' }}>
-          <button
-            type="button"
-            onClick={addMagic}
-            style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: '#007bff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              marginBottom: '1rem',
-            }}
-          >
-            + 魔法・スキルを追加
-          </button>
-        </div>
-        {['精霊魔法', '神聖魔法', '呪歌', '練技', 'その他'].map(system => {
-          const systemMagics = sheetData.magics.filter(m => m.system === system);
-          if (systemMagics.length === 0) return null;
+        {/* 技能と魔法・スキル系統グループの対応表 */}
+        {(() => {
+          // ユーザーが取得している技能に対応した魔法・スキル系統グループを取得
+          const classToSystemMap: Record<string, string> = {
+            'ソーサラー': '精霊魔法',
+            'コンジャラー': '精霊魔法',
+            'プリースト': '神聖魔法',
+            'マギテック': '精霊魔法',
+            'フェアリーテイマー': '精霊魔法',
+            'エンハンサー': '練技',
+            'バード': '呪歌',
+            'ライダー': '練技',
+            'アルケミスト': '練技',
+          };
+          
+          // 取得している技能から対応する系統グループを取得
+          const availableSystems = new Set<string>();
+          sheetData.classes.forEach(cls => {
+            const system = classToSystemMap[cls.name];
+            if (system) {
+              availableSystems.add(system);
+            }
+          });
+          
+          // 既存の魔法・スキルで使用されている系統も追加
+          sheetData.magics.forEach(magic => {
+            if (magic.system) {
+              availableSystems.add(magic.system);
+            }
+          });
+          
+          const systems = Array.from(availableSystems).sort();
+          
           return (
-            <div key={system} style={{ marginBottom: '1.5rem' }}>
-              <h4 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: 'bold', color: '#666' }}>
-                {system}
-              </h4>
-              {systemMagics.map((magic) => {
+            <>
+              {systems.map(system => {
+                const systemMagics = sheetData.magics.filter(m => m.system === system);
+                return (
+                  <div key={system} style={{ marginBottom: '1.5rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                      <h4 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: 'bold', color: '#666' }}>
+                        {system}
+                      </h4>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newMagic: Sw25Magic = { name: '', system: system, cost: 0, effect: '', memo: '' };
+                          const updated = { ...sheetData, magics: [...sheetData.magics, newMagic] };
+                          setIsInternalUpdate(true);
+                          setSheetData(updated);
+                          onChange(updated);
+                        }}
+                        style={{
+                          padding: '0.25rem 0.5rem',
+                          backgroundColor: '#007bff',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '0.875rem',
+                        }}
+                      >
+                        + {system}を追加
+                      </button>
+                    </div>
+                    {systemMagics.map((magic) => {
                 const originalIndex = sheetData.magics.findIndex(m => m === magic);
                 return (
                   <div key={originalIndex} style={{ marginBottom: '1rem', padding: '1rem', border: '1px solid #ddd', borderRadius: '4px' }}>
@@ -1307,9 +1338,12 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
                   </div>
                 );
               })}
-            </div>
+                  </div>
+                );
+              })}
+            </>
           );
-        })}
+        })()}
         {/* 系統が未設定の魔法・スキル */}
         {sheetData.magics.filter(m => !m.system || m.system === '').length > 0 && (
           <div style={{ marginBottom: '1.5rem' }}>
