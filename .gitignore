@@ -2,6 +2,9 @@
 .env
 .env.local
 
+# メモ用フォルダ
+docs/
+
 # Docker関連
 postgres_data/
 
