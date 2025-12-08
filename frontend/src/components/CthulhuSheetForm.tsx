@@ -349,369 +349,378 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
 
   const removeMythosItem = (type: 'mythosBooks' | 'spells' | 'artifacts', index: number) => {
     const newItems = (sheetData[type] || []).filter((_, i) => i !== index);
-    onUpdate = { updateAttributes }
+    const updated = { ...sheetData, [type]: newItems };
+    setSheetData(updated);
+    onChange(updated);
+  };
+
+  return (
+    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }}>
+      {/* 能力値セクション */}
+      <CthulhuAttributesSection
+        attributes={sheetData.attributes}
+        onUpdate={updateAttributes}
       />
 
-
-      {/* 派生値セクション */ }
-      < CthulhuDerivedStatsSection
-    derived = { sheetData.derived }
-    onUpdate = { updateDerived }
+      {/* 派生値セクション */}
+      <CthulhuDerivedStatsSection
+        derived={sheetData.derived}
+        onUpdate={updateDerived}
       />
 
-      {/* 技能セクション */ }
+      {/* 技能セクション */}
       < section >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h2 style={{ fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem', margin: 0 }}>
-          技能
-        </h2>
-      </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h2 style={{ fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem', margin: 0 }}>
+            技能
+          </h2>
+        </div>
 
-    {/* ポイント管理表示 */ }
-    <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '4px', border: '1px solid #dee2e6' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
-        <div>
-          <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>職業P使用量</div>
-          <div style={{ fontSize: '1.125rem', fontWeight: 'bold', color: isJobPointsOverLimit ? '#dc3545' : '#212529' }}>
-            {totalJobPoints} / {jobPointsLimit} (EDU × 20)
+        {/* ポイント管理表示 */}
+        <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '4px', border: '1px solid #dee2e6' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+            <div>
+              <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>職業P使用量</div>
+              <div style={{ fontSize: '1.125rem', fontWeight: 'bold', color: isJobPointsOverLimit ? '#dc3545' : '#212529' }}>
+                {totalJobPoints} / {jobPointsLimit} (EDU × 20)
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>興味P使用量</div>
+              <div style={{ fontSize: '1.125rem', fontWeight: 'bold', color: isInterestPointsOverLimit ? '#dc3545' : '#212529' }}>
+                {totalInterestPoints} / {interestPointsLimit} (INT × 10)
+              </div>
+            </div>
           </div>
+          {(isJobPointsOverLimit || isInterestPointsOverLimit) && (
+            <div style={{ marginTop: '0.5rem', padding: '0.5rem', backgroundColor: '#fff3cd', borderRadius: '4px', color: '#856404', fontSize: '0.875rem' }}>
+              ⚠️ ポイントの上限を超えています。保存前に調整してください。
+            </div>
+          )}
         </div>
-        <div>
-          <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>興味P使用量</div>
-          <div style={{ fontSize: '1.125rem', fontWeight: 'bold', color: isInterestPointsOverLimit ? '#dc3545' : '#212529' }}>
-            {totalInterestPoints} / {interestPointsLimit} (INT × 10)
-          </div>
-        </div>
-      </div>
-      {(isJobPointsOverLimit || isInterestPointsOverLimit) && (
-        <div style={{ marginTop: '0.5rem', padding: '0.5rem', backgroundColor: '#fff3cd', borderRadius: '4px', color: '#856404', fontSize: '0.875rem' }}>
-          ⚠️ ポイントの上限を超えています。保存前に調整してください。
-        </div>
-      )}
-    </div>
 
-    {/* 技能テーブル */ }
-    <div style={{ overflowX: 'auto', maxHeight: '600px', overflowY: 'auto', border: '1px solid #dee2e6', borderRadius: '4px' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
-        <thead style={{ backgroundColor: '#f8f9fa', position: 'sticky', top: 0, zIndex: 10 }}>
-          <tr>
-            <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>技能名</th>
-            <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>初期値</th>
-            <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>職業P</th>
-            <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>興味P</th>
-            <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>成長</th>
-            <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>その他</th>
-            <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>合計</th>
-            <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          {/* デフォルト技能 */}
-          {sheetData.skills.map((skill, index) => (
-            <tr key={`default-${index}`} style={{ borderBottom: '1px solid #dee2e6' }}>
-              <td style={{ padding: '0.75rem', fontWeight: 'bold' }}>{skill.name}</td>
-              <td style={{ padding: '0.75rem', textAlign: 'center' }}>{skill.baseValue}</td>
-              <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                <input
-                  type="number"
-                  value={skill.jobPoints || 0}
-                  onChange={(e) => updateDefaultSkill(index, 'jobPoints', parseInt(e.target.value) || 0)}
-                  min="0"
-                  style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
-                />
-              </td>
-              <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                <input
-                  type="number"
-                  value={skill.interestPoints || 0}
-                  onChange={(e) => updateDefaultSkill(index, 'interestPoints', parseInt(e.target.value) || 0)}
-                  min="0"
-                  style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
-                />
-              </td>
-              <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                <input
-                  type="number"
-                  value={skill.growth || 0}
-                  onChange={(e) => updateDefaultSkill(index, 'growth', parseInt(e.target.value) || 0)}
-                  style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
-                />
-              </td>
-              <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                <input
-                  type="number"
-                  value={skill.other || 0}
-                  onChange={(e) => updateDefaultSkill(index, 'other', parseInt(e.target.value) || 0)}
-                  style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
-                />
-              </td>
-              <td style={{ padding: '0.75rem', textAlign: 'center', fontWeight: 'bold', backgroundColor: '#f8f9fa' }}>
-                {skill.total || calculateSkillTotal(skill)}
-              </td>
-              <td style={{ padding: '0.75rem', textAlign: 'center' }}>-</td>
-            </tr>
-          ))}
-          {/* 追加技能 */}
-          {(sheetData.customSkills || []).map((skill, index) => (
-            <tr key={`custom-${index}`} style={{ borderBottom: '1px solid #dee2e6', backgroundColor: '#fffbf0' }}>
-              <td style={{ padding: '0.75rem' }}>
-                <input
-                  type="text"
-                  value={skill.name}
-                  onChange={(e) => updateCustomSkillName(index, e.target.value)}
-                  placeholder="技能名"
-                  style={{ width: '100%', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                />
-              </td>
-              <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                <input
-                  type="number"
-                  value={skill.baseValue || 0}
-                  onChange={(e) => updateCustomSkillBaseValue(index, parseInt(e.target.value) || 0)}
-                  min="0"
-                  style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
-                />
-              </td>
-              <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                <input
-                  type="number"
-                  value={skill.jobPoints || 0}
-                  onChange={(e) => updateCustomSkill(index, 'jobPoints', parseInt(e.target.value) || 0)}
-                  min="0"
-                  style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
-                />
-              </td>
-              <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                <input
-                  type="number"
-                  value={skill.interestPoints || 0}
-                  onChange={(e) => updateCustomSkill(index, 'interestPoints', parseInt(e.target.value) || 0)}
-                  min="0"
-                  style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
-                />
-              </td>
-              <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                <input
-                  type="number"
-                  value={skill.growth || 0}
-                  onChange={(e) => updateCustomSkill(index, 'growth', parseInt(e.target.value) || 0)}
-                  style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
-                />
-              </td>
-              <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                <input
-                  type="number"
-                  value={skill.other || 0}
-                  onChange={(e) => updateCustomSkill(index, 'other', parseInt(e.target.value) || 0)}
-                  style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
-                />
-              </td>
-              <td style={{ padding: '0.75rem', textAlign: 'center', fontWeight: 'bold', backgroundColor: '#f8f9fa' }}>
-                {skill.total || calculateSkillTotal(skill)}
-              </td>
-              <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                <button
-                  type="button"
-                  onClick={() => removeCustomSkill(index)}
-                  style={{
-                    padding: '0.25rem 0.5rem',
-                    backgroundColor: '#dc3545',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '0.75rem',
-                  }}
-                >
-                  削除
-                </button>
-              </td>
-            </tr>
-          ))}
-          {/* 追加ボタン行 */}
-          <tr>
-            <td colSpan={8} style={{ padding: '0.75rem', textAlign: 'center' }}>
-              <button
-                type="button"
-                onClick={addCustomSkill}
-                style={{
-                  padding: '0.5rem 1rem',
-                  backgroundColor: '#28a745',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontSize: '0.875rem',
-                }}
-              >
-                + 技能を追加
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+        {/* 技能テーブル */}
+        <div style={{ overflowX: 'auto', maxHeight: '600px', overflowY: 'auto', border: '1px solid #dee2e6', borderRadius: '4px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+            <thead style={{ backgroundColor: '#f8f9fa', position: 'sticky', top: 0, zIndex: 10 }}>
+              <tr>
+                <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>技能名</th>
+                <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>初期値</th>
+                <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>職業P</th>
+                <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>興味P</th>
+                <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>成長</th>
+                <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>その他</th>
+                <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>合計</th>
+                <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {/* デフォルト技能 */}
+              {sheetData.skills.map((skill, index) => (
+                <tr key={`default-${index}`} style={{ borderBottom: '1px solid #dee2e6' }}>
+                  <td style={{ padding: '0.75rem', fontWeight: 'bold' }}>{skill.name}</td>
+                  <td style={{ padding: '0.75rem', textAlign: 'center' }}>{skill.baseValue}</td>
+                  <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                    <input
+                      type="number"
+                      value={skill.jobPoints || 0}
+                      onChange={(e) => updateDefaultSkill(index, 'jobPoints', parseInt(e.target.value) || 0)}
+                      min="0"
+                      style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
+                    />
+                  </td>
+                  <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                    <input
+                      type="number"
+                      value={skill.interestPoints || 0}
+                      onChange={(e) => updateDefaultSkill(index, 'interestPoints', parseInt(e.target.value) || 0)}
+                      min="0"
+                      style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
+                    />
+                  </td>
+                  <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                    <input
+                      type="number"
+                      value={skill.growth || 0}
+                      onChange={(e) => updateDefaultSkill(index, 'growth', parseInt(e.target.value) || 0)}
+                      style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
+                    />
+                  </td>
+                  <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                    <input
+                      type="number"
+                      value={skill.other || 0}
+                      onChange={(e) => updateDefaultSkill(index, 'other', parseInt(e.target.value) || 0)}
+                      style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
+                    />
+                  </td>
+                  <td style={{ padding: '0.75rem', textAlign: 'center', fontWeight: 'bold', backgroundColor: '#f8f9fa' }}>
+                    {skill.total || calculateSkillTotal(skill)}
+                  </td>
+                  <td style={{ padding: '0.75rem', textAlign: 'center' }}>-</td>
+                </tr>
+              ))}
+              {/* 追加技能 */}
+              {(sheetData.customSkills || []).map((skill, index) => (
+                <tr key={`custom-${index}`} style={{ borderBottom: '1px solid #dee2e6', backgroundColor: '#fffbf0' }}>
+                  <td style={{ padding: '0.75rem' }}>
+                    <input
+                      type="text"
+                      value={skill.name}
+                      onChange={(e) => updateCustomSkillName(index, e.target.value)}
+                      placeholder="技能名"
+                      style={{ width: '100%', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                    />
+                  </td>
+                  <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                    <input
+                      type="number"
+                      value={skill.baseValue || 0}
+                      onChange={(e) => updateCustomSkillBaseValue(index, parseInt(e.target.value) || 0)}
+                      min="0"
+                      style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
+                    />
+                  </td>
+                  <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                    <input
+                      type="number"
+                      value={skill.jobPoints || 0}
+                      onChange={(e) => updateCustomSkill(index, 'jobPoints', parseInt(e.target.value) || 0)}
+                      min="0"
+                      style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
+                    />
+                  </td>
+                  <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                    <input
+                      type="number"
+                      value={skill.interestPoints || 0}
+                      onChange={(e) => updateCustomSkill(index, 'interestPoints', parseInt(e.target.value) || 0)}
+                      min="0"
+                      style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
+                    />
+                  </td>
+                  <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                    <input
+                      type="number"
+                      value={skill.growth || 0}
+                      onChange={(e) => updateCustomSkill(index, 'growth', parseInt(e.target.value) || 0)}
+                      style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
+                    />
+                  </td>
+                  <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                    <input
+                      type="number"
+                      value={skill.other || 0}
+                      onChange={(e) => updateCustomSkill(index, 'other', parseInt(e.target.value) || 0)}
+                      style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
+                    />
+                  </td>
+                  <td style={{ padding: '0.75rem', textAlign: 'center', fontWeight: 'bold', backgroundColor: '#f8f9fa' }}>
+                    {skill.total || calculateSkillTotal(skill)}
+                  </td>
+                  <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                    <button
+                      type="button"
+                      onClick={() => removeCustomSkill(index)}
+                      style={{
+                        padding: '0.25rem 0.5rem',
+                        backgroundColor: '#dc3545',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '0.75rem',
+                      }}
+                    >
+                      削除
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {/* 追加ボタン行 */}
+              <tr>
+                <td colSpan={8} style={{ padding: '0.75rem', textAlign: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={addCustomSkill}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      backgroundColor: '#28a745',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                    }}
+                  >
+                    + 技能を追加
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </section >
 
-  {/* 格闘技能セクション */ }
-  < section >
-  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-    <h2 style={{ fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem', margin: 0 }}>
-      格闘技能
-    </h2>
-  </div>
+      {/* 格闘技能セクション */}
+      < section >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h2 style={{ fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem', margin: 0 }}>
+            格闘技能
+          </h2>
+        </div>
 
-{/* 格闘技能テーブル */ }
-<div style={{ overflowX: 'auto', maxHeight: '600px', overflowY: 'auto', border: '1px solid #dee2e6', borderRadius: '4px' }}>
-  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
-    <thead style={{ backgroundColor: '#f8f9fa', position: 'sticky', top: 0, zIndex: 10 }}>
-      <tr>
-        <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>技能名</th>
-        <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>初期値</th>
-        <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>職業P</th>
-        <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>興味P</th>
-        <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>成長</th>
-        <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>その他</th>
-        <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>合計</th>
-        <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>操作</th>
-      </tr>
-    </thead>
-    <tbody>
-      {(sheetData.combatSkills || []).map((skill, index) => {
-        // isCustomフラグを確実に判定（明示的にtrueの場合のみカスタム技能とみなす）
-        const isCustom = skill.isCustom === true;
-        return (
-          <tr key={`combat-${index}`} style={{ borderBottom: '1px solid #dee2e6', backgroundColor: isCustom ? '#fffbf0' : undefined }}>
-            <td style={{ padding: '0.75rem' }}>
-              {isCustom ? (
-                <input
-                  type="text"
-                  value={skill.name || ''}
-                  onChange={(e) => updateCombatSkillName(index, e.target.value)}
-                  placeholder="技能名"
-                  style={{ width: '100%', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                />
-              ) : (
-                <span style={{ fontWeight: 'bold' }}>{skill.name}</span>
-              )}
-            </td>
-            <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-              {isCustom ? (
-                <input
-                  type="number"
-                  value={skill.baseValue || 0}
-                  onChange={(e) => updateCombatSkillBaseValue(index, parseInt(e.target.value) || 0)}
-                  min="0"
-                  style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
-                />
-              ) : (
-                <span>{skill.baseValue}</span>
-              )}
-            </td>
-            <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-              <input
-                type="number"
-                value={skill.jobPoints || 0}
-                onChange={(e) => updateCombatSkill(index, 'jobPoints', parseInt(e.target.value) || 0)}
-                min="0"
-                style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
-              />
-            </td>
-            <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-              <input
-                type="number"
-                value={skill.interestPoints || 0}
-                onChange={(e) => updateCombatSkill(index, 'interestPoints', parseInt(e.target.value) || 0)}
-                min="0"
-                style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
-              />
-            </td>
-            <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-              <input
-                type="number"
-                value={skill.growth || 0}
-                onChange={(e) => updateCombatSkill(index, 'growth', parseInt(e.target.value) || 0)}
-                style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
-              />
-            </td>
-            <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-              <input
-                type="number"
-                value={skill.other || 0}
-                onChange={(e) => updateCombatSkill(index, 'other', parseInt(e.target.value) || 0)}
-                style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
-              />
-            </td>
-            <td style={{ padding: '0.75rem', textAlign: 'center', fontWeight: 'bold', backgroundColor: '#f8f9fa' }}>
-              {skill.total || calculateSkillTotal(skill)}
-            </td>
-            <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-              {isCustom ? (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    removeCombatSkill(index);
-                  }}
-                  style={{
-                    padding: '0.25rem 0.5rem',
-                    backgroundColor: '#dc3545',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '0.75rem',
-                  }}
-                >
-                  削除
-                </button>
-              ) : (
-                <span>-</span>
-              )}
-            </td>
-          </tr>
-        );
-      })}
-      {/* 追加ボタン行 */}
-      <tr>
-        <td colSpan={8} style={{ padding: '0.75rem', textAlign: 'center' }}>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              addCombatSkill(e);
-            }}
-            style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: '#28a745',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '0.875rem',
-            }}
-          >
-            + 格闘技能を追加
-          </button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</div>
+        {/* 格闘技能テーブル */}
+        <div style={{ overflowX: 'auto', maxHeight: '600px', overflowY: 'auto', border: '1px solid #dee2e6', borderRadius: '4px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+            <thead style={{ backgroundColor: '#f8f9fa', position: 'sticky', top: 0, zIndex: 10 }}>
+              <tr>
+                <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>技能名</th>
+                <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>初期値</th>
+                <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>職業P</th>
+                <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>興味P</th>
+                <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>成長</th>
+                <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>その他</th>
+                <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>合計</th>
+                <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(sheetData.combatSkills || []).map((skill, index) => {
+                // isCustomフラグを確実に判定（明示的にtrueの場合のみカスタム技能とみなす）
+                const isCustom = skill.isCustom === true;
+                return (
+                  <tr key={`combat-${index}`} style={{ borderBottom: '1px solid #dee2e6', backgroundColor: isCustom ? '#fffbf0' : undefined }}>
+                    <td style={{ padding: '0.75rem' }}>
+                      {isCustom ? (
+                        <input
+                          type="text"
+                          value={skill.name || ''}
+                          onChange={(e) => updateCombatSkillName(index, e.target.value)}
+                          placeholder="技能名"
+                          style={{ width: '100%', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                        />
+                      ) : (
+                        <span style={{ fontWeight: 'bold' }}>{skill.name}</span>
+                      )}
+                    </td>
+                    <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                      {isCustom ? (
+                        <input
+                          type="number"
+                          value={skill.baseValue || 0}
+                          onChange={(e) => updateCombatSkillBaseValue(index, parseInt(e.target.value) || 0)}
+                          min="0"
+                          style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
+                        />
+                      ) : (
+                        <span>{skill.baseValue}</span>
+                      )}
+                    </td>
+                    <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                      <input
+                        type="number"
+                        value={skill.jobPoints || 0}
+                        onChange={(e) => updateCombatSkill(index, 'jobPoints', parseInt(e.target.value) || 0)}
+                        min="0"
+                        style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
+                      />
+                    </td>
+                    <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                      <input
+                        type="number"
+                        value={skill.interestPoints || 0}
+                        onChange={(e) => updateCombatSkill(index, 'interestPoints', parseInt(e.target.value) || 0)}
+                        min="0"
+                        style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
+                      />
+                    </td>
+                    <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                      <input
+                        type="number"
+                        value={skill.growth || 0}
+                        onChange={(e) => updateCombatSkill(index, 'growth', parseInt(e.target.value) || 0)}
+                        style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
+                      />
+                    </td>
+                    <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                      <input
+                        type="number"
+                        value={skill.other || 0}
+                        onChange={(e) => updateCombatSkill(index, 'other', parseInt(e.target.value) || 0)}
+                        style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
+                      />
+                    </td>
+                    <td style={{ padding: '0.75rem', textAlign: 'center', fontWeight: 'bold', backgroundColor: '#f8f9fa' }}>
+                      {skill.total || calculateSkillTotal(skill)}
+                    </td>
+                    <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                      {isCustom ? (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            removeCombatSkill(index);
+                          }}
+                          style={{
+                            padding: '0.25rem 0.5rem',
+                            backgroundColor: '#dc3545',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '0.75rem',
+                          }}
+                        >
+                          削除
+                        </button>
+                      ) : (
+                        <span>-</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+              {/* 追加ボタン行 */}
+              <tr>
+                <td colSpan={8} style={{ padding: '0.75rem', textAlign: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      addCombatSkill(e);
+                    }}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      backgroundColor: '#28a745',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                    }}
+                  >
+                    + 格闘技能を追加
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </section >
 
-  {/* 武器セクション */ }
-  < CthulhuWeaponsSection
-weapons = { sheetData.weapons || [] }
-onAdd = { addWeapon }
-onUpdate = { updateWeapon }
-onRemove = { removeWeapon }
-  />
+      {/* 武器セクション */}
+      < CthulhuWeaponsSection
+        weapons={sheetData.weapons || []}
+        onAdd={addWeapon}
+        onUpdate={updateWeapon}
+        onRemove={removeWeapon}
+      />
 
-  {/* 所持品セクション */ }
-  < section >
+      {/* 所持品セクション */}
+      < section >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <h2 style={{ fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem', margin: 0 }}>
             所持品
@@ -779,8 +788,8 @@ onRemove = { removeWeapon }
         </div>
       </section >
 
-  {/* 財産セクション */ }
-  < section >
+      {/* 財産セクション */}
+      < section >
         <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
           財産
         </h2>
@@ -826,8 +835,8 @@ onRemove = { removeWeapon }
         </div>
       </section >
 
-  {/* 通過したシナリオセクション */ }
-  < section >
+      {/* 通過したシナリオセクション */}
+      < section >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <h2 style={{ fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem', margin: 0 }}>
             通過したシナリオ
@@ -899,219 +908,219 @@ onRemove = { removeWeapon }
         </div>
       </section >
 
-  {/* 魔導書・呪文・アーティファクトセクション */ }
-  < section >
-  <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
-    魔導書・呪文・アーティファクト
-  </h2>
+      {/* 魔導書・呪文・アーティファクトセクション */}
+      < section >
+        <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
+          魔導書・呪文・アーティファクト
+        </h2>
 
-{/* 魔導書 */ }
-<div style={{ marginBottom: '2rem' }}>
-  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-    <h3 style={{ fontSize: '1.25rem', margin: 0 }}>魔導書</h3>
-    <button
-      type="button"
-      onClick={() => addMythosItem('mythosBooks')}
-      style={{
-        padding: '0.5rem 1rem',
-        backgroundColor: '#28a745',
-        color: '#fff',
-        border: 'none',
-        borderRadius: '4px',
-        cursor: 'pointer',
-        fontSize: '0.875rem',
-      }}
-    >
-      + 魔導書を追加
-    </button>
-  </div>
-  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-    {(sheetData.mythosBooks || []).map((item, index) => (
-      <div key={index} style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-          <h4 style={{ margin: 0, fontSize: '0.875rem' }}>#{index + 1}</h4>
-          <button
-            type="button"
-            onClick={() => removeMythosItem('mythosBooks', index)}
-            style={{
-              padding: '0.25rem 0.5rem',
-              backgroundColor: '#dc3545',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '0.875rem',
-            }}
-          >
-            削除
-          </button>
+        {/* 魔導書 */}
+        <div style={{ marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h3 style={{ fontSize: '1.25rem', margin: 0 }}>魔導書</h3>
+            <button
+              type="button"
+              onClick={() => addMythosItem('mythosBooks')}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#28a745',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+              }}
+            >
+              + 魔導書を追加
+            </button>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {(sheetData.mythosBooks || []).map((item, index) => (
+              <div key={index} style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <h4 style={{ margin: 0, fontSize: '0.875rem' }}>#{index + 1}</h4>
+                  <button
+                    type="button"
+                    onClick={() => removeMythosItem('mythosBooks', index)}
+                    style={{
+                      padding: '0.25rem 0.5rem',
+                      backgroundColor: '#dc3545',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                    }}
+                  >
+                    削除
+                  </button>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <input
+                    type="text"
+                    placeholder="名称"
+                    value={item.name}
+                    onChange={(e) => updateMythosItem('mythosBooks', index, 'name', e.target.value)}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  />
+                  <textarea
+                    placeholder="メモ"
+                    value={item.memo}
+                    onChange={(e) => updateMythosItem('mythosBooks', index, 'memo', e.target.value)}
+                    rows={2}
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontFamily: 'inherit',
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <input
-            type="text"
-            placeholder="名称"
-            value={item.name}
-            onChange={(e) => updateMythosItem('mythosBooks', index, 'name', e.target.value)}
-            style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-          />
-          <textarea
-            placeholder="メモ"
-            value={item.memo}
-            onChange={(e) => updateMythosItem('mythosBooks', index, 'memo', e.target.value)}
-            rows={2}
-            style={{
-              width: '100%',
-              padding: '0.5rem',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-              fontFamily: 'inherit',
-            }}
-          />
-        </div>
-      </div>
-    ))}
-  </div>
-</div>
 
-{/* 呪文 */ }
-<div style={{ marginBottom: '2rem' }}>
-  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-    <h3 style={{ fontSize: '1.25rem', margin: 0 }}>呪文</h3>
-    <button
-      type="button"
-      onClick={() => addMythosItem('spells')}
-      style={{
-        padding: '0.5rem 1rem',
-        backgroundColor: '#28a745',
-        color: '#fff',
-        border: 'none',
-        borderRadius: '4px',
-        cursor: 'pointer',
-        fontSize: '0.875rem',
-      }}
-    >
-      + 呪文を追加
-    </button>
-  </div>
-  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-    {(sheetData.spells || []).map((item, index) => (
-      <div key={index} style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-          <h4 style={{ margin: 0, fontSize: '0.875rem' }}>#{index + 1}</h4>
-          <button
-            type="button"
-            onClick={() => removeMythosItem('spells', index)}
-            style={{
-              padding: '0.25rem 0.5rem',
-              backgroundColor: '#dc3545',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '0.875rem',
-            }}
-          >
-            削除
-          </button>
+        {/* 呪文 */}
+        <div style={{ marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h3 style={{ fontSize: '1.25rem', margin: 0 }}>呪文</h3>
+            <button
+              type="button"
+              onClick={() => addMythosItem('spells')}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#28a745',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+              }}
+            >
+              + 呪文を追加
+            </button>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {(sheetData.spells || []).map((item, index) => (
+              <div key={index} style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <h4 style={{ margin: 0, fontSize: '0.875rem' }}>#{index + 1}</h4>
+                  <button
+                    type="button"
+                    onClick={() => removeMythosItem('spells', index)}
+                    style={{
+                      padding: '0.25rem 0.5rem',
+                      backgroundColor: '#dc3545',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                    }}
+                  >
+                    削除
+                  </button>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <input
+                    type="text"
+                    placeholder="名称"
+                    value={item.name}
+                    onChange={(e) => updateMythosItem('spells', index, 'name', e.target.value)}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  />
+                  <textarea
+                    placeholder="メモ"
+                    value={item.memo}
+                    onChange={(e) => updateMythosItem('spells', index, 'memo', e.target.value)}
+                    rows={2}
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontFamily: 'inherit',
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <input
-            type="text"
-            placeholder="名称"
-            value={item.name}
-            onChange={(e) => updateMythosItem('spells', index, 'name', e.target.value)}
-            style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-          />
-          <textarea
-            placeholder="メモ"
-            value={item.memo}
-            onChange={(e) => updateMythosItem('spells', index, 'memo', e.target.value)}
-            rows={2}
-            style={{
-              width: '100%',
-              padding: '0.5rem',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-              fontFamily: 'inherit',
-            }}
-          />
-        </div>
-      </div>
-    ))}
-  </div>
-</div>
 
-{/* アーティファクト */ }
-<div>
-  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-    <h3 style={{ fontSize: '1.25rem', margin: 0 }}>アーティファクト</h3>
-    <button
-      type="button"
-      onClick={() => addMythosItem('artifacts')}
-      style={{
-        padding: '0.5rem 1rem',
-        backgroundColor: '#28a745',
-        color: '#fff',
-        border: 'none',
-        borderRadius: '4px',
-        cursor: 'pointer',
-        fontSize: '0.875rem',
-      }}
-    >
-      + アーティファクトを追加
-    </button>
-  </div>
-  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-    {(sheetData.artifacts || []).map((item, index) => (
-      <div key={index} style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-          <h4 style={{ margin: 0, fontSize: '0.875rem' }}>#{index + 1}</h4>
-          <button
-            type="button"
-            onClick={() => removeMythosItem('artifacts', index)}
-            style={{
-              padding: '0.25rem 0.5rem',
-              backgroundColor: '#dc3545',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '0.875rem',
-            }}
-          >
-            削除
-          </button>
+        {/* アーティファクト */}
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h3 style={{ fontSize: '1.25rem', margin: 0 }}>アーティファクト</h3>
+            <button
+              type="button"
+              onClick={() => addMythosItem('artifacts')}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#28a745',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+              }}
+            >
+              + アーティファクトを追加
+            </button>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {(sheetData.artifacts || []).map((item, index) => (
+              <div key={index} style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <h4 style={{ margin: 0, fontSize: '0.875rem' }}>#{index + 1}</h4>
+                  <button
+                    type="button"
+                    onClick={() => removeMythosItem('artifacts', index)}
+                    style={{
+                      padding: '0.25rem 0.5rem',
+                      backgroundColor: '#dc3545',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                    }}
+                  >
+                    削除
+                  </button>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <input
+                    type="text"
+                    placeholder="名称"
+                    value={item.name}
+                    onChange={(e) => updateMythosItem('artifacts', index, 'name', e.target.value)}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  />
+                  <textarea
+                    placeholder="メモ"
+                    value={item.memo}
+                    onChange={(e) => updateMythosItem('artifacts', index, 'memo', e.target.value)}
+                    rows={2}
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontFamily: 'inherit',
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <input
-            type="text"
-            placeholder="名称"
-            value={item.name}
-            onChange={(e) => updateMythosItem('artifacts', index, 'name', e.target.value)}
-            style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-          />
-          <textarea
-            placeholder="メモ"
-            value={item.memo}
-            onChange={(e) => updateMythosItem('artifacts', index, 'memo', e.target.value)}
-            rows={2}
-            style={{
-              width: '100%',
-              padding: '0.5rem',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-              fontFamily: 'inherit',
-            }}
-          />
-        </div>
-      </div>
-    ))}
-  </div>
-</div>
       </section >
 
-  {/* 背景・その他セクション */ }
-  < section >
+      {/* 背景・その他セクション */}
+      < section >
         <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
           背景・その他
         </h2>
