@@ -1,3 +1,8 @@
+/* Import CSS modules */
+@import './styles/variables.css';
+@import './styles/common.css';
+@import './styles/layout.css';
+
 :root {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
@@ -63,7 +68,9 @@ button:disabled {
   opacity: 0.6;
 }
 
-input, textarea, select {
+input,
+textarea,
+select {
   font-family: inherit;
   font-size: inherit;
 }
@@ -72,7 +79,7 @@ input, textarea, select {
   h1 {
     font-size: 1.5em;
   }
-  
+
   h2 {
     font-size: 1.25em;
   }
