@@ -889,6 +889,49 @@ export const CharacterDetail = () => {
                     <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>システム</div>
                     <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{SYSTEM_NAMES[character.system]}</div>
                   </div>
+                  {character.system === 'sw25' && (() => {
+                    const sheetData = normalizeSw25SheetData(character.sheet_data) as Sw25SheetData;
+                    return (
+                      <>
+                        {sheetData.playerName && (
+                          <div>
+                            <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>プレイヤー名</div>
+                            <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.playerName}</div>
+                          </div>
+                        )}
+                        {sheetData.characterName && (
+                          <div>
+                            <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>キャラクター名</div>
+                            <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.characterName}</div>
+                          </div>
+                        )}
+                        {sheetData.race && (
+                          <div>
+                            <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>種族</div>
+                            <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.race}</div>
+                          </div>
+                        )}
+                        {sheetData.birth && (
+                          <div>
+                            <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>生まれ</div>
+                            <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.birth}</div>
+                          </div>
+                        )}
+                        {sheetData.age !== undefined && (
+                          <div>
+                            <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>年齢</div>
+                            <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.age}</div>
+                          </div>
+                        )}
+                        {sheetData.gender && (
+                          <div>
+                            <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>性別</div>
+                            <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.gender}</div>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
                   {character.tags.length > 0 && (
                     <div style={{ gridColumn: '1 / -1' }}>
                       <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.5rem' }}>タグ</div>
