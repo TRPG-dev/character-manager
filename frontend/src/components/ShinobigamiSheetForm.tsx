@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import type { ShinobigamiSheetData, ShinobigamiNinpo, ShinobigamiOkugi, ShinobigamiEmotion } from '../types/shinobigami';
 import { normalizeSheetData } from '../utils/shinobigami';
-import { 
-  SHINOBI_SCHOOLS, 
-  SKILL_TABLE_COLUMNS, 
-  SKILL_TABLE_DATA, 
-  MAX_SKILLS, 
-  getDomainFromSchool, 
+import {
+  SHINOBI_SCHOOLS,
+  SKILL_TABLE_COLUMNS,
+  SKILL_TABLE_DATA,
+  MAX_SKILLS,
+  getDomainFromSchool,
   getEmptyColumnIndices,
   getRyuugiFromSchool,
   RANKS,
@@ -14,6 +14,10 @@ import {
   EMOTION_OPTIONS,
   SHINNEN_OPTIONS,
 } from '../data/shinobigamiSkills';
+import {
+  ShinobigamiBasicInfoSection,
+  ShinobigamiNinpoSection,
+} from './shinobigami';
 
 interface ShinobigamiSheetFormProps {
   data: ShinobigamiSheetData;
@@ -170,7 +174,7 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
   const toggleHencho = (hencho: string) => {
     const current = sheetData.hencho || [];
     const index = current.indexOf(hencho);
-    const newHencho = index >= 0 
+    const newHencho = index >= 0
       ? current.filter((h) => h !== hencho)
       : [...current, hencho];
     const updated = { ...sheetData, hencho: newHencho };
@@ -633,111 +637,12 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
       </section>
 
       {/* 忍法セクション */}
-      <section>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h2 style={{ fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem', margin: 0 }}>
-            忍法
-          </h2>
-          <button
-            type="button"
-            onClick={addNinpo}
-            style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: '#28a745',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '0.875rem',
-            }}
-          >
-            + 忍法を追加
-          </button>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {(sheetData.ninpo || []).map((ninpo, index) => (
-            <div key={index} style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                <h3 style={{ margin: 0, fontSize: '1rem' }}>忍法 #{index + 1}</h3>
-                <button
-                  type="button"
-                  onClick={() => removeNinpo(index)}
-                  style={{
-                    padding: '0.25rem 0.5rem',
-                    backgroundColor: '#dc3545',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '0.875rem',
-                  }}
-                >
-                  削除
-                </button>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '0.5rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>忍法名</label>
-                  <input
-                    type="text"
-                    value={ninpo.name}
-                    onChange={(e) => updateNinpo(index, 'name', e.target.value)}
-                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>タイプ</label>
-                  <input
-                    type="text"
-                    value={ninpo.type}
-                    onChange={(e) => updateNinpo(index, 'type', e.target.value)}
-                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>指定特技</label>
-                  <input
-                    type="text"
-                    value={ninpo.skill}
-                    onChange={(e) => updateNinpo(index, 'skill', e.target.value)}
-                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>間合い</label>
-                  <input
-                    type="text"
-                    value={ninpo.range}
-                    onChange={(e) => updateNinpo(index, 'range', e.target.value)}
-                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>コスト</label>
-                  <input
-                    type="text"
-                    value={ninpo.cost}
-                    onChange={(e) => updateNinpo(index, 'cost', e.target.value)}
-                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>参照ページ</label>
-                  <input
-                    type="text"
-                    value={ninpo.page}
-                    onChange={(e) => updateNinpo(index, 'page', e.target.value)}
-                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                  />
-                </div>
-              </div>
-            </div>
-          ))}
-          {(sheetData.ninpo || []).length === 0 && (
-            <p style={{ color: '#6c757d', fontStyle: 'italic' }}>忍法がありません。追加ボタンで追加してください。</p>
-          )}
-        </div>
-      </section>
+      <ShinobigamiNinpoSection
+        ninpos={sheetData.ninpo || []}
+        onAdd={addNinpo}
+        onUpdate={updateNinpo}
+        onRemove={removeNinpo}
+      />
 
       {/* 奥義セクション */}
       <section>
