@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import type { Sw25SheetData, Sw25Class, Sw25Skill, Sw25Magic, Sw25Item, Sw25Weapon, Sw25Armor, Sw25Accessory } from '../types/sw25';
 import { normalizeSheetData } from '../utils/sw25';
-import { 
-  SW25_SKILLS, 
+import {
+  SW25_SKILLS,
   SW25_LANGUAGES,
   getClassByName,
   getClassesByCategory,
@@ -10,6 +10,11 @@ import {
   calculateRequiredLanguageCount,
 } from '../data/sw25';
 import { CollapsibleSection } from './CollapsibleSection';
+import {
+  Sw25AbilitySection,
+  Sw25AttributeTable,
+  Sw25DerivedStats,
+} from './sw25';
 
 interface Sw25SheetFormProps {
   data: Sw25SheetData;
@@ -144,22 +149,22 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
   const updateAutoLanguages = (currentData: Sw25SheetData) => {
     const race = currentData.race || '';
     const classes = currentData.classes || [];
-    
+
     // 自動取得する言語を取得
     const autoLanguages = getAutoLanguages(race, classes);
-    
+
     // 既存の手動追加された言語を保持
     const existingLanguages = (currentData.languages || []).filter(lang => {
       // 自動言語に含まれていないものは手動追加
       return !autoLanguages.find(auto => auto.name === lang.name);
     });
-    
+
     // 自動言語を追加
     const mergedLanguages = [
       ...autoLanguages.map(auto => ({ name: auto.name, speak: auto.speak, read: auto.read })),
       ...existingLanguages,
     ];
-    
+
     return mergedLanguages;
   };
 
@@ -205,7 +210,7 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
 
     // HP = 冒険者レベル*3 + 生命力
     calculatedAttributes.HP = adventurerLevel * 3 + calculatedAttributes.生命力;
-    
+
     // MP = 魔法使い系技能レベル合計*3 + 精神力
     const magicClassLevelSum = currentData.classes
       .filter(cls => {
@@ -214,19 +219,19 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
       })
       .reduce((sum, cls) => sum + cls.level, 0);
     calculatedAttributes.MP = magicClassLevelSum * 3 + calculatedAttributes.精神力;
-    
+
     // 生命抵抗力 = 冒険者レベル + 生命力ボーナス
     calculatedAttributes.生命抵抗力 = adventurerLevel + vitalityBonus;
-    
+
     // 精神抵抗力 = 冒険者レベル + 精神力ボーナス
     calculatedAttributes.精神抵抗力 = adventurerLevel + spiritBonus;
 
     // 移動力 = 敏捷度
     calculatedAttributes.移動力 = calculatedAttributes.敏捷度;
-    
+
     // 全力移動 = 敏捷度*3
     calculatedAttributes.全力移動 = calculatedAttributes.敏捷度 * 3;
-    
+
     // 先制力 = スカウト技能レベル + 敏捷度ボーナス（スカウト技能を取得している場合のみ）
     const scoutLevel = currentData.classes.find(cls => cls.name === 'スカウト')?.level || 0;
     if (scoutLevel > 0) {
@@ -234,7 +239,7 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
     } else {
       delete calculatedAttributes.先制力;
     }
-    
+
     // 魔物知識 = セージ技能レベル + 知力ボーナス（セージ技能かライダー技能を取得している場合のみ）
     const sageLevel = currentData.classes.find(cls => cls.name === 'セージ')?.level || 0;
     const riderLevel = currentData.classes.find(cls => cls.name === 'ライダー')?.level || 0;
@@ -373,16 +378,16 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
     const newClasses = [...sheetData.classes];
     newClasses[index] = { ...newClasses[index], [field]: value };
     const updated = { ...sheetData, classes: newClasses };
-    
+
     // 能力値の再計算（冒険者レベルが変化する可能性があるため）
     updated.attributes = calculateAttributes(updated);
-    
+
     // 自動追加される戦闘特技を更新
     updated.skills = updateAutoSkills(updated);
-    
+
     // 自動追加される言語を更新
     updated.languages = updateAutoLanguages(updated);
-    
+
     setIsInternalUpdate(true);
     setSheetData(updated);
     onChange(updated);
@@ -603,17 +608,17 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
   // 経験値テーブル
   const getExperienceRequiredForLevel = (level: number, isTableA: boolean): number => {
     if (level === 0) return 0;
-    
+
     const tableA = [
       1000, 1000, 1500, 1500, 2000, 2500, 3000, 4000, 5000, 6000,
       7500, 9000, 10500, 12000, 13500
     ];
-    
+
     const tableB = [
       500, 1000, 1000, 1500, 1500, 2000, 2500, 3000, 4000, 5000,
       6000, 7500, 9000, 10500, 12000
     ];
-    
+
     const table = isTableA ? tableA : tableB;
     if (level <= table.length) {
       return table.slice(0, level).reduce((sum, exp) => sum + exp, 0);
@@ -637,13 +642,13 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
 
   // 冒険者レベルの計算（戦士系、魔法系、その他の最大値）
   const adventurerLevel = calculateAdventurerLevel(sheetData.classes);
-  
+
   // 使用経験点の計算
   const usedExperiencePoints = calculateUsedExperiencePoints(sheetData.classes);
-  
+
   // 残り経験点の計算
   const remainingExperiencePoints = (sheetData.initialExperiencePoints || 0) + (sheetData.gainedExperiencePoints || 0) - usedExperiencePoints;
-  
+
   // 冒険者レベルを更新（能力値も再計算）
   useEffect(() => {
     if (sheetData.adventurerLevel !== adventurerLevel) {
@@ -678,391 +683,24 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
     <div>
       {/* 能力値セクション */}
       <CollapsibleSection title="能力値" defaultOpen={true}>
-        <div style={{ marginBottom: '1.5rem' }}>
-          <h4 style={{ marginBottom: '1rem', fontSize: '1.125rem', fontWeight: 'bold' }}>基本能力（技、体、心）</h4>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                技
-              </label>
-              <input
-                type="number"
-                value={sheetData.abilities.技}
-                onChange={(e) => updateAbility('技', parseInt(e.target.value) || 0)}
-                style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                体
-              </label>
-              <input
-                type="number"
-                value={sheetData.abilities.体}
-                onChange={(e) => updateAbility('体', parseInt(e.target.value) || 0)}
-                style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                心
-              </label>
-              <input
-                type="number"
-                value={sheetData.abilities.心}
-                onChange={(e) => updateAbility('心', parseInt(e.target.value) || 0)}
-                style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-              />
-            </div>
-          </div>
-        </div>
+        <Sw25AbilitySection
+          abilities={sheetData.abilities}
+          onUpdate={updateAbility}
+        />
 
-        <div style={{ marginBottom: '1.5rem' }}>
-          <h4 style={{ marginBottom: '1rem', fontSize: '1.125rem', fontWeight: 'bold' }}>能力値</h4>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #ddd' }}>
-              <thead>
-                <tr style={{ backgroundColor: '#f8f9fa' }}>
-                  <th style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'left' }}>能力値</th>
-                  <th style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'center' }}>基本能力</th>
-                  <th style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'center' }}>初期値</th>
-                  <th style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'center' }}>成長値</th>
-                  <th style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'center' }}>合計</th>
-                  <th style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'center' }}>能力値ボーナス</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  { key: '器用度' as const, base: '技' as const },
-                  { key: '敏捷度' as const, base: '技' as const },
-                  { key: '筋力' as const, base: '体' as const },
-                  { key: '生命力' as const, base: '体' as const },
-                  { key: '知力' as const, base: '心' as const },
-                  { key: '精神力' as const, base: '心' as const },
-                ].map(({ key, base }) => {
-                  // 対応表の値が既に種族修正を含んでいるため、種族修正を加算しない
-                  const baseValue = sheetData.abilities[base];
-                  const initial = (sheetData.attributeInitials?.[key] || 0);
-                  const growth = (sheetData.attributeGrowth?.[key] || 0);
-                  const total = sheetData.attributes[key];
-                  const bonus = calculateAttributeBonus(total);
-                  return (
-                    <tr key={key}>
-                      <td style={{ padding: '0.5rem', border: '1px solid #ddd', fontWeight: 'bold' }}>{key}</td>
-                      <td style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'center', backgroundColor: '#f8f9fa' }}>
-                        {baseValue}
-                      </td>
-                      <td style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'center' }}>
-                        <input
-                          type="number"
-                          value={initial}
-                          onChange={(e) => updateAttributeInitial(key, parseInt(e.target.value) || 0)}
-                          style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
-                        />
-                      </td>
-                      <td style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'center' }}>
-                        <input
-                          type="number"
-                          value={growth}
-                          onChange={(e) => updateAttributeGrowth(key, parseInt(e.target.value) || 0)}
-                          style={{ width: '60px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}
-                        />
-                      </td>
-                      <td style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'center', backgroundColor: '#f8f9fa', fontWeight: 'bold' }}>
-                        {total}
-                      </td>
-                      <td style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'center', backgroundColor: '#f8f9fa', fontWeight: 'bold' }}>
-                        {bonus}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
 
-        <div style={{ marginBottom: '1.5rem' }}>
-          <h4 style={{ marginBottom: '1rem', fontSize: '1.125rem', fontWeight: 'bold' }}>派生値</h4>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                HP
-              </label>
-              <input
-                type="number"
-                value={sheetData.attributes.HP}
-                readOnly
-                style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa' }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                MP
-              </label>
-              <input
-                type="number"
-                value={sheetData.attributes.MP}
-                readOnly
-                style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa' }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                生命抵抗力
-              </label>
-              <input
-                type="number"
-                value={sheetData.attributes.生命抵抗力}
-                readOnly
-                style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa' }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                精神抵抗力
-              </label>
-              <input
-                type="number"
-                value={sheetData.attributes.精神抵抗力}
-                readOnly
-                style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa' }}
-              />
-            </div>
-            {sheetData.attributes.移動力 !== undefined && (
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                  移動力
-                </label>
-                <input
-                  type="number"
-                  value={sheetData.attributes.移動力}
-                  readOnly
-                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa' }}
-                />
-              </div>
-            )}
-            {sheetData.attributes.全力移動 !== undefined && (
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                  全力移動
-                </label>
-                <input
-                  type="number"
-                  value={sheetData.attributes.全力移動}
-                  readOnly
-                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa' }}
-                />
-              </div>
-            )}
-            {sheetData.attributes.先制力 !== undefined && (
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                  先制力
-                </label>
-                <input
-                  type="number"
-                  value={sheetData.attributes.先制力}
-                  readOnly
-                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa' }}
-                />
-              </div>
-            )}
-            {sheetData.attributes.魔物知識 !== undefined && (
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                  魔物知識
-                </label>
-                <input
-                  type="number"
-                  value={sheetData.attributes.魔物知識}
-                  readOnly
-                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa' }}
-                />
-              </div>
-            )}
-            {sheetData.attributes.防護点 !== undefined && (
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                  防護点
-                </label>
-                <input
-                  type="number"
-                  value={sheetData.attributes.防護点}
-                  readOnly
-                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa' }}
-                />
-              </div>
-            )}
-          </div>
+        <Sw25AttributeTable
+          abilities={sheetData.abilities}
+          attributes={sheetData.attributes}
+          attributeInitials={sheetData.attributeInitials}
+          attributeGrowth={sheetData.attributeGrowth}
+          onUpdateInitial={updateAttributeInitial}
+          onUpdateGrowth={updateAttributeGrowth}
+          calculateAttributeBonus={calculateAttributeBonus}
+        />
 
-          {/* 技巧、運動、観察、知識の表示 */}
-          {(sheetData.attributes.技巧 && sheetData.attributes.技巧.length > 0) || 
-           (sheetData.attributes.運動 && sheetData.attributes.運動.length > 0) || 
-           (sheetData.attributes.観察 && sheetData.attributes.観察.length > 0) || 
-           (sheetData.attributes.知識 && sheetData.attributes.知識.length > 0) ? (
-            <div style={{ marginTop: '1.5rem' }}>
-              <h5 style={{ marginBottom: '0.75rem', fontSize: '1rem', fontWeight: 'bold' }}>技能別派生値</h5>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-                {sheetData.attributes.技巧 && sheetData.attributes.技巧.length > 0 && (
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                      技巧
-                    </label>
-                    <div style={{ padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa' }}>
-                      {['スカウト', 'レンジャー', 'ライダー'].map((skillName) => {
-                        const skillLevel = sheetData.classes.find(cls => cls.name === skillName)?.level || 0;
-                        if (skillLevel === 0) return null;
-                        const dexterityBonus = calculateAttributeBonus(sheetData.attributes.器用度);
-                        const value = skillLevel + dexterityBonus;
-                        return (
-                          <div key={skillName} style={{ marginBottom: '0.25rem' }}>
-                            {skillName}: {value}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-                {sheetData.attributes.運動 && sheetData.attributes.運動.length > 0 && (
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                      運動
-                    </label>
-                    <div style={{ padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa' }}>
-                      {['スカウト', 'レンジャー', 'ライダー'].map((skillName) => {
-                        const skillLevel = sheetData.classes.find(cls => cls.name === skillName)?.level || 0;
-                        if (skillLevel === 0) return null;
-                        const agilityBonus = calculateAttributeBonus(sheetData.attributes.敏捷度);
-                        const value = skillLevel + agilityBonus;
-                        return (
-                          <div key={skillName} style={{ marginBottom: '0.25rem' }}>
-                            {skillName}: {value}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-                {sheetData.attributes.観察 && sheetData.attributes.観察.length > 0 && (
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                      観察
-                    </label>
-                    <div style={{ padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa' }}>
-                      {['スカウト', 'レンジャー', 'ライダー'].map((skillName) => {
-                        const skillLevel = sheetData.classes.find(cls => cls.name === skillName)?.level || 0;
-                        if (skillLevel === 0) return null;
-                        const intelligenceBonus = calculateAttributeBonus(sheetData.attributes.知力);
-                        const value = skillLevel + intelligenceBonus;
-                        return (
-                          <div key={skillName} style={{ marginBottom: '0.25rem' }}>
-                            {skillName}: {value}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-                {sheetData.attributes.知識 && sheetData.attributes.知識.length > 0 && (
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                      知識
-                    </label>
-                    <div style={{ padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa' }}>
-                      {['セージ', 'バード', 'ライダー', 'アルケミスト'].map((skillName) => {
-                        const skillLevel = sheetData.classes.find(cls => cls.name === skillName)?.level || 0;
-                        if (skillLevel === 0) return null;
-                        const intelligenceBonus = calculateAttributeBonus(sheetData.attributes.知力);
-                        const value = skillLevel + intelligenceBonus;
-                        return (
-                          <div key={skillName} style={{ marginBottom: '0.25rem' }}>
-                            {skillName}: {value}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          ) : null}
 
-          {/* 命中力、追加ダメージ、回避力の表示 */}
-          {sheetData.classes.some(cls => {
-            const classData = getClassByName(cls.name);
-            return classData?.category === '戦士系';
-          }) ? (
-            <div style={{ marginTop: '1.5rem' }}>
-              <h5 style={{ marginBottom: '0.75rem', fontSize: '1rem', fontWeight: 'bold' }}>戦士系技能別派生値</h5>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                    命中力
-                  </label>
-                  <div style={{ padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa' }}>
-                    {sheetData.classes
-                      .filter(cls => {
-                        const classData = getClassByName(cls.name);
-                        return classData?.category === '戦士系';
-                      })
-                      .map((cls) => {
-                        const dexterityBonus = calculateAttributeBonus(sheetData.attributes.器用度);
-                        const value = cls.level + dexterityBonus;
-                        return (
-                          <div key={cls.name} style={{ marginBottom: '0.25rem' }}>
-                            {cls.name}: {value}
-                          </div>
-                        );
-                      })}
-                  </div>
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                    追加ダメージ
-                  </label>
-                  <div style={{ padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa' }}>
-                    {sheetData.classes
-                      .filter(cls => {
-                        const classData = getClassByName(cls.name);
-                        return classData?.category === '戦士系';
-                      })
-                      .map((cls) => {
-                        const strengthBonus = calculateAttributeBonus(sheetData.attributes.筋力);
-                        const value = cls.level + strengthBonus;
-                        return (
-                          <div key={cls.name} style={{ marginBottom: '0.25rem' }}>
-                            {cls.name}: {value}
-                          </div>
-                        );
-                      })}
-                  </div>
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                    回避力
-                  </label>
-                  <div style={{ padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa' }}>
-                    {sheetData.classes
-                      .filter(cls => {
-                        const classData = getClassByName(cls.name);
-                        return classData?.category === '戦士系';
-                      })
-                      .map((cls) => {
-                        const agilityBonus = calculateAttributeBonus(sheetData.attributes.敏捷度);
-                        const value = cls.level + agilityBonus;
-                        return (
-                          <div key={cls.name} style={{ marginBottom: '0.25rem' }}>
-                            {cls.name}: {value}
-                          </div>
-                        );
-                      })}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : null}
-        </div>
+        <Sw25DerivedStats attributes={sheetData.attributes} />
       </CollapsibleSection>
 
       {/* 技能セクション */}
@@ -1384,7 +1022,7 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
             'ライダー': '練技',
             'アルケミスト': '賦術',
           };
-          
+
           // 取得している技能から対応する系統グループを取得
           const availableSystems = new Set<string>();
           sheetData.classes.forEach(cls => {
@@ -1393,16 +1031,16 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
               availableSystems.add(system);
             }
           });
-          
+
           // 既存の魔法・スキルで使用されている系統も追加
           sheetData.magics.forEach(magic => {
             if (magic.system) {
               availableSystems.add(magic.system);
             }
           });
-          
+
           const systems = Array.from(availableSystems).sort();
-          
+
           return (
             <>
               {systems.map(system => {
@@ -1436,90 +1074,90 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
                       </button>
                     </div>
                     {systemMagics.map((magic) => {
-                const originalIndex = sheetData.magics.findIndex(m => m === magic);
-                return (
-                  <div key={originalIndex} style={{ marginBottom: '1rem', padding: '1rem', border: '1px solid #ddd', borderRadius: '4px' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 100px auto', gap: '1rem', marginBottom: '0.5rem' }}>
-                      <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                          魔法・スキル名
-                        </label>
-                        <input
-                          type="text"
-                          value={magic.name}
-                          onChange={(e) => updateMagic(originalIndex, 'name', e.target.value)}
-                          placeholder="魔法・スキル名を入力"
-                          style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                        />
-                      </div>
-                      <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                          系統
-                        </label>
-                        <input
-                          type="text"
-                          value={magic.system}
-                          disabled
-                          style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa', color: '#495057' }}
-                        />
-                      </div>
-                      <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                          消費MP
-                        </label>
-                        <input
-                          type="number"
-                          min="0"
-                          value={magic.cost}
-                          onChange={(e) => updateMagic(originalIndex, 'cost', parseInt(e.target.value) || 0)}
-                          style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                        />
-                      </div>
-                      <div>
-                        <button
-                          type="button"
-                          onClick={() => removeMagic(originalIndex)}
-                          style={{
-                            padding: '0.5rem 1rem',
-                            backgroundColor: '#dc3545',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            marginTop: '1.5rem',
-                          }}
-                        >
-                          削除
-                        </button>
-                      </div>
-                    </div>
-                    <div style={{ marginBottom: '0.5rem' }}>
-                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                        効果
-                      </label>
-                      <textarea
-                        value={magic.effect}
-                        onChange={(e) => updateMagic(originalIndex, 'effect', e.target.value)}
-                        placeholder="効果を入力"
-                        rows={2}
-                        style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                      />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                        備考
-                      </label>
-                      <input
-                        type="text"
-                        value={magic.memo || ''}
-                        onChange={(e) => updateMagic(originalIndex, 'memo', e.target.value)}
-                        placeholder="備考を入力"
-                        style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
+                      const originalIndex = sheetData.magics.findIndex(m => m === magic);
+                      return (
+                        <div key={originalIndex} style={{ marginBottom: '1rem', padding: '1rem', border: '1px solid #ddd', borderRadius: '4px' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 100px auto', gap: '1rem', marginBottom: '0.5rem' }}>
+                            <div>
+                              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                                魔法・スキル名
+                              </label>
+                              <input
+                                type="text"
+                                value={magic.name}
+                                onChange={(e) => updateMagic(originalIndex, 'name', e.target.value)}
+                                placeholder="魔法・スキル名を入力"
+                                style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                              />
+                            </div>
+                            <div>
+                              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                                系統
+                              </label>
+                              <input
+                                type="text"
+                                value={magic.system}
+                                disabled
+                                style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa', color: '#495057' }}
+                              />
+                            </div>
+                            <div>
+                              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                                消費MP
+                              </label>
+                              <input
+                                type="number"
+                                min="0"
+                                value={magic.cost}
+                                onChange={(e) => updateMagic(originalIndex, 'cost', parseInt(e.target.value) || 0)}
+                                style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                              />
+                            </div>
+                            <div>
+                              <button
+                                type="button"
+                                onClick={() => removeMagic(originalIndex)}
+                                style={{
+                                  padding: '0.5rem 1rem',
+                                  backgroundColor: '#dc3545',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '4px',
+                                  cursor: 'pointer',
+                                  marginTop: '1.5rem',
+                                }}
+                              >
+                                削除
+                              </button>
+                            </div>
+                          </div>
+                          <div style={{ marginBottom: '0.5rem' }}>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                              効果
+                            </label>
+                            <textarea
+                              value={magic.effect}
+                              onChange={(e) => updateMagic(originalIndex, 'effect', e.target.value)}
+                              placeholder="効果を入力"
+                              rows={2}
+                              style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                            />
+                          </div>
+                          <div>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                              備考
+                            </label>
+                            <input
+                              type="text"
+                              value={magic.memo || ''}
+                              onChange={(e) => updateMagic(originalIndex, 'memo', e.target.value)}
+                              placeholder="備考を入力"
+                              style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 );
               })}
@@ -1532,7 +1170,7 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
             <h4 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: 'bold', color: '#666' }}>
               未分類
             </h4>
-              {sheetData.magics
+            {sheetData.magics
               .map((magic, idx) => ({ magic, idx }))
               .filter(({ magic }) => !magic.system || magic.system === '')
               .map(({ magic, idx: magicIdx }) => (
@@ -2161,24 +1799,24 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
           const classes = sheetData.classes || [];
           const autoLanguages = getAutoLanguages(race, classes);
           const requiredCount = calculateRequiredLanguageCount(classes);
-          
+
           // 自動言語と手動言語を分ける
           const currentLanguages = sheetData.languages || [];
           const autoLangNames = autoLanguages.map(l => l.name);
           const manualLanguages = currentLanguages.filter(l => !autoLangNames.includes(l.name));
-          
+
           // 手動言語の話・読の合計数をカウント
           const manualLangCount = manualLanguages.reduce((sum, lang) => {
             return sum + (lang.speak ? 1 : 0) + (lang.read ? 1 : 0);
           }, 0);
-          
+
           return (
             <>
               {/* セージの言語取得情報 */}
               {requiredCount > 0 && (
                 <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#e7f3ff', borderRadius: '4px', border: '1px solid #0084ff' }}>
                   <div style={{ fontSize: '0.875rem', marginBottom: '0.5rem' }}>
-                    <strong>セージLv{classes.find(c => c.name === 'セージ')?.level}</strong>: 
+                    <strong>セージLv{classes.find(c => c.name === 'セージ')?.level}</strong>:
                     自動取得以外の言語で<strong>話or読を{requiredCount}つ</strong>選択してください
                   </div>
                   <div style={{ fontSize: '0.875rem', color: manualLangCount >= requiredCount ? '#28a745' : '#dc3545' }}>
@@ -2186,7 +1824,7 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
                   </div>
                 </div>
               )}
-              
+
               {/* 自動取得言語 */}
               {autoLanguages.length > 0 && (
                 <div style={{ marginBottom: '1.5rem' }}>
@@ -2217,7 +1855,7 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
                   </table>
                 </div>
               )}
-              
+
               {/* 手動追加言語 */}
               <div style={{ marginBottom: '1rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
@@ -2240,7 +1878,7 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
                     + 言語を追加
                   </button>
                 </div>
-                
+
                 {manualLanguages.length > 0 ? (
                   <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #ddd' }}>
                     <thead>
@@ -2263,7 +1901,7 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
                                 style={{ width: '100%', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px' }}
                               >
                                 <option value="">選択してください</option>
-                                {SW25_LANGUAGES.filter(langName => 
+                                {SW25_LANGUAGES.filter(langName =>
                                   !autoLangNames.includes(langName) || langName === lang.name
                                 ).map(langName => (
                                   <option key={langName} value={langName}>{langName}</option>

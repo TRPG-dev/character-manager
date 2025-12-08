@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react';
-import type { CthulhuSheetData, CthulhuSkill, CthulhuWeapon, CthulhuItem, CthulhuScenario, CthulhuMythosItem } from '../types/cthulhu';
+import type { CthulhuSheetData, CthulhuSkill, CthulhuWeapon, CthulhuItem } from '../types/cthulhu';
 import { calculateDerivedValues, normalizeSheetData, getJobPointsLimit, getInterestPointsLimit } from '../utils/cthulhu';
 import { calculateSkillTotal, calculateTotalJobPoints, calculateTotalInterestPoints } from '../data/cthulhuSkills';
+import {
+  CthulhuAttributesSection,
+  CthulhuDerivedStatsSection,
+  CthulhuWeaponsSection,
+} from './cthulhu';
 
 interface CthulhuSheetFormProps {
   data: CthulhuSheetData;
@@ -32,7 +37,7 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
       HP_current: sheetData.derived.HP_current,
       MP_current: sheetData.derived.MP_current,
     };
-    
+
     // 動的計算が必要な技能の初期値を更新
     const updatedSkills = sheetData.skills.map(skill => {
       if (skill.name === '母国語') {
@@ -41,7 +46,7 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
       }
       return skill;
     });
-    
+
     // 格闘技能の動的計算
     const updatedCombatSkills = (sheetData.combatSkills || []).map(skill => {
       if (skill.name === '回避') {
@@ -50,7 +55,7 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
       }
       return skill;
     });
-    
+
     const updated = { ...sheetData, attributes: newAttributes, derived: updatedDerived, skills: updatedSkills, combatSkills: updatedCombatSkills };
     setIsInternalUpdate(true);
     setSheetData(updated);
@@ -349,179 +354,28 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
     onChange(updated);
   };
 
-  const attributeLabels: Record<keyof typeof sheetData.attributes, string> = {
-    STR: 'STR (筋力)',
-    CON: 'CON (体力)',
-    POW: 'POW (精神力)',
-    DEX: 'DEX (敏捷性)',
-    APP: 'APP (外見)',
-    INT: 'INT (知性)',
-    EDU: 'EDU (教育)',
-    SIZ: 'SIZ (体格)',
-  };
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }}>
       {/* 能力値セクション */}
-      <section>
-        <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
-          能力値
-        </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
-          {(Object.keys(sheetData.attributes) as Array<keyof typeof sheetData.attributes>).map((key) => (
-            <div key={key}>
-              <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
-                {attributeLabels[key]}
-              </label>
-              <input
-                type="number"
-                value={sheetData.attributes[key]}
-                onChange={(e) => updateAttributes(key, parseInt(e.target.value) || 0)}
-                min="0"
-                max="100"
-                style={{
-                  width: '100%',
-                  padding: '0.5rem',
-                  fontSize: '1rem',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                }}
-              />
-            </div>
-          ))}
-        </div>
-      </section>
+      <CthulhuAttributesSection
+        attributes={sheetData.attributes}
+        onUpdate={updateAttributes}
+      />
 
       {/* 派生値セクション */}
-      <section>
-        <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
-          派生値
-        </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
-              SAN (現在)
-            </label>
-            <input
-              type="number"
-              value={sheetData.derived.SAN_current}
-              onChange={(e) => updateDerived('SAN_current', parseInt(e.target.value) || 0)}
-              style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-            />
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
-              SAN (最大)
-            </label>
-            <input
-              type="number"
-              value={sheetData.derived.SAN_max}
-              onChange={(e) => updateDerived('SAN_max', parseInt(e.target.value) || 0)}
-              style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f5f5f5' }}
-              readOnly
-            />
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
-              HP (現在)
-            </label>
-            <input
-              type="number"
-              value={sheetData.derived.HP_current}
-              onChange={(e) => updateDerived('HP_current', parseInt(e.target.value) || 0)}
-              style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-            />
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
-              HP (最大) ((CON+SIZ)/2)
-            </label>
-            <input
-              type="number"
-              value={sheetData.derived.HP_max}
-              onChange={(e) => updateDerived('HP_max', parseInt(e.target.value) || 0)}
-              style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f5f5f5' }}
-              readOnly
-            />
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
-              MP (現在)
-            </label>
-            <input
-              type="number"
-              value={sheetData.derived.MP_current}
-              onChange={(e) => updateDerived('MP_current', parseInt(e.target.value) || 0)}
-              style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-            />
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
-              MP (最大)
-            </label>
-            <input
-              type="number"
-              value={sheetData.derived.MP_max}
-              onChange={(e) => updateDerived('MP_max', parseInt(e.target.value) || 0)}
-              style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f5f5f5' }}
-              readOnly
-            />
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
-              アイデア (INT×5)
-            </label>
-            <input
-              type="number"
-              value={sheetData.derived.IDEA || 0}
-              readOnly
-              style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f5f5f5' }}
-            />
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
-              知識 (EDU×5)
-            </label>
-            <input
-              type="number"
-              value={sheetData.derived.KNOW || 0}
-              readOnly
-              style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f5f5f5' }}
-            />
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
-              幸運 (POW×5)
-            </label>
-            <input
-              type="number"
-              value={sheetData.derived.LUCK || 0}
-              readOnly
-              style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f5f5f5' }}
-            />
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
-              ダメージボーナス
-            </label>
-            <input
-              type="text"
-              value={sheetData.derived.DB || '+0'}
-              readOnly
-              style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f5f5f5' }}
-            />
-          </div>
-        </div>
-      </section>
+      <CthulhuDerivedStatsSection
+        derived={sheetData.derived}
+        onUpdate={updateDerived}
+      />
 
       {/* 技能セクション */}
-      <section>
+      < section >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <h2 style={{ fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem', margin: 0 }}>
             技能
           </h2>
         </div>
-        
+
         {/* ポイント管理表示 */}
         <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '4px', border: '1px solid #dee2e6' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
@@ -706,16 +560,16 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
             </tbody>
           </table>
         </div>
-      </section>
+      </section >
 
       {/* 格闘技能セクション */}
-      <section>
+      < section >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <h2 style={{ fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem', margin: 0 }}>
             格闘技能
           </h2>
         </div>
-        
+
         {/* 格闘技能テーブル */}
         <div style={{ overflowX: 'auto', maxHeight: '600px', overflowY: 'auto', border: '1px solid #dee2e6', borderRadius: '4px' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
@@ -855,135 +709,18 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
             </tbody>
           </table>
         </div>
-      </section>
+      </section >
 
       {/* 武器セクション */}
-      <section>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h2 style={{ fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem', margin: 0 }}>
-            武器
-          </h2>
-          <button
-            type="button"
-            onClick={addWeapon}
-            style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: '#28a745',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '0.875rem',
-            }}
-          >
-            + 武器を追加
-          </button>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {(sheetData.weapons || []).map((weapon, index) => (
-            <div key={index} style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                <h3 style={{ margin: 0, fontSize: '1rem' }}>武器 #{index + 1}</h3>
-                <button
-                  type="button"
-                  onClick={() => removeWeapon(index)}
-                  style={{
-                    padding: '0.25rem 0.5rem',
-                    backgroundColor: '#dc3545',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '0.875rem',
-                  }}
-                >
-                  削除
-                </button>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '0.5rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>武器名</label>
-                  <input
-                    type="text"
-                    value={weapon.name}
-                    onChange={(e) => updateWeapon(index, 'name', e.target.value)}
-                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>技能値</label>
-                  <input
-                    type="number"
-                    value={weapon.value}
-                    onChange={(e) => updateWeapon(index, 'value', parseInt(e.target.value) || 0)}
-                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>ダメージ</label>
-                  <input
-                    type="text"
-                    value={weapon.damage}
-                    onChange={(e) => updateWeapon(index, 'damage', e.target.value)}
-                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>射程</label>
-                  <input
-                    type="text"
-                    value={weapon.range}
-                    onChange={(e) => updateWeapon(index, 'range', e.target.value)}
-                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>攻撃回数</label>
-                  <input
-                    type="number"
-                    value={weapon.attacks}
-                    onChange={(e) => updateWeapon(index, 'attacks', parseInt(e.target.value) || 1)}
-                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>装弾数</label>
-                  <input
-                    type="number"
-                    value={weapon.ammo}
-                    onChange={(e) => updateWeapon(index, 'ammo', parseInt(e.target.value) || 0)}
-                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>故障</label>
-                  <input
-                    type="number"
-                    value={weapon.malfunction}
-                    onChange={(e) => updateWeapon(index, 'malfunction', parseInt(e.target.value) || 0)}
-                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>耐久力</label>
-                  <input
-                    type="number"
-                    value={weapon.durability}
-                    onChange={(e) => updateWeapon(index, 'durability', parseInt(e.target.value) || 0)}
-                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                  />
-                </div>
-              </div>
-            </div>
-          ))}
-          {(sheetData.weapons || []).length === 0 && (
-            <p style={{ color: '#6c757d', fontStyle: 'italic' }}>武器がありません。追加ボタンで追加してください。</p>
-          )}
-        </div>
-      </section>
+      < CthulhuWeaponsSection
+        weapons={sheetData.weapons || []}
+        onAdd={addWeapon}
+        onUpdate={updateWeapon}
+        onRemove={removeWeapon}
+      />
 
       {/* 所持品セクション */}
-      <section>
+      < section >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <h2 style={{ fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem', margin: 0 }}>
             所持品
@@ -1049,10 +786,10 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
             <p style={{ color: '#6c757d', fontStyle: 'italic' }}>所持品がありません。追加ボタンで追加してください。</p>
           )}
         </div>
-      </section>
+      </section >
 
       {/* 財産セクション */}
-      <section>
+      < section >
         <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
           財産
         </h2>
@@ -1096,10 +833,10 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
             />
           </div>
         </div>
-      </section>
+      </section >
 
       {/* 通過したシナリオセクション */}
-      <section>
+      < section >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <h2 style={{ fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem', margin: 0 }}>
             通過したシナリオ
@@ -1169,14 +906,14 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
             <p style={{ color: '#6c757d', fontStyle: 'italic' }}>通過したシナリオがありません。追加ボタンで追加してください。</p>
           )}
         </div>
-      </section>
+      </section >
 
       {/* 魔導書・呪文・アーティファクトセクション */}
-      <section>
+      < section >
         <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
           魔導書・呪文・アーティファクト
         </h2>
-        
+
         {/* 魔導書 */}
         <div style={{ marginBottom: '2rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
@@ -1380,10 +1117,10 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
             ))}
           </div>
         </div>
-      </section>
+      </section >
 
       {/* 背景・その他セクション */}
-      <section>
+      < section >
         <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
           背景・その他
         </h2>
@@ -1425,8 +1162,8 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
             placeholder="その他のメモを記入してください"
           />
         </div>
-      </section>
-    </div>
+      </section >
+    </div >
   );
 };
 
