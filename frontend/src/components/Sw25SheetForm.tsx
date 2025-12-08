@@ -14,8 +14,6 @@ import {
   Sw25AbilitySection,
   Sw25AttributeTable,
   Sw25DerivedStats,
-  Sw25BasicInfoSection,
-  Sw25ClassSection,
 } from './sw25';
 
 interface Sw25SheetFormProps {
