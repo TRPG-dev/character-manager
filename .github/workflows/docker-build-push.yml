@@ -1,0 +1,106 @@
+name: Build and Push Docker Images to GCP
+
+on:
+  push:
+    tags:
+      - 'frontend-*'
+      - 'backend-*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Tag name (e.g., frontend-v1.0.0 or backend-v1.0.0)'
+        required: true
+        type: string
+
+env:
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GCP_REGION: ${{ vars.GCP_REGION || 'asia-northeast1' }}
+  ARTIFACT_REGISTRY_REPO: ${{ vars.ARTIFACT_REGISTRY_REPO || 'character-manager' }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.ref || github.ref }}
+
+      - name: Determine tag name
+        id: determine-tag
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            TAG_NAME="${{ inputs.tag_name }}"
+          else
+            TAG_NAME="${{ github.ref_name }}"
+          fi
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+
+      - name: Determine service to build
+        id: determine-service
+        run: |
+          TAG_NAME="${{ steps.determine-tag.outputs.tag_name }}"
+          if [[ "$TAG_NAME" == frontend-* ]]; then
+            echo "service=frontend" >> $GITHUB_OUTPUT
+            echo "context=./frontend" >> $GITHUB_OUTPUT
+            echo "dockerfile=./frontend/Dockerfile" >> $GITHUB_OUTPUT
+          elif [[ "$TAG_NAME" == backend-* ]]; then
+            echo "service=backend" >> $GITHUB_OUTPUT
+            echo "context=./backend" >> $GITHUB_OUTPUT
+            echo "dockerfile=./backend/Dockerfile" >> $GITHUB_OUTPUT
+          else
+            echo "Invalid tag name: $TAG_NAME"
+            echo "Tag must start with 'frontend-' or 'backend-'"
+            exit 1
+          fi
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev
+
+      - name: Extract version from tag
+        id: extract-version
+        run: |
+          TAG_NAME="${{ steps.determine-tag.outputs.tag_name }}"
+          VERSION="${TAG_NAME#*-}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Build and push Docker image
+        run: |
+          SERVICE="${{ steps.determine-service.outputs.service }}"
+          VERSION="${{ steps.extract-version.outputs.version }}"
+          IMAGE_NAME="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/$SERVICE"
+          
+          docker build \
+            -t "$IMAGE_NAME:$VERSION" \
+            -t "$IMAGE_NAME:latest" \
+            -f ${{ steps.determine-service.outputs.dockerfile }} \
+            ${{ steps.determine-service.outputs.context }}
+          
+          docker push "$IMAGE_NAME:$VERSION"
+          docker push "$IMAGE_NAME:latest"
+
+      - name: Output image details
+        run: |
+          SERVICE="${{ steps.determine-service.outputs.service }}"
+          VERSION="${{ steps.extract-version.outputs.version }}"
+          IMAGE_NAME="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/$SERVICE"
+          
+          echo "### Docker Image Published :rocket:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Service:** $SERVICE" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** $VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "**Image:** \`$IMAGE_NAME:$VERSION\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Latest:** \`$IMAGE_NAME:latest\`" >> $GITHUB_STEP_SUMMARY
