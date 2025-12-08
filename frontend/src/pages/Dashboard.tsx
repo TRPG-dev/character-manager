@@ -102,125 +102,143 @@ export const Dashboard = () => {
 
       {/* 検索・フィルター */}
       <div style={{ marginBottom: '2rem', padding: '1.5rem', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
-        <form onSubmit={handleSearch} style={{ marginBottom: '1rem' }}>
-          <input
-            type="text"
-            placeholder="名前で検索..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            style={{
-              width: '100%',
-              maxWidth: '400px',
-              padding: '0.5rem',
-              fontSize: '1rem',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-              marginRight: '1rem',
-            }}
-          />
-          <button
-            type="submit"
-            style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: '#28a745',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-            }}
-          >
-            検索
-          </button>
-        </form>
-
-        <div style={{ marginBottom: '1rem' }}>
-          <label style={{ marginRight: '1rem' }}>システム:</label>
-          <select
-            value={selectedSystem}
-            onChange={(e) => {
-              setSelectedSystem(e.target.value as SystemEnum | '');
-              setCurrentPage(1);
-            }}
-            style={{
-              padding: '0.5rem',
-              fontSize: '1rem',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-            }}
-          >
-            <option value="">すべて</option>
-            {Object.entries(SYSTEM_NAMES).map(([value, label]) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label style={{ marginRight: '1rem' }}>タグ:</label>
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center', marginTop: '0.5rem' }}>
-            {selectedTags.map(tag => (
-              <span
-                key={tag}
-                style={{
-                  padding: '0.25rem 0.5rem',
-                  backgroundColor: '#007bff',
-                  color: '#fff',
-                  borderRadius: '4px',
-                  fontSize: '0.875rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                }}
-              >
-                {tag}
-                <button
-                  onClick={() => handleRemoveTag(tag)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#fff',
-                    cursor: 'pointer',
-                    fontSize: '1rem',
-                  }}
-                >
-                  ×
-                </button>
-              </span>
-            ))}
+        <form onSubmit={handleSearch}>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            {/* 名前検索 */}
             <input
               type="text"
-              placeholder="タグを追加"
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleAddTag();
-                }
-              }}
+              placeholder="名前で検索..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               style={{
-                padding: '0.25rem 0.5rem',
+                flex: '1 1 200px',
+                minWidth: '150px',
+                padding: '0.5rem',
                 fontSize: '0.875rem',
                 border: '1px solid #ddd',
                 borderRadius: '4px',
               }}
             />
-            <button
-              onClick={handleAddTag}
+
+            {/* システム選択 */}
+            <select
+              value={selectedSystem}
+              onChange={(e) => {
+                setSelectedSystem(e.target.value as SystemEnum | '');
+                setCurrentPage(1);
+              }}
               style={{
-                padding: '0.25rem 0.5rem',
-                backgroundColor: '#6c757d',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
+                flex: '0 1 180px',
+                padding: '0.5rem',
                 fontSize: '0.875rem',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
               }}
             >
-              追加
-            </button>
+              <option value="">すべてのシステム</option>
+              {Object.entries(SYSTEM_NAMES).map(([value, label]) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
+            </select>
+
+            {/* タグ検索 */}
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flex: '1 1 200px' }}>
+              <input
+                type="text"
+                placeholder="タグで絞り込み..."
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddTag();
+                  }
+                }}
+                style={{
+                  flex: '1',
+                  minWidth: '120px',
+                  padding: '0.5rem',
+                  fontSize: '0.875rem',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                }}
+              />
+              <button
+                type="button"
+                onClick={handleAddTag}
+                style={{
+                  padding: '0.5rem 0.75rem',
+                  backgroundColor: '#6c757d',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                絞り込み
+              </button>
+            </div>
           </div>
-        </div>
+
+          {/* 選択されたタグの表示 */}
+          {selectedTags.length > 0 && (
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '1rem' }}>
+              <span style={{ fontSize: '0.875rem', color: '#666', alignSelf: 'center' }}>タグ:</span>
+              {selectedTags.map(tag => (
+                <span
+                  key={tag}
+                  style={{
+                    padding: '0.25rem 0.5rem',
+                    backgroundColor: '#007bff',
+                    color: '#fff',
+                    borderRadius: '4px',
+                    fontSize: '0.875rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                  }}
+                >
+                  {tag}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveTag(tag)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#fff',
+                      cursor: 'pointer',
+                      fontSize: '1rem',
+                      padding: 0,
+                      lineHeight: 1,
+                    }}
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedTags([]);
+                  setCurrentPage(1);
+                }}
+                style={{
+                  padding: '0.25rem 0.5rem',
+                  backgroundColor: 'transparent',
+                  color: '#dc3545',
+                  border: '1px solid #dc3545',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '0.75rem',
+                }}
+              >
+                すべてクリア
+              </button>
+            </div>
+          )}
+        </form>
       </div>
 
       {/* キャラクター一覧 */}

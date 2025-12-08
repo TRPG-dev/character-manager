@@ -67,10 +67,10 @@ async def list_characters(
     if system:
         q = q.filter(Character.system == system)
 
-    # タグでフィルタ（配列の重複チェック）
+    # タグでフィルタ（PostgreSQLの@>演算子を使用）
     if tags:
         for tag in tags:
-            q = q.filter(Character.tags.contains([tag]))
+            q = q.filter(Character.tags.op('@>')(f'{{{tag}}}'))
 
     # 総件数を取得
     total = q.count()
