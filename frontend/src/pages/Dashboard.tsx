@@ -21,6 +21,7 @@ export const Dashboard = () => {
   const [characters, setCharacters] = useState<Character[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [appliedSearchQuery, setAppliedSearchQuery] = useState('');
   const [selectedSystem, setSelectedSystem] = useState<SystemEnum | ''>('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -35,7 +36,7 @@ export const Dashboard = () => {
       const token = await getAccessToken();
       if (token) {
         const response = await getCharacters(token, {
-          query: searchQuery || undefined,
+          query: appliedSearchQuery || undefined,
           system: selectedSystem || undefined,
           tags: selectedTags.length > 0 ? selectedTags : undefined,
           page: currentPage,
@@ -55,7 +56,7 @@ export const Dashboard = () => {
 
   useEffect(() => {
     fetchCharacters();
-  }, [isAuthenticated, searchQuery, selectedSystem, selectedTags, currentPage]);
+  }, [isAuthenticated, appliedSearchQuery, selectedSystem, selectedTags, currentPage]);
 
   const handleAddTag = () => {
     if (tagInput.trim() && !selectedTags.includes(tagInput.trim())) {
@@ -72,8 +73,8 @@ export const Dashboard = () => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    setAppliedSearchQuery(searchQuery);
     setCurrentPage(1);
-    fetchCharacters();
   };
 
   if (loading && characters.length === 0) {
@@ -119,6 +120,24 @@ export const Dashboard = () => {
                 borderRadius: '4px',
               }}
             />
+            
+            {/* 検索ボタン */}
+            <button
+              type="submit"
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#28a745',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                fontWeight: 'bold',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              検索
+            </button>
 
             {/* システム選択 */}
             <select
@@ -148,9 +167,10 @@ export const Dashboard = () => {
                 placeholder="タグで絞り込み..."
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
-                onKeyPress={(e) => {
+                onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
+                    e.stopPropagation();
                     handleAddTag();
                   }
                 }}
