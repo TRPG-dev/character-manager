@@ -33,8 +33,8 @@ export const CthulhuWeaponsSection = ({ weapons, onAdd, onUpdate, onRemove }: Ct
                                 type="number"
                                 min="0"
                                 max="100"
-                                value={weapon.skillValue || 0}
-                                onChange={(e) => onUpdate(index, 'skillValue', parseInt(e.target.value) || 0)}
+                                value={weapon.value || 0}
+                                onChange={(e) => onUpdate(index, 'value', parseInt(e.target.value) || 0)}
                                 className="input"
                             />
                         </div>
