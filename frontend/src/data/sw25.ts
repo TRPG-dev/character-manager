@@ -889,6 +889,100 @@ export function getClassesByCategory(category: ClassCategory): Sw25ClassData[] {
   return SW25_CLASSES.filter(cls => cls.category === category);
 }
 
+// ============================================================================
+// 言語データ
+// ============================================================================
 
+/**
+ * 言語一覧
+ */
+export const SW25_LANGUAGES = [
+  '交易共通語',
+  '地方語',
+  'エルフ語',
+  'ドワーフ語',
+  'グラスランナー語',
+  'シャドウ語',
+  'ミアキス語',
+  'ソレイユ語',
+  'リカント語',
+  '神紀文明語',
+  '魔動機文明語',
+  '魔法文明語',
+  '妖精語',
+  '魔神語',
+  'ドラゴン語',
+  '汎用蛮族語',
+  '巨人語',
+  'ドレイク語',
+  'バルカン語',
+  'ライカンスロープ語',
+  'バジリスク語',
+  'リザードマン語',
+  'ケンタウロス語',
+  '妖魔語',
+] as const;
+
+/**
+ * 種族ごとの自動取得言語
+ */
+export const RACE_LANGUAGES: Record<string, Array<{ name: string; speak: boolean; read: boolean }>> = {
+  '人間': [{ name: '地方語', speak: true, read: true }],
+  'エルフ': [{ name: 'エルフ語', speak: true, read: true }],
+  'ドワーフ': [{ name: 'ドワーフ語', speak: true, read: true }],
+  'タビット': [{ name: '神紀文明語', speak: false, read: true }],
+  'ルーンフォーク': [{ name: '魔動機文明語', speak: true, read: true }],
+  'リカント': [{ name: 'リカント語', speak: true, read: true }],
+};
+
+/**
+ * 技能ごとの自動取得言語
+ */
+export const CLASS_LANGUAGES: Record<string, Array<{ name: string; speak: boolean; read: boolean }>> = {
+  'ソーサラー': [{ name: '魔法文明語', speak: true, read: true }],
+  'コンジャラー': [{ name: '魔法文明語', speak: true, read: true }],
+  'マギテック': [{ name: '魔動機文明語', speak: true, read: true }],
+};
+
+/**
+ * 種族と技能から自動取得する言語を取得
+ */
+export function getAutoLanguages(race: string, classes: Array<{ name: string; level: number }>) {
+  const languages: Array<{ name: string; speak: boolean; read: boolean; auto: boolean }> = [];
+  
+  // 交易共通語は全員が話・読を取得
+  languages.push({ name: '交易共通語', speak: true, read: true, auto: true });
+  
+  // 種族による自動取得
+  const raceLangs = RACE_LANGUAGES[race] || [];
+  raceLangs.forEach(lang => {
+    languages.push({ ...lang, auto: true });
+  });
+  
+  // 技能による自動取得
+  classes.forEach(cls => {
+    const classLangs = CLASS_LANGUAGES[cls.name] || [];
+    classLangs.forEach(lang => {
+      // 既に追加されていない場合のみ追加
+      if (!languages.find(l => l.name === lang.name)) {
+        languages.push({ ...lang, auto: true });
+      }
+    });
+  });
+  
+  return languages;
+}
+
+/**
+ * セージのレベルによる必要言語取得数を計算
+ */
+export function calculateRequiredLanguageCount(classes: Array<{ name: string; level: number }>) {
+  const sageClass = classes.find(cls => cls.name === 'セージ');
+  if (!sageClass) {
+    return 0;
+  }
+  
+  return sageClass.level;
+}
 
 

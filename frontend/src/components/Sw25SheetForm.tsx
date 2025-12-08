@@ -3,8 +3,11 @@ import type { Sw25SheetData, Sw25Class, Sw25Skill, Sw25Magic, Sw25Item, Sw25Weap
 import { normalizeSheetData } from '../utils/sw25';
 import { 
   SW25_SKILLS, 
+  SW25_LANGUAGES,
   getClassByName,
   getClassesByCategory,
+  getAutoLanguages,
+  calculateRequiredLanguageCount,
 } from '../data/sw25';
 import { CollapsibleSection } from './CollapsibleSection';
 
@@ -25,6 +28,8 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
     const normalized = normalizeSheetData(data);
     // 自動追加される戦闘特技を更新
     normalized.skills = updateAutoSkills(normalized);
+    // 自動追加される言語を更新
+    normalized.languages = updateAutoLanguages(normalized);
     setSheetData(normalized);
   }, [data]);
 
@@ -133,6 +138,29 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
     );
 
     return [...existingSkills, ...uniqueAutoSkills];
+  };
+
+  // 自動追加される言語を更新
+  const updateAutoLanguages = (currentData: Sw25SheetData) => {
+    const race = currentData.race || '';
+    const classes = currentData.classes || [];
+    
+    // 自動取得する言語を取得
+    const autoLanguages = getAutoLanguages(race, classes);
+    
+    // 既存の手動追加された言語を保持
+    const existingLanguages = (currentData.languages || []).filter(lang => {
+      // 自動言語に含まれていないものは手動追加
+      return !autoLanguages.find(auto => auto.name === lang.name);
+    });
+    
+    // 自動言語を追加
+    const mergedLanguages = [
+      ...autoLanguages.map(auto => ({ name: auto.name, speak: auto.speak, read: auto.read })),
+      ...existingLanguages,
+    ];
+    
+    return mergedLanguages;
   };
 
   // 能力値の自動計算
@@ -352,6 +380,9 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
     // 自動追加される戦闘特技を更新
     updated.skills = updateAutoSkills(updated);
     
+    // 自動追加される言語を更新
+    updated.languages = updateAutoLanguages(updated);
+    
     setIsInternalUpdate(true);
     setSheetData(updated);
     onChange(updated);
@@ -365,6 +396,8 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
     updated.attributes = calculateAttributes(updated);
     // 自動追加される戦闘特技を更新
     updated.skills = updateAutoSkills(updated);
+    // 自動追加される言語を更新
+    updated.languages = updateAutoLanguages(updated);
     setIsInternalUpdate(true);
     setSheetData(updated);
     onChange(updated);
@@ -2123,76 +2156,165 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
 
       {/* 言語セクション */}
       <CollapsibleSection title="言語" defaultOpen={false}>
-        <div style={{ marginBottom: '1rem' }}>
-          <button
-            type="button"
-            onClick={addLanguage}
-            style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: '#007bff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              marginBottom: '1rem',
-            }}
-          >
-            + 言語を追加
-          </button>
-        </div>
-        {(sheetData.languages || []).map((language, index) => (
-          <div key={index} style={{ marginBottom: '1rem', padding: '1rem', border: '1px solid #ddd', borderRadius: '4px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto auto', gap: '1rem', alignItems: 'center' }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                  言語名
-                </label>
-                <input
-                  type="text"
-                  value={language.name}
-                  onChange={(e) => updateLanguage(index, 'name', e.target.value)}
-                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                />
+        {(() => {
+          const race = sheetData.race || '';
+          const classes = sheetData.classes || [];
+          const autoLanguages = getAutoLanguages(race, classes);
+          const requiredCount = calculateRequiredLanguageCount(classes);
+          
+          // 自動言語と手動言語を分ける
+          const currentLanguages = sheetData.languages || [];
+          const autoLangNames = autoLanguages.map(l => l.name);
+          const manualLanguages = currentLanguages.filter(l => !autoLangNames.includes(l.name));
+          
+          // 手動言語の話・読の合計数をカウント
+          const manualLangCount = manualLanguages.reduce((sum, lang) => {
+            return sum + (lang.speak ? 1 : 0) + (lang.read ? 1 : 0);
+          }, 0);
+          
+          return (
+            <>
+              {/* セージの言語取得情報 */}
+              {requiredCount > 0 && (
+                <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#e7f3ff', borderRadius: '4px', border: '1px solid #0084ff' }}>
+                  <div style={{ fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+                    <strong>セージLv{classes.find(c => c.name === 'セージ')?.level}</strong>: 
+                    自動取得以外の言語で<strong>話or読を{requiredCount}つ</strong>選択してください
+                  </div>
+                  <div style={{ fontSize: '0.875rem', color: manualLangCount >= requiredCount ? '#28a745' : '#dc3545' }}>
+                    現在の選択数: <strong>{manualLangCount} / {requiredCount}</strong>
+                  </div>
+                </div>
+              )}
+              
+              {/* 自動取得言語 */}
+              {autoLanguages.length > 0 && (
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <h4 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: 'bold', color: '#666' }}>
+                    自動取得言語
+                  </h4>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #ddd', backgroundColor: '#f8f9fa' }}>
+                    <thead>
+                      <tr style={{ backgroundColor: '#e9ecef' }}>
+                        <th style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'left' }}>言語名</th>
+                        <th style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'center', width: '80px' }}>話</th>
+                        <th style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'center', width: '80px' }}>読</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {autoLanguages.map((lang, index) => (
+                        <tr key={index}>
+                          <td style={{ padding: '0.5rem', border: '1px solid #ddd' }}>{lang.name}</td>
+                          <td style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'center' }}>
+                            <input type="checkbox" checked={lang.speak} disabled style={{ cursor: 'not-allowed' }} />
+                          </td>
+                          <td style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'center' }}>
+                            <input type="checkbox" checked={lang.read} disabled style={{ cursor: 'not-allowed' }} />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              
+              {/* 手動追加言語 */}
+              <div style={{ marginBottom: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <h4 style={{ fontSize: '1rem', fontWeight: 'bold', color: '#666' }}>
+                    追加言語
+                  </h4>
+                  <button
+                    type="button"
+                    onClick={addLanguage}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      backgroundColor: '#007bff',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                    }}
+                  >
+                    + 言語を追加
+                  </button>
+                </div>
+                
+                {manualLanguages.length > 0 ? (
+                  <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #ddd' }}>
+                    <thead>
+                      <tr style={{ backgroundColor: '#f8f9fa' }}>
+                        <th style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'left' }}>言語名</th>
+                        <th style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'center', width: '80px' }}>話</th>
+                        <th style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'center', width: '80px' }}>読</th>
+                        <th style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'center', width: '100px' }}>操作</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {manualLanguages.map((lang) => {
+                        const originalIndex = currentLanguages.findIndex(l => l === lang);
+                        return (
+                          <tr key={originalIndex}>
+                            <td style={{ padding: '0.5rem', border: '1px solid #ddd' }}>
+                              <select
+                                value={lang.name}
+                                onChange={(e) => updateLanguage(originalIndex, 'name', e.target.value)}
+                                style={{ width: '100%', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                              >
+                                <option value="">選択してください</option>
+                                {SW25_LANGUAGES.filter(langName => 
+                                  !autoLangNames.includes(langName) || langName === lang.name
+                                ).map(langName => (
+                                  <option key={langName} value={langName}>{langName}</option>
+                                ))}
+                              </select>
+                            </td>
+                            <td style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'center' }}>
+                              <input
+                                type="checkbox"
+                                checked={lang.speak}
+                                onChange={(e) => updateLanguage(originalIndex, 'speak', e.target.checked)}
+                              />
+                            </td>
+                            <td style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'center' }}>
+                              <input
+                                type="checkbox"
+                                checked={lang.read}
+                                onChange={(e) => updateLanguage(originalIndex, 'read', e.target.checked)}
+                              />
+                            </td>
+                            <td style={{ padding: '0.5rem', border: '1px solid #ddd', textAlign: 'center' }}>
+                              <button
+                                type="button"
+                                onClick={() => removeLanguage(originalIndex)}
+                                style={{
+                                  padding: '0.25rem 0.5rem',
+                                  backgroundColor: '#dc3545',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '4px',
+                                  cursor: 'pointer',
+                                  fontSize: '0.875rem',
+                                }}
+                              >
+                                削除
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div style={{ padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '4px', textAlign: 'center', color: '#666', fontSize: '0.875rem' }}>
+                    追加した言語はありません
+                  </div>
+                )}
               </div>
-              <div>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={language.speak}
-                    onChange={(e) => updateLanguage(index, 'speak', e.target.checked)}
-                  />
-                  <span>話</span>
-                </label>
-              </div>
-              <div>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={language.read}
-                    onChange={(e) => updateLanguage(index, 'read', e.target.checked)}
-                  />
-                  <span>読</span>
-                </label>
-              </div>
-              <div>
-                <button
-                  type="button"
-                  onClick={() => removeLanguage(index)}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    backgroundColor: '#dc3545',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                  }}
-                >
-                  削除
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
+            </>
+          );
+        })()}
       </CollapsibleSection>
 
       {/* その他セクション */}
