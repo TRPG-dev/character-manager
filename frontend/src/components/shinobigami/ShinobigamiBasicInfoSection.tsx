@@ -50,7 +50,7 @@ export const ShinobigamiBasicInfoSection = ({
                     <input
                         type="text"
                         value={shinobiName || ''}
-                        onChange={(e) => onUpdate('shinobiName', e.target.value)}
+                        onChange={(e) => onUpdate('characterName', e.target.value)}
                         className="input"
                     />
                 </div>
@@ -81,7 +81,7 @@ export const ShinobigamiBasicInfoSection = ({
                     >
                         <option value="">選択してください</option>
                         {SHINOBI_SCHOOLS.map((s) => (
-                            <option key={s.name} value={s.name}>{s.name}</option>
+                            <option key={s.value} value={s.value}>{s.label}</option>
                         ))}
                     </select>
                 </div>
@@ -103,7 +103,7 @@ export const ShinobigamiBasicInfoSection = ({
                     <input
                         type="text"
                         value={belief || ''}
-                        onChange={(e) => onUpdate('belief', e.target.value)}
+                        onChange={(e) => onUpdate('shinnen', e.target.value)}
                         className="input"
                     />
                 </div>

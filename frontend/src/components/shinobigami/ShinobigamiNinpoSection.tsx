@@ -40,8 +40,8 @@ export const ShinobigamiNinpoSection = ({ ninpos, onAdd, onUpdate, onRemove }: S
                             <label className="block mb-sm font-bold">タイミング</label>
                             <input
                                 type="text"
-                                value={ninpo.timing || ''}
-                                onChange={(e) => onUpdate(index, 'timing', e.target.value)}
+                                value={ninpo.type || ''}
+                                onChange={(e) => onUpdate(index, 'type', e.target.value)}
                                 className="input"
                             />
                         </div>
@@ -49,17 +49,8 @@ export const ShinobigamiNinpoSection = ({ ninpos, onAdd, onUpdate, onRemove }: S
                             <label className="block mb-sm font-bold">判定</label>
                             <input
                                 type="text"
-                                value={ninpo.judgment || ''}
-                                onChange={(e) => onUpdate(index, 'judgment', e.target.value)}
-                                className="input"
-                            />
-                        </div>
-                        <div className="col-span-2">
-                            <label className="block mb-sm font-bold">効果</label>
-                            <textarea
-                                value={ninpo.effect || ''}
-                                onChange={(e) => onUpdate(index, 'effect', e.target.value)}
-                                rows={3}
+                                value={ninpo.skill || ''}
+                                onChange={(e) => onUpdate(index, 'skill', e.target.value)}
                                 className="input"
                             />
                         </div>
