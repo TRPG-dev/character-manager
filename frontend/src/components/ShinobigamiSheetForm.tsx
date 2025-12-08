@@ -14,10 +14,7 @@ import {
   EMOTION_OPTIONS,
   SHINNEN_OPTIONS,
 } from '../data/shinobigamiSkills';
-import {
-  ShinobigamiBasicInfoSection,
-  ShinobigamiNinpoSection,
-} from './shinobigami';
+import { ShinobigamiNinpoSection } from './shinobigami';
 
 interface ShinobigamiSheetFormProps {
   data: ShinobigamiSheetData;
