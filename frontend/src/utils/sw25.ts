@@ -140,6 +140,69 @@ export function normalizeSheetData(data: any): Sw25SheetData {
   };
 }
 
+/**
+ * ダイスロールを実行（例: "2d", "1d+3", "2d+6"）
+ */
+export function rollDice(formula: string): number {
+  // フォーマット: "XdY+Z" または "XdY" または "Xd"
+  const match = formula.match(/^(\d+)d(?:\+(\d+))?$/i);
+  
+  if (!match) {
+    throw new Error(`Invalid dice formula: ${formula}`);
+  }
+  
+  const numDice = parseInt(match[1]);
+  const modifier = match[2] ? parseInt(match[2]) : 0;
+  
+  let total = modifier;
+  for (let i = 0; i < numDice; i++) {
+    total += Math.floor(Math.random() * 6) + 1; // 1d6を振る
+  }
+  
+  return total;
+}
 
-
+/**
+ * 種族に基づいて能力値初期値をダイスロールで決定
+ */
+export function rollAttributeInitialsByRace(race: string): {
+  器用度: number;
+  敏捷度: number;
+  筋力: number;
+  生命力: number;
+  知力: number;
+  精神力: number;
+} {
+  // デフォルトは人間と同じ（2d）
+  const defaultFormula = { 
+    器用度: '2d', 敏捷度: '2d', 筋力: '2d', 
+    生命力: '2d', 知力: '2d', 精神力: '2d' 
+  };
+  
+  const raceFormulas: Record<string, typeof defaultFormula> = {
+    '人間': { 器用度: '2d', 敏捷度: '2d', 筋力: '2d', 生命力: '2d', 知力: '2d', 精神力: '2d' },
+    'エルフ': { 器用度: '2d', 敏捷度: '2d', 筋力: '1d', 生命力: '2d', 知力: '2d', 精神力: '2d' },
+    'ドワーフ': { 器用度: '2d+6', 敏捷度: '1d', 筋力: '2d', 生命力: '2d', 知力: '1d', 精神力: '2d+6' },
+    'タビット': { 器用度: '1d', 敏捷度: '1d', 筋力: '1d', 生命力: '2d', 知力: '2d+6', 精神力: '2d' },
+    'ルーンフォーク': { 器用度: '2d', 敏捷度: '1d', 筋力: '2d', 生命力: '2d', 知力: '2d', 精神力: '1d' },
+    'ナイトメア': { 器用度: '2d', 敏捷度: '2d', 筋力: '1d', 生命力: '1d', 知力: '2d', 精神力: '2d' },
+    'リカント': { 器用度: '1d', 敏捷度: '1d+3', 筋力: '2d', 生命力: '2d', 知力: '1d+6', 精神力: '1d' },
+    'リルドラケン': { 器用度: '1d', 敏捷度: '2d', 筋力: '2d', 生命力: '2d+6', 知力: '1d', 精神力: '2d' },
+    'グラスランナー': { 器用度: '2d', 敏捷度: '2d', 筋力: '1d', 生命力: '2d+6', 知力: '1d', 精神力: '2d+6' },
+    'メリア': { 器用度: '1d', 敏捷度: '1d', 筋力: '1d', 生命力: '2d+6', 知力: '1d', 精神力: '1d' },
+    'ティエンス': { 器用度: '2d', 敏捷度: '2d', 筋力: '1d', 生命力: '1d+3', 知力: '2d', 精神力: '2d+3' },
+    'レプラカーン': { 器用度: '2d', 敏捷度: '1d', 筋力: '2d', 生命力: '2d', 知力: '2d', 精神力: '2d' },
+  };
+  
+  const formula = raceFormulas[race] || defaultFormula;
+  
+  return {
+    器用度: rollDice(formula.器用度),
+    敏捷度: rollDice(formula.敏捷度),
+    筋力: rollDice(formula.筋力),
+    生命力: rollDice(formula.生命力),
+    知力: rollDice(formula.知力),
+    精神力: rollDice(formula.精神力),
+  };
+}
 

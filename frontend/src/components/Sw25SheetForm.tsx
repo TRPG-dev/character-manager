@@ -3,7 +3,6 @@ import type { Sw25SheetData, Sw25Class, Sw25Skill, Sw25Magic, Sw25Item, Sw25Weap
 import { normalizeSheetData } from '../utils/sw25';
 import { 
   SW25_SKILLS, 
-  SW25_MAGICS,
   getClassByName,
   getClassesByCategory,
 } from '../data/sw25';
@@ -27,7 +26,7 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
     // 自動追加される戦闘特技を更新
     normalized.skills = updateAutoSkills(normalized);
     setSheetData(normalized);
-  }, [data, isInternalUpdate]);
+  }, [data]);
 
   // 能力値ボーナスの計算（能力値/6を切り下げ）
   const calculateAttributeBonus = (value: number): number => {
@@ -1152,8 +1151,6 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
         {(() => {
           const adventurerLevel = calculateAdventurerLevel(sheetData.classes);
           const maxSkills = calculateMaxSkills(adventurerLevel);
-          const currentSkills = sheetData.skills.length;
-          const canAddSkill = currentSkills < maxSkills;
 
           // 自動追加された戦闘特技と手動追加された戦闘特技を分ける
           const autoSkills = sheetData.skills.filter(skill => {
@@ -1164,6 +1161,10 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
             const skillData = SW25_SKILLS.find(s => s.name === skill.name);
             return skillData?.category !== '自動';
           });
+
+          // 修得可能数のカウントは手動の戦闘特技数のみ
+          const currentSkills = manualSkills.length;
+          const canAddSkill = currentSkills < maxSkills;
 
           return (
             <>
@@ -1257,8 +1258,16 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
                           onChange={(e) => {
                             const selectedSkill = SW25_SKILLS.find(s => s.name === e.target.value);
                             if (selectedSkill) {
-                              updateSkill(originalIndex, 'name', e.target.value);
-                              updateSkill(originalIndex, 'effect', selectedSkill.effect);
+                              const newSkills = [...sheetData.skills];
+                              newSkills[originalIndex] = {
+                                ...newSkills[originalIndex],
+                                name: e.target.value,
+                                effect: selectedSkill.effect,
+                              };
+                              const updated = { ...sheetData, skills: newSkills };
+                              setIsInternalUpdate(true);
+                              setSheetData(updated);
+                              onChange(updated);
                             }
                           }}
                           style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
@@ -1332,15 +1341,15 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
         {(() => {
           // ユーザーが取得している技能に対応した魔法・スキル系統グループを取得
           const classToSystemMap: Record<string, string> = {
-            'ソーサラー': '精霊魔法',
-            'コンジャラー': '精霊魔法',
+            'ソーサラー': '真語魔法',
+            'コンジャラー': '操霊魔法',
             'プリースト': '神聖魔法',
-            'マギテック': '精霊魔法',
-            'フェアリーテイマー': '精霊魔法',
+            'マギテック': '魔導機術',
+            'フェアリーテイマー': '妖精魔法',
             'エンハンサー': '練技',
             'バード': '呪歌',
             'ライダー': '練技',
-            'アルケミスト': '練技',
+            'アルケミスト': '賦術',
           };
           
           // 取得している技能から対応する系統グループを取得
@@ -1397,55 +1406,29 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
                 const originalIndex = sheetData.magics.findIndex(m => m === magic);
                 return (
                   <div key={originalIndex} style={{ marginBottom: '1rem', padding: '1rem', border: '1px solid #ddd', borderRadius: '4px' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 100px auto', gap: '1rem', marginBottom: '0.5rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 100px auto', gap: '1rem', marginBottom: '0.5rem' }}>
                       <div>
                         <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                           魔法・スキル名
                         </label>
-                        <select
-                          value={magic.name}
-                          onChange={(e) => {
-                            const selectedMagic = SW25_MAGICS.find(m => m.name === e.target.value);
-                            if (selectedMagic) {
-                              updateMagic(originalIndex, 'name', e.target.value);
-                              updateMagic(originalIndex, 'system', selectedMagic.system);
-                              updateMagic(originalIndex, 'cost', selectedMagic.cost);
-                              updateMagic(originalIndex, 'effect', selectedMagic.effect);
-                            } else {
-                              updateMagic(originalIndex, 'name', e.target.value);
-                            }
-                          }}
-                          style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                        >
-                          <option value="">選択してください</option>
-                          {SW25_MAGICS.filter(m => m.system === system).map(m => (
-                            <option key={m.name} value={m.name}>{m.name}</option>
-                          ))}
-                        </select>
                         <input
                           type="text"
                           value={magic.name}
                           onChange={(e) => updateMagic(originalIndex, 'name', e.target.value)}
-                          placeholder="または手動入力"
-                          style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', marginTop: '0.5rem' }}
+                          placeholder="魔法・スキル名を入力"
+                          style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
                         />
                       </div>
                       <div>
                         <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                           系統
                         </label>
-                        <select
+                        <input
+                          type="text"
                           value={magic.system}
-                          onChange={(e) => updateMagic(originalIndex, 'system', e.target.value)}
-                          style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                        >
-                          <option value="">選択してください</option>
-                          <option value="精霊魔法">精霊魔法</option>
-                          <option value="神聖魔法">神聖魔法</option>
-                          <option value="呪歌">呪歌</option>
-                          <option value="練技">練技</option>
-                          <option value="その他">その他</option>
-                        </select>
+                          disabled
+                          style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f8f9fa', color: '#495057' }}
+                        />
                       </div>
                       <div>
                         <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
@@ -1544,11 +1527,15 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
                         style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
                       >
                         <option value="">選択してください</option>
-                        <option value="精霊魔法">精霊魔法</option>
+                        <option value="真語魔法">真語魔法</option>
+                        <option value="操霊魔法">操霊魔法</option>
                         <option value="神聖魔法">神聖魔法</option>
+                        <option value="妖精魔法">妖精魔法</option>
+                        <option value="魔導機術">魔導機術</option>
                         <option value="呪歌">呪歌</option>
                         <option value="練技">練技</option>
-                        <option value="その他">その他</option>
+                        <option value="賦術">賦術</option>
+                        <option value="騎乗">騎乗</option>
                       </select>
                     </div>
                     <div>

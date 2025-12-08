@@ -11,7 +11,7 @@ import type { ShinobigamiSheetData } from '../types/shinobigami';
 import { normalizeSheetData as normalizeShinobigamiSheetData } from '../utils/shinobigami';
 import { Sw25SheetForm } from '../components/Sw25SheetForm';
 import type { Sw25SheetData } from '../types/sw25';
-import { normalizeSheetData as normalizeSw25SheetData } from '../utils/sw25';
+import { normalizeSheetData as normalizeSw25SheetData, rollAttributeInitialsByRace } from '../utils/sw25';
 import { DiceRoller } from '../components/DiceRoller';
 import { AutoRollAttributes } from '../components/AutoRollAttributes';
 import { CollapsibleSection } from '../components/CollapsibleSection';
@@ -422,6 +422,52 @@ export const CharacterCreate = () => {
                     }
                   }}
                 />
+              </div>
+            )}
+
+            {selectedSystem === 'sw25' && (
+              <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '4px', border: '1px solid #dee2e6' }}>
+                <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: 'bold' }}>能力値初期値ダイスロール</h3>
+                <p style={{ marginBottom: '1rem', fontSize: '0.875rem', color: '#666' }}>
+                  種族に応じた能力値初期値を自動でダイスロールします。<br />
+                  ※基本情報で種族を選択してから使用してください。
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!sheetData || !('race' in sheetData)) {
+                      showWarning('シートデータが読み込まれていません');
+                      return;
+                    }
+                    const sw25Data = sheetData as Sw25SheetData;
+                    if (!sw25Data.race || sw25Data.race === 'その他') {
+                      showWarning('種族を選択してください');
+                      return;
+                    }
+                    if (!confirm(`${sw25Data.race}の能力値初期値をダイスロールで決定しますか？\n現在の初期値は上書きされます。`)) {
+                      return;
+                    }
+                    const rolledValues = rollAttributeInitialsByRace(sw25Data.race);
+                    const updated = { 
+                      ...sw25Data, 
+                      attributeInitials: rolledValues 
+                    };
+                    setSheetData(updated);
+                    showSuccess(`能力値初期値をダイスロールしました（${sw25Data.race}）`);
+                  }}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    backgroundColor: '#28a745',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                    fontWeight: 'bold',
+                  }}
+                >
+                  🎲 能力値初期値をダイスロール
+                </button>
               </div>
             )}
           </CollapsibleSection>
