@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { FiArrowLeft, FiCopy, FiEdit, FiGlobe, FiLock, FiTrash2 } from 'react-icons/fi';
 import { useAuth } from '../auth/useAuth';
 import { getCharacter, deleteCharacter, publishCharacter } from '../services/api';
 import type { Character, SystemEnum } from '../services/api';
@@ -17,6 +18,7 @@ import { ImageModal } from '../components/ImageModal';
 import { useToast } from '../contexts/ToastContext';
 import { handleApiError, formatErrorMessage } from '../utils/errorHandler';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { IconText } from '../components/IconText';
 
 const SYSTEM_NAMES: Record<SystemEnum, string> = {
   cthulhu: 'クトゥルフ神話TRPG',
@@ -125,14 +127,14 @@ export const CharacterDetail = () => {
           style={{
             marginTop: '1rem',
             padding: '0.5rem 1rem',
-            backgroundColor: '#007bff',
-            color: '#fff',
+            backgroundColor: 'var(--color-primary)',
+            color: 'var(--color-text-inverse)',
             border: 'none',
             borderRadius: '4px',
             cursor: 'pointer',
           }}
         >
-          ダッシュボードに戻る
+          <IconText icon={<FiArrowLeft />}>マイページに戻る</IconText>
         </button>
       </div>
     );
@@ -142,6 +144,23 @@ export const CharacterDetail = () => {
     <div style={{ width: '100%', margin: '0 auto', padding: '2rem' }}>
       {/* ヘッダーセクション */}
       <section style={{ marginBottom: '2rem' }}>
+        <div style={{ marginBottom: '1rem' }}>
+          <button
+            type="button"
+            onClick={() => navigate('/dashboard')}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: 'var(--color-secondary)',
+              color: 'var(--color-text-inverse)',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+            }}
+          >
+            <IconText icon={<FiArrowLeft />}>マイページに戻る</IconText>
+          </button>
+        </div>
         <div style={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
@@ -150,15 +169,18 @@ export const CharacterDetail = () => {
           gap: '1rem',
           marginBottom: '1.5rem'
         }}>
-          <h1 style={{ margin: 0, fontSize: '2rem', fontWeight: 'bold' }}>{character.name}</h1>
+          <div>
+            <h1 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 'bold' }}>キャラクター詳細</h1>
+            <div style={{ marginTop: '0.25rem', fontSize: '1.25rem', fontWeight: 'bold' }}>{character.name}</div>
+          </div>
           {isOwner && (
             <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
               <button
                 onClick={() => navigate(`/characters/${id}/edit`)}
                 style={{
                   padding: '0.5rem 1rem',
-                  backgroundColor: '#007bff',
-                  color: '#fff',
+                  backgroundColor: 'var(--color-primary)',
+                  color: 'var(--color-text-inverse)',
                   border: 'none',
                   borderRadius: '4px',
                   cursor: 'pointer',
@@ -166,14 +188,14 @@ export const CharacterDetail = () => {
                   fontWeight: '500',
                 }}
               >
-                編集
+                <IconText icon={<FiEdit />}>編集</IconText>
               </button>
               <button
                 onClick={handleTogglePublish}
                 style={{
                   padding: '0.5rem 1rem',
-                  backgroundColor: character.is_public ? '#ffc107' : '#28a745',
-                  color: '#fff',
+                  backgroundColor: character.is_public ? 'var(--color-warning)' : 'var(--color-success)',
+                  color: 'var(--color-text-inverse)',
                   border: 'none',
                   borderRadius: '4px',
                   cursor: 'pointer',
@@ -181,14 +203,18 @@ export const CharacterDetail = () => {
                   fontWeight: '500',
                 }}
               >
-                {character.is_public ? '非公開にする' : '公開する'}
+                {character.is_public ? (
+                  <IconText icon={<FiLock />}>非公開</IconText>
+                ) : (
+                  <IconText icon={<FiGlobe />}>公開</IconText>
+                )}
               </button>
               <button
                 onClick={handleDelete}
                 style={{
                   padding: '0.5rem 1rem',
-                  backgroundColor: '#dc3545',
-                  color: '#fff',
+                  backgroundColor: 'var(--color-danger)',
+                  color: 'var(--color-text-inverse)',
                   border: 'none',
                   borderRadius: '4px',
                   cursor: 'pointer',
@@ -196,7 +222,7 @@ export const CharacterDetail = () => {
                   fontWeight: '500',
                 }}
               >
-                削除
+                <IconText icon={<FiTrash2 />}>削除</IconText>
               </button>
             </div>
           )}
@@ -206,9 +232,9 @@ export const CharacterDetail = () => {
           <div style={{ 
             marginBottom: '1.5rem', 
             padding: '1rem', 
-            backgroundColor: '#d1ecf1', 
+            backgroundColor: 'color-mix(in srgb, var(--color-info) 14%, white)', 
             borderRadius: '8px',
-            border: '1px solid #bee5eb'
+            border: '1px solid color-mix(in srgb, var(--color-info) 25%, var(--color-border))'
           }}>
             <p style={{ margin: '0 0 0.5rem 0', fontWeight: 'bold', fontSize: '0.875rem' }}>共有リンク:</p>
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -216,7 +242,7 @@ export const CharacterDetail = () => {
                 flex: 1, 
                 minWidth: '200px',
                 padding: '0.5rem', 
-                backgroundColor: '#fff', 
+                backgroundColor: 'var(--color-surface)', 
                 borderRadius: '4px',
                 fontSize: '0.875rem',
                 wordBreak: 'break-all'
@@ -227,8 +253,8 @@ export const CharacterDetail = () => {
                 onClick={copyShareLink}
                 style={{
                   padding: '0.5rem 1rem',
-                  backgroundColor: '#007bff',
-                  color: '#fff',
+                  backgroundColor: 'var(--color-primary)',
+                  color: 'var(--color-text-inverse)',
                   border: 'none',
                   borderRadius: '4px',
                   cursor: 'pointer',
@@ -236,7 +262,7 @@ export const CharacterDetail = () => {
                   whiteSpace: 'nowrap',
                 }}
               >
-                コピー
+                <IconText icon={<FiCopy />}>コピー</IconText>
               </button>
             </div>
           </div>
@@ -279,7 +305,7 @@ export const CharacterDetail = () => {
                         width: 'auto',
                         height: 'auto',
                         borderRadius: '8px',
-                        border: '2px solid #dee2e6',
+                        border: '2px solid var(--color-border)',
                         boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                         transition: 'transform 0.2s, box-shadow 0.2s',
                       }}
@@ -295,7 +321,7 @@ export const CharacterDetail = () => {
                     <div style={{ 
                       marginTop: '0.5rem', 
                       fontSize: '0.875rem', 
-                      color: '#6c757d',
+                      color: 'var(--color-text-muted)',
                       textAlign: 'center'
                     }}>
                       クリックで拡大表示
@@ -306,13 +332,13 @@ export const CharacterDetail = () => {
                     width: '100%',
                     maxWidth: '400px',
                     height: '300px',
-                    backgroundColor: '#f8f9fa',
-                    border: '2px dashed #dee2e6',
+                    backgroundColor: 'var(--color-surface-muted)',
+                    border: '2px dashed var(--color-border)',
                     borderRadius: '8px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#6c757d',
+                    color: 'var(--color-text-muted)',
                     fontSize: '1rem',
                   }}>
                     <div style={{ textAlign: 'center' }}>
@@ -333,35 +359,35 @@ export const CharacterDetail = () => {
               {/* 基本情報セクション */}
               <section style={{ 
                 padding: '1.5rem',
-                backgroundColor: '#f8f9fa',
+                backgroundColor: 'var(--color-surface-muted)',
                 borderRadius: '8px',
-                border: '1px solid #dee2e6'
+                border: '1px solid var(--color-border)',
               }}>
                 <h2 style={{ 
                   marginTop: 0, 
                   marginBottom: '1rem', 
                   fontSize: '1.5rem',
-                  borderBottom: '2px solid #007bff',
+                  borderBottom: '2px solid var(--color-primary)',
                   paddingBottom: '0.5rem'
                 }}>
                   基本情報
                 </h2>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
                   <div>
-                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>システム</div>
+                    <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>システム</div>
                     <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{SYSTEM_NAMES[character.system]}</div>
                   </div>
                   {character.tags.length > 0 && (
                     <div style={{ gridColumn: '1 / -1' }}>
-                      <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.5rem' }}>タグ</div>
+                      <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>タグ</div>
                       <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                         {character.tags.map(tag => (
                           <span
                             key={tag}
                             style={{
                               padding: '0.375rem 0.75rem',
-                              backgroundColor: '#007bff',
-                              color: '#fff',
+                              backgroundColor: 'var(--color-primary)',
+                              color: 'var(--color-text-inverse)',
                               borderRadius: '4px',
                               fontSize: '0.875rem',
                               fontWeight: '500',
@@ -379,31 +405,31 @@ export const CharacterDetail = () => {
                       <>
                         {sheetData.playerName && (
                           <div>
-                            <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>プレイヤー名</div>
+                            <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>プレイヤー名</div>
                             <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.playerName}</div>
                           </div>
                         )}
                         {sheetData.occupation && (
                           <div>
-                            <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>職業</div>
+                            <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>職業</div>
                             <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.occupation}</div>
                           </div>
                         )}
                         {sheetData.age && (
                           <div>
-                            <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>年齢</div>
+                            <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>年齢</div>
                             <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.age}</div>
                           </div>
                         )}
                         {sheetData.gender && (
                           <div>
-                            <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>性別</div>
+                            <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>性別</div>
                             <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.gender}</div>
                           </div>
                         )}
                         {sheetData.birthplace && (
                           <div>
-                            <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>出身地</div>
+                            <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>出身地</div>
                             <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.birthplace}</div>
                           </div>
                         )}
@@ -474,7 +500,7 @@ export const CharacterDetail = () => {
                               width: 'auto',
                               height: 'auto',
                               borderRadius: '8px',
-                              border: '2px solid #dee2e6',
+                              border: '2px solid var(--color-border)',
                               boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                               transition: 'transform 0.2s, box-shadow 0.2s',
                             }}
@@ -490,7 +516,7 @@ export const CharacterDetail = () => {
                           <div style={{ 
                             marginTop: '0.5rem', 
                             fontSize: '0.875rem', 
-                            color: '#6c757d',
+                            color: 'var(--color-text-muted)',
                             textAlign: 'center'
                           }}>
                             クリックで拡大表示
@@ -501,13 +527,13 @@ export const CharacterDetail = () => {
                           width: '100%',
                           maxWidth: '400px',
                           height: '300px',
-                          backgroundColor: '#f8f9fa',
-                          border: '2px dashed #dee2e6',
+                          backgroundColor: 'var(--color-surface-muted)',
+                          border: '2px dashed var(--color-border)',
                           borderRadius: '8px',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          color: '#6c757d',
+                          color: 'var(--color-text-muted)',
                           fontSize: '1rem',
                         }}>
                           <div style={{ textAlign: 'center' }}>
@@ -528,22 +554,22 @@ export const CharacterDetail = () => {
                     {/* 基本情報セクション */}
                     <section style={{ 
                       padding: '1.5rem',
-                      backgroundColor: '#f8f9fa',
+                      backgroundColor: 'var(--color-surface-muted)',
                       borderRadius: '8px',
-                      border: '1px solid #dee2e6'
+                      border: '1px solid var(--color-border)'
                     }}>
                       <h2 style={{ 
                         marginTop: 0, 
                         marginBottom: '1rem', 
                         fontSize: '1.5rem',
-                        borderBottom: '2px solid #007bff',
+                        borderBottom: '2px solid var(--color-primary)',
                         paddingBottom: '0.5rem'
                       }}>
                         基本情報
                       </h2>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
                         <div>
-                          <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>システム</div>
+                          <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>システム</div>
                           <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{SYSTEM_NAMES[character.system]}</div>
                         </div>
                         {character.system === 'shinobigami' && (() => {
@@ -552,19 +578,19 @@ export const CharacterDetail = () => {
                             <>
                               {sheetData.playerName && (
                                 <div>
-                                  <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>プレイヤー名</div>
+                                  <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>プレイヤー名</div>
                                   <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.playerName}</div>
                                 </div>
                               )}
                               {sheetData.age !== undefined && (
                                 <div>
-                                  <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>年齢</div>
+                                  <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>年齢</div>
                                   <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.age}</div>
                                 </div>
                               )}
                               {sheetData.gender && (
                                 <div>
-                                  <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>性別</div>
+                                  <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>性別</div>
                                   <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.gender}</div>
                                 </div>
                               )}
@@ -573,15 +599,15 @@ export const CharacterDetail = () => {
                         })()}
                         {character.tags.length > 0 && (
                           <div style={{ gridColumn: '1 / -1' }}>
-                            <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.5rem' }}>タグ</div>
+                            <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>タグ</div>
                             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                               {character.tags.map(tag => (
                                 <span
                                   key={tag}
                                   style={{
                                     padding: '0.375rem 0.75rem',
-                                    backgroundColor: '#007bff',
-                                    color: '#fff',
+                                    backgroundColor: 'var(--color-primary)',
+                                    color: 'var(--color-text-inverse)',
                                     borderRadius: '4px',
                                     fontSize: '0.875rem',
                                     fontWeight: '500',
@@ -646,7 +672,7 @@ export const CharacterDetail = () => {
                             width: 'auto',
                             height: 'auto',
                             borderRadius: '8px',
-                            border: '2px solid #dee2e6',
+                            border: '2px solid var(--color-border)',
                             boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                             transition: 'transform 0.2s, box-shadow 0.2s',
                           }}
@@ -662,7 +688,7 @@ export const CharacterDetail = () => {
                         <div style={{ 
                           marginTop: '0.5rem', 
                           fontSize: '0.875rem', 
-                          color: '#6c757d',
+                          color: 'var(--color-text-muted)',
                           textAlign: 'center'
                         }}>
                           クリックで拡大表示
@@ -673,13 +699,13 @@ export const CharacterDetail = () => {
                         width: '100%',
                         maxWidth: '400px',
                         height: '300px',
-                        backgroundColor: '#f8f9fa',
-                        border: '2px dashed #dee2e6',
+                        backgroundColor: 'var(--color-surface-muted)',
+                        border: '2px dashed var(--color-border)',
                         borderRadius: '8px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: '#6c757d',
+                        color: 'var(--color-text-muted)',
                         fontSize: '1rem',
                       }}>
                         <div style={{ textAlign: 'center' }}>
@@ -701,22 +727,22 @@ export const CharacterDetail = () => {
                   <section style={{ 
                     marginBottom: '2rem',
                     padding: '1.5rem',
-                    backgroundColor: '#f8f9fa',
+                    backgroundColor: 'var(--color-surface-muted)',
                     borderRadius: '8px',
-                    border: '1px solid #dee2e6'
+                    border: '1px solid var(--color-border)'
                   }}>
                     <h2 style={{ 
                       marginTop: 0, 
                       marginBottom: '1rem', 
                       fontSize: '1.5rem',
-                      borderBottom: '2px solid #007bff',
+                      borderBottom: '2px solid var(--color-primary)',
                       paddingBottom: '0.5rem'
                     }}>
                       基本情報
                     </h2>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
                       <div>
-                        <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>システム</div>
+                        <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>システム</div>
                         <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{SYSTEM_NAMES[character.system]}</div>
                       </div>
                       {character.system === 'shinobigami' && (() => {
@@ -725,19 +751,19 @@ export const CharacterDetail = () => {
                           <>
                             {sheetData.playerName && (
                               <div>
-                                <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>プレイヤー名</div>
+                                <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>プレイヤー名</div>
                                 <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.playerName}</div>
                               </div>
                             )}
                             {sheetData.age !== undefined && (
                               <div>
-                                <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>年齢</div>
+                                <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>年齢</div>
                                 <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.age}</div>
                               </div>
                             )}
                             {sheetData.gender && (
                               <div>
-                                <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>性別</div>
+                                <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>性別</div>
                                 <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.gender}</div>
                               </div>
                             )}
@@ -746,15 +772,15 @@ export const CharacterDetail = () => {
                       })()}
                       {character.tags.length > 0 && (
                         <div style={{ gridColumn: '1 / -1' }}>
-                          <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.5rem' }}>タグ</div>
+                          <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>タグ</div>
                           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                             {character.tags.map(tag => (
                               <span
                                 key={tag}
                                 style={{
                                   padding: '0.375rem 0.75rem',
-                                  backgroundColor: '#007bff',
-                                  color: '#fff',
+                                  backgroundColor: 'var(--color-primary)',
+                                  color: 'var(--color-text-inverse)',
                                   borderRadius: '4px',
                                   fontSize: '0.875rem',
                                   fontWeight: '500',
@@ -773,15 +799,15 @@ export const CharacterDetail = () => {
                   <section style={{ 
                     marginTop: '2rem',
                     padding: '1.5rem',
-                    backgroundColor: '#fff',
+                    backgroundColor: 'var(--color-surface)',
                     borderRadius: '8px',
-                    border: '1px solid #dee2e6'
+                    border: '1px solid var(--color-border)'
                   }}>
                     <h2 style={{ 
                       marginTop: 0, 
                       marginBottom: '1.5rem', 
                       fontSize: '1.5rem',
-                      borderBottom: '2px solid #007bff',
+                      borderBottom: '2px solid var(--color-primary)',
                       paddingBottom: '0.5rem'
                     }}>
                       キャラクターシート
@@ -816,7 +842,7 @@ export const CharacterDetail = () => {
                         width: 'auto',
                         height: 'auto',
                         borderRadius: '8px',
-                        border: '2px solid #dee2e6',
+                        border: '2px solid var(--color-border)',
                         boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                         transition: 'transform 0.2s, box-shadow 0.2s',
                       }}
@@ -832,7 +858,7 @@ export const CharacterDetail = () => {
                     <div style={{ 
                       marginTop: '0.5rem', 
                       fontSize: '0.875rem', 
-                      color: '#6c757d',
+                      color: 'var(--color-text-muted)',
                       textAlign: 'center'
                     }}>
                       クリックで拡大表示
@@ -843,13 +869,13 @@ export const CharacterDetail = () => {
                     width: '100%',
                     maxWidth: '400px',
                     height: '300px',
-                    backgroundColor: '#f8f9fa',
-                    border: '2px dashed #dee2e6',
+                    backgroundColor: 'var(--color-surface-muted)',
+                    border: '2px dashed var(--color-border)',
                     borderRadius: '8px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#6c757d',
+                    color: 'var(--color-text-muted)',
                     fontSize: '1rem',
                   }}>
                     <div style={{ textAlign: 'center' }}>
@@ -871,22 +897,22 @@ export const CharacterDetail = () => {
               <section style={{ 
                 marginBottom: '2rem',
                 padding: '1.5rem',
-                backgroundColor: '#f8f9fa',
+                backgroundColor: 'var(--color-surface-muted)',
                 borderRadius: '8px',
-                border: '1px solid #dee2e6'
+                border: '1px solid var(--color-border)'
               }}>
                 <h2 style={{ 
                   marginTop: 0, 
                   marginBottom: '1rem', 
                   fontSize: '1.5rem',
-                  borderBottom: '2px solid #007bff',
+                  borderBottom: '2px solid var(--color-primary)',
                   paddingBottom: '0.5rem'
                 }}>
                   基本情報
                 </h2>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
                   <div>
-                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>システム</div>
+                    <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>システム</div>
                     <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{SYSTEM_NAMES[character.system]}</div>
                   </div>
                   {character.system === 'sw25' && (() => {
@@ -895,37 +921,37 @@ export const CharacterDetail = () => {
                       <>
                         {sheetData.playerName && (
                           <div>
-                            <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>プレイヤー名</div>
+                            <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>プレイヤー名</div>
                             <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.playerName}</div>
                           </div>
                         )}
                         {sheetData.characterName && (
                           <div>
-                            <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>キャラクター名</div>
+                            <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>キャラクター名</div>
                             <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.characterName}</div>
                           </div>
                         )}
                         {sheetData.race && (
                           <div>
-                            <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>種族</div>
+                            <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>種族</div>
                             <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.race}</div>
                           </div>
                         )}
                         {sheetData.birth && (
                           <div>
-                            <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>生まれ</div>
+                            <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>生まれ</div>
                             <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.birth}</div>
                           </div>
                         )}
                         {sheetData.age !== undefined && (
                           <div>
-                            <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>年齢</div>
+                            <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>年齢</div>
                             <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.age}</div>
                           </div>
                         )}
                         {sheetData.gender && (
                           <div>
-                            <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>性別</div>
+                            <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>性別</div>
                             <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.gender}</div>
                           </div>
                         )}
@@ -934,15 +960,15 @@ export const CharacterDetail = () => {
                   })()}
                   {character.tags.length > 0 && (
                     <div style={{ gridColumn: '1 / -1' }}>
-                      <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.5rem' }}>タグ</div>
+                      <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>タグ</div>
                       <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                         {character.tags.map(tag => (
                           <span
                             key={tag}
                             style={{
                               padding: '0.375rem 0.75rem',
-                              backgroundColor: '#007bff',
-                              color: '#fff',
+                              backgroundColor: 'var(--color-primary)',
+                              color: 'var(--color-text-inverse)',
                               borderRadius: '4px',
                               fontSize: '0.875rem',
                               fontWeight: '500',
@@ -961,15 +987,15 @@ export const CharacterDetail = () => {
               <section style={{ 
                 marginTop: '2rem',
                 padding: '1.5rem',
-                backgroundColor: '#fff',
+                backgroundColor: 'var(--color-surface)',
                 borderRadius: '8px',
-                border: '1px solid #dee2e6'
+                border: '1px solid var(--color-border)'
               }}>
                 <h2 style={{ 
                   marginTop: 0, 
                   marginBottom: '1.5rem', 
                   fontSize: '1.5rem',
-                  borderBottom: '2px solid #007bff',
+                  borderBottom: '2px solid var(--color-primary)',
                   paddingBottom: '0.5rem'
                 }}>
                   キャラクターシート
@@ -989,15 +1015,15 @@ export const CharacterDetail = () => {
             <section style={{ 
               marginTop: '2rem',
               padding: '1.5rem',
-              backgroundColor: '#fff',
+              backgroundColor: 'var(--color-surface)',
               borderRadius: '8px',
-              border: '1px solid #dee2e6'
+              border: '1px solid var(--color-border)'
             }}>
               <h2 style={{ 
                 marginTop: 0, 
                 marginBottom: '1.5rem', 
                 fontSize: '1.5rem',
-                borderBottom: '2px solid #007bff',
+                borderBottom: '2px solid var(--color-primary)',
                 paddingBottom: '0.5rem'
               }}>
                 キャラクターシート

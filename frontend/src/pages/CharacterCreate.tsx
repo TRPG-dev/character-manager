@@ -1,7 +1,9 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, type ChangeEvent, type FormEvent, type MouseEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FiArrowLeft, FiEye, FiPlus, FiSave } from 'react-icons/fi';
+import { FaDiceD20 } from 'react-icons/fa';
 import { useAuth } from '../auth/useAuth';
-import { createCharacter, uploadCharacterImage } from '../services/api';
+import { createCharacter, updateCharacter, uploadCharacterImage } from '../services/api';
 import type { SystemEnum } from '../services/api';
 import { CthulhuSheetForm } from '../components/CthulhuSheetForm';
 import type { CthulhuSheetData } from '../types/cthulhu';
@@ -18,6 +20,7 @@ import { CollapsibleSection } from '../components/CollapsibleSection';
 import { BasicInfoForm } from '../components/BasicInfoForm';
 import { useToast } from '../contexts/ToastContext';
 import { handleApiError, formatErrorMessage } from '../utils/errorHandler';
+import { IconText } from '../components/IconText';
 
 const SYSTEM_NAMES: Record<SystemEnum, string> = {
   cthulhu: 'クトゥルフ神話TRPG',
@@ -130,7 +133,7 @@ export const CharacterCreate = () => {
     return null;
   };
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const error = validateImageFile(file);
@@ -161,7 +164,7 @@ export const CharacterCreate = () => {
 
     try {
       await uploadCharacterImage(token, characterId, file, (percent) => setUploadProgress(percent));
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to upload image:', error);
       throw error;
     } finally {
@@ -169,7 +172,7 @@ export const CharacterCreate = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!selectedSystem || !name.trim()) return;
 
@@ -213,14 +216,14 @@ export const CharacterCreate = () => {
         try {
           await uploadImageAfterCreate(character.id, selectedImage, token);
           showSuccess('画像のアップロードが完了しました');
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error('Failed to upload image:', error);
           showWarning('画像のアップロードに失敗しましたが、キャラクターは作成されました');
         }
       }
 
       showSuccess('キャラクターを作成しました。続けて編集できます。');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to create character:', error);
       const apiError = handleApiError(error);
       showError(formatErrorMessage(apiError));
@@ -231,8 +234,8 @@ export const CharacterCreate = () => {
 
   if (step === 'select') {
     return (
-      <div>
-        <h1>システムを選択</h1>
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }}>
+        <h1 style={{ margin: 0 }}>キャラクター作成</h1>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1.5rem', marginTop: '2rem' }}>
           {Object.entries(SYSTEM_NAMES).map(([value, label]) => (
             <button
@@ -240,20 +243,20 @@ export const CharacterCreate = () => {
               onClick={() => handleSystemSelect(value as SystemEnum)}
               style={{
                 padding: '2rem',
-                border: '2px solid #ddd',
+                border: '2px solid var(--color-border)',
                 borderRadius: '8px',
-                backgroundColor: '#fff',
+                backgroundColor: 'var(--color-surface)',
                 cursor: 'pointer',
                 fontSize: '1.125rem',
                 transition: 'all 0.2s',
               }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = '#007bff';
-                e.currentTarget.style.backgroundColor = '#f0f8ff';
+              onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => {
+                e.currentTarget.style.borderColor = 'var(--color-primary)';
+                e.currentTarget.style.backgroundColor = 'var(--color-primary-light)';
               }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = '#ddd';
-                e.currentTarget.style.backgroundColor = '#fff';
+              onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => {
+                e.currentTarget.style.borderColor = 'var(--color-border)';
+                e.currentTarget.style.backgroundColor = 'var(--color-surface)';
               }}
             >
               {label}
@@ -265,22 +268,22 @@ export const CharacterCreate = () => {
           style={{
             marginTop: '2rem',
             padding: '0.5rem 1rem',
-            backgroundColor: '#6c757d',
-            color: '#fff',
+            backgroundColor: 'var(--color-secondary)',
+            color: 'var(--color-text-inverse)',
             border: 'none',
             borderRadius: '4px',
             cursor: 'pointer',
           }}
         >
-          キャンセル
+          <IconText icon={<FiArrowLeft />}>戻る</IconText>
         </button>
       </div>
     );
   }
 
   return (
-    <div>
-      <h1>キャラクター作成</h1>
+    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }}>
+      <h1 style={{ marginTop: 0 }}>キャラクター作成</h1>
       <form onSubmit={handleSubmit}>
         <CollapsibleSection title="基本情報" defaultOpen={true}>
           {selectedSystem === 'cthulhu' && sheetData && (
@@ -292,7 +295,6 @@ export const CharacterCreate = () => {
               onNameChange={setName}
               tags={tags}
               onTagsChange={setTags}
-              selectedImage={selectedImage}
               imagePreview={imagePreview}
               onImageSelect={handleImageSelect}
               onImageRemove={handleImageRemove}
@@ -312,7 +314,6 @@ export const CharacterCreate = () => {
               onNameChange={setName}
               tags={tags}
               onTagsChange={setTags}
-              selectedImage={selectedImage}
               imagePreview={imagePreview}
               onImageSelect={handleImageSelect}
               onImageRemove={handleImageRemove}
@@ -332,7 +333,6 @@ export const CharacterCreate = () => {
               onNameChange={setName}
               tags={tags}
               onTagsChange={setTags}
-              selectedImage={selectedImage}
               imagePreview={imagePreview}
               onImageSelect={handleImageSelect}
               onImageRemove={handleImageRemove}
@@ -370,9 +370,9 @@ export const CharacterCreate = () => {
             )}
 
             {selectedSystem === 'sw25' && (
-              <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '4px', border: '1px solid #dee2e6' }}>
+              <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: 'var(--color-surface-muted)', borderRadius: '4px', border: '1px solid var(--color-border)' }}>
                 <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: 'bold' }}>能力値初期値ダイスロール</h3>
-                <p style={{ marginBottom: '1rem', fontSize: '0.875rem', color: '#666' }}>
+                <p style={{ marginBottom: '1rem', fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>
                   種族に応じた能力値初期値を自動でダイスロールします。<br />
                   ※基本情報で種族を選択してから使用してください。
                 </p>
@@ -401,8 +401,8 @@ export const CharacterCreate = () => {
                   }}
                   style={{
                     padding: '0.5rem 1rem',
-                    backgroundColor: '#28a745',
-                    color: 'white',
+                    backgroundColor: 'var(--color-success)',
+                    color: 'var(--color-text-inverse)',
                     border: 'none',
                     borderRadius: '4px',
                     cursor: 'pointer',
@@ -410,7 +410,7 @@ export const CharacterCreate = () => {
                     fontWeight: 'bold',
                   }}
                 >
-                  🎲 能力値初期値をダイスロール
+                  <IconText icon={<FaDiceD20 />}>能力値初期値をダイスロール</IconText>
                 </button>
               </div>
             )}
@@ -446,30 +446,30 @@ export const CharacterCreate = () => {
                 disabled={loading || !name.trim()}
                 style={{
                   padding: '0.75rem 2rem',
-                  backgroundColor: loading || !name.trim() ? '#ccc' : '#007bff',
-                  color: '#fff',
+                  backgroundColor: loading || !name.trim() ? 'var(--color-disabled-bg)' : 'var(--color-primary)',
+                  color: loading || !name.trim() ? 'var(--color-disabled-text)' : 'var(--color-text-inverse)',
                   border: 'none',
                   borderRadius: '4px',
                   cursor: loading || !name.trim() ? 'not-allowed' : 'pointer',
                   fontSize: '1rem',
                 }}
               >
-                {loading ? '作成中...' : '作成'}
+                {loading ? '作成中...' : <IconText icon={<FiPlus />}>作成</IconText>}
               </button>
               <button
                 type="button"
                 onClick={() => navigate('/dashboard')}
                 style={{
                   padding: '0.75rem 2rem',
-                  backgroundColor: '#6c757d',
-                  color: '#fff',
+                  backgroundColor: 'var(--color-secondary)',
+                  color: 'var(--color-text-inverse)',
                   border: 'none',
                   borderRadius: '4px',
                   cursor: 'pointer',
                   fontSize: '1rem',
                 }}
               >
-                キャンセル
+                <IconText icon={<FiArrowLeft />}>戻る</IconText>
               </button>
             </>
           ) : (
@@ -491,7 +491,7 @@ export const CharacterCreate = () => {
                     });
                     showSuccess('更新が完了しました');
                     navigate(`/characters/${createdCharacterId}`);
-                  } catch (error: any) {
+                  } catch (error: unknown) {
                     console.error('Failed to update character:', error);
                     const apiError = handleApiError(error);
                     showError(formatErrorMessage(apiError));
@@ -502,30 +502,30 @@ export const CharacterCreate = () => {
                 disabled={loading}
                 style={{
                   padding: '0.75rem 2rem',
-                  backgroundColor: loading ? '#ccc' : '#28a745',
-                  color: '#fff',
+                  backgroundColor: loading ? 'var(--color-disabled-bg)' : 'var(--color-success)',
+                  color: loading ? 'var(--color-disabled-text)' : 'var(--color-text-inverse)',
                   border: 'none',
                   borderRadius: '4px',
                   cursor: loading ? 'not-allowed' : 'pointer',
                   fontSize: '1rem',
                 }}
               >
-                {loading ? '保存中...' : '保存'}
+                {loading ? '保存中...' : <IconText icon={<FiSave />}>保存</IconText>}
               </button>
               <button
                 type="button"
                 onClick={() => navigate(`/characters/${createdCharacterId}`)}
                 style={{
                   padding: '0.75rem 2rem',
-                  backgroundColor: '#6c757d',
-                  color: '#fff',
+                  backgroundColor: 'var(--color-secondary)',
+                  color: 'var(--color-text-inverse)',
                   border: 'none',
                   borderRadius: '4px',
                   cursor: 'pointer',
                   fontSize: '1rem',
                 }}
               >
-                詳細を見る
+                <IconText icon={<FiEye />}>詳細を見る</IconText>
               </button>
             </>
           )}

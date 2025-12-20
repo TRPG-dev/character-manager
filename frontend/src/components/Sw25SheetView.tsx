@@ -1,23 +1,19 @@
 import { useState, useEffect } from 'react';
 import type { Sw25SheetData } from '../types/sw25';
 import { normalizeSheetData } from '../utils/sw25';
-import { getRaceByName, getClassByName, getClassesByCategory } from '../data/sw25';
+import { getClassByName } from '../data/sw25';
 import { CollapsibleSection } from './CollapsibleSection';
 
 interface Sw25SheetViewProps {
   data: Sw25SheetData;
   isDesktop?: boolean;
   showLeftColumn?: boolean;
-  showRightColumn?: boolean;
-  showSkills?: boolean;
 }
 
 export const Sw25SheetView = ({ 
   data, 
   isDesktop = false,
   showLeftColumn = false,
-  showRightColumn = false,
-  showSkills = false,
 }: Sw25SheetViewProps) => {
   const sheetData = normalizeSheetData(data);
   const [internalIsDesktop, setInternalIsDesktop] = useState(false);

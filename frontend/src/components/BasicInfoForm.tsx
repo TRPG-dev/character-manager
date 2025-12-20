@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ChangeEvent, type RefObject } from 'react';
 import type { CthulhuSheetData } from '../types/cthulhu';
 import type { ShinobigamiSheetData } from '../types/shinobigami';
 import type { Sw25SheetData } from '../types/sw25';
@@ -22,13 +22,12 @@ interface BasicInfoFormProps {
   tags: string[];
   onTagsChange: (tags: string[]) => void;
   // プロフィール画像
-  selectedImage?: File | null;
   imagePreview?: string | null;
-  onImageSelect?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onImageSelect?: (e: ChangeEvent<HTMLInputElement>) => void;
   onImageRemove?: () => void;
   uploadingImage?: boolean;
   uploadProgress?: number;
-  fileInputRef?: React.RefObject<HTMLInputElement | null>;
+  fileInputRef?: RefObject<HTMLInputElement | null>;
   loading?: boolean;
   // システム変更（新規作成時のみ）
   onSystemChange?: () => void;
@@ -42,7 +41,6 @@ export const BasicInfoForm = ({
   onNameChange,
   tags,
   onTagsChange,
-  selectedImage,
   imagePreview,
   onImageSelect,
   onImageRemove,
@@ -84,12 +82,13 @@ export const BasicInfoForm = ({
               style={{
                 marginTop: '0.5rem',
                 padding: '0.25rem 0.5rem',
-                backgroundColor: '#6c757d',
-                color: '#fff',
+                backgroundColor: 'var(--color-success)',
+                color: 'var(--color-text-inverse)',
                 border: 'none',
                 borderRadius: '4px',
                 cursor: 'pointer',
                 fontSize: '0.875rem',
+                fontWeight: 'bold',
               }}
             >
               変更
@@ -182,11 +181,12 @@ export const BasicInfoForm = ({
             onClick={handleAddTag}
             style={{
               padding: '0.5rem 1rem',
-              backgroundColor: '#6c757d',
-              color: '#fff',
+              backgroundColor: 'var(--color-success)',
+              color: 'var(--color-text-inverse)',
               border: 'none',
               borderRadius: '4px',
               cursor: 'pointer',
+              fontWeight: 'bold',
             }}
           >
             追加

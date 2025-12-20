@@ -1,6 +1,6 @@
 // クトゥルフ神話TRPG用のユーティリティ関数
 import type { CthulhuAttributes, CthulhuDerived, CthulhuSheetData, CthulhuSkill } from '../types/cthulhu';
-import { DEFAULT_CTHULHU_SKILLS, COMBAT_SKILLS, calculateSkillTotal, calculateTotalJobPoints, calculateTotalInterestPoints } from '../data/cthulhuSkills';
+import { DEFAULT_CTHULHU_SKILLS, COMBAT_SKILLS, calculateSkillTotal } from '../data/cthulhuSkills';
 
 /**
  * サイコロを振る（フロントエンド用）

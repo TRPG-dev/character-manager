@@ -1,5 +1,5 @@
 // シノビガミ用のユーティリティ関数
-import type { ShinobigamiSheetData, ShinobigamiAttributes, ShinobigamiEmotion, ShinobigamiOkugi, ShinobigamiNingu, ShinobigamiSessionHistory } from '../types/shinobigami';
+import type { ShinobigamiSheetData, ShinobigamiAttributes, ShinobigamiNingu } from '../types/shinobigami';
 
 /**
  * シートデータを正規化（不足しているフィールドを追加）

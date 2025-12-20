@@ -38,18 +38,19 @@ export const ConfirmDialog = ({
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          backgroundColor: '#fff',
+          backgroundColor: 'var(--color-surface)',
           borderRadius: '8px',
           padding: '1.5rem',
           maxWidth: '400px',
           width: '90%',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          boxShadow: 'var(--shadow-lg)',
+          border: '1px solid var(--color-border)',
         }}
       >
         <h3 style={{ marginTop: 0, marginBottom: '1rem', fontSize: '1.25rem' }}>
           {title}
         </h3>
-        <p style={{ marginBottom: '1.5rem', color: '#495057' }}>
+        <p style={{ marginBottom: '1.5rem', color: 'var(--color-text-muted)' }}>
           {message}
         </p>
         <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
@@ -58,8 +59,8 @@ export const ConfirmDialog = ({
             onClick={onCancel}
             style={{
               padding: '0.5rem 1rem',
-              backgroundColor: '#6c757d',
-              color: '#fff',
+              backgroundColor: 'var(--color-secondary)',
+              color: 'var(--color-text-inverse)',
               border: 'none',
               borderRadius: '4px',
               cursor: 'pointer',
@@ -73,8 +74,8 @@ export const ConfirmDialog = ({
             onClick={onConfirm}
             style={{
               padding: '0.5rem 1rem',
-              backgroundColor: '#007bff',
-              color: '#fff',
+              backgroundColor: 'var(--color-primary)',
+              color: 'var(--color-text-inverse)',
               border: 'none',
               borderRadius: '4px',
               cursor: 'pointer',

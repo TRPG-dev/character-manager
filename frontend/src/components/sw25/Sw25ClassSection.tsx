@@ -8,7 +8,6 @@ interface Sw25ClassSectionProps {
     remainingExperiencePoints: number;
     initialExperiencePoints?: number;
     gainedExperiencePoints?: number;
-    onUpdateInitialExp: (value: number) => void;
     onUpdateGainedExp: (value: number | undefined) => void;
     onAddClass: () => void;
     onUpdateClass: (index: number, field: 'name' | 'level', value: string | number) => void;
@@ -25,7 +24,6 @@ export const Sw25ClassSection = ({
     remainingExperiencePoints,
     initialExperiencePoints,
     gainedExperiencePoints,
-    onUpdateInitialExp,
     onUpdateGainedExp,
     onAddClass,
     onUpdateClass,

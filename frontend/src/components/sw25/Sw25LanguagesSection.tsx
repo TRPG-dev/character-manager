@@ -1,8 +1,8 @@
-import type { Language, Sw25Class } from '../../types/sw25';
+import type { Sw25Language, Sw25Class } from '../../types/sw25';
 import { SW25_LANGUAGES, getAutoLanguages, calculateRequiredLanguageCount } from '../../data/sw25';
 
 interface Sw25LanguagesSectionProps {
-  languages: Language[];
+  languages?: Sw25Language[];
   race: string;
   classes: Sw25Class[];
   onAddLanguage: () => void;

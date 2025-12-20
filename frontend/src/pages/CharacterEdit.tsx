@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { FiArrowLeft, FiPlus, FiSave, FiTrash2 } from 'react-icons/fi';
+import { FaDiceD20 } from 'react-icons/fa';
 import { useAuth } from '../auth/useAuth';
 import { deleteCharacterImage, getCharacter, updateCharacter, uploadCharacterImage } from '../services/api';
 import type { Character, SystemEnum } from '../services/api';
@@ -18,10 +20,10 @@ import { AutoRollAttributes } from '../components/AutoRollAttributes';
 import { CollapsibleSection } from '../components/CollapsibleSection';
 import { BasicInfoForm } from '../components/BasicInfoForm';
 import { ConfirmDialog } from '../components/ConfirmDialog';
-import { Toast } from '../components/Toast';
 import { useToast } from '../contexts/ToastContext';
 import { handleApiError, formatErrorMessage } from '../utils/errorHandler';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { IconText } from '../components/IconText';
 
 const SYSTEM_NAMES: Record<SystemEnum, string> = {
   cthulhu: 'クトゥルフ神話TRPG',
@@ -50,7 +52,6 @@ export const CharacterEdit = () => {
   const [shinobigamiSheetData, setShinobigamiSheetData] = useState<ShinobigamiSheetData | null>(null);
   const [sw25SheetData, setSw25SheetData] = useState<Sw25SheetData | null>(null);
   const [genericSheetData, setGenericSheetData] = useState<Record<string, any> | null>(null);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [nameError, setNameError] = useState<string>('');
 
@@ -62,7 +63,6 @@ export const CharacterEdit = () => {
       try {
         const token = await getAccessToken();
         if (token) {
-          setAccessToken(token);
           const char = await getCharacter(token, id);
           setCharacter(char);
           setName(char.name);
@@ -115,7 +115,7 @@ export const CharacterEdit = () => {
     return true;
   };
 
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleNameChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setName(value);
     if (value.trim()) {
@@ -147,7 +147,7 @@ export const CharacterEdit = () => {
     return null;
   };
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -172,7 +172,7 @@ export const CharacterEdit = () => {
     setImagePreview(null);
   };
 
-  const handleSubmitClick = (e: React.FormEvent) => {
+  const handleSubmitClick = (e: FormEvent) => {
     e.preventDefault();
     if (!validateName(name)) {
       return;
@@ -226,7 +226,7 @@ export const CharacterEdit = () => {
           // フォールバック: JSONテキストエリアから取得
           try {
             parsedSheetData = JSON.parse(sheetData);
-          } catch (error) {
+          } catch {
             showError('シートデータが正しいJSON形式ではありません');
             setSaving(false);
             return;
@@ -261,7 +261,7 @@ export const CharacterEdit = () => {
           navigate(`/characters/${id}`);
         }, 500);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to update character:', error);
       const apiError = handleApiError(error);
       showError(formatErrorMessage(apiError));
@@ -283,14 +283,14 @@ export const CharacterEdit = () => {
           style={{
             marginTop: '1rem',
             padding: '0.5rem 1rem',
-            backgroundColor: '#007bff',
-            color: '#fff',
+            backgroundColor: 'var(--color-primary)',
+            color: 'var(--color-text-inverse)',
             border: 'none',
             borderRadius: '4px',
             cursor: 'pointer',
           }}
         >
-          ダッシュボードに戻る
+          <IconText icon={<FiArrowLeft />}>マイページに戻る</IconText>
         </button>
       </div>
     );
@@ -315,7 +315,7 @@ export const CharacterEdit = () => {
                     maxWidth: '300px',
                     maxHeight: '300px',
                     borderRadius: '8px',
-                    border: '1px solid #ddd',
+                    border: '1px solid var(--color-border)',
                     display: 'block',
                   }}
                 />
@@ -328,15 +328,15 @@ export const CharacterEdit = () => {
                       top: '0.5rem',
                       right: '0.5rem',
                       padding: '0.25rem 0.5rem',
-                      backgroundColor: 'rgba(220, 53, 69, 0.9)',
-                      color: '#fff',
+                      backgroundColor: 'color-mix(in srgb, var(--color-danger) 90%, transparent)',
+                      color: 'var(--color-text-inverse)',
                       border: 'none',
                       borderRadius: '4px',
                       cursor: 'pointer',
                       fontSize: '0.875rem',
                     }}
                   >
-                    削除（保存で反映）
+                    <IconText icon={<FiTrash2 />}>削除（保存で反映）</IconText>
                   </button>
                 )}
               </div>
@@ -350,7 +350,7 @@ export const CharacterEdit = () => {
                 style={{
                   padding: '0.5rem',
                   fontSize: '0.875rem',
-                  border: '1px solid #ddd',
+                  border: '1px solid var(--color-border)',
                   borderRadius: '4px',
                 }}
               />
@@ -360,20 +360,20 @@ export const CharacterEdit = () => {
                   onClick={handleImageRemove}
                   style={{
                     padding: '0.5rem 0.75rem',
-                    backgroundColor: '#dc3545',
-                    color: '#fff',
+                    backgroundColor: 'var(--color-danger)',
+                    color: 'var(--color-text-inverse)',
                     border: 'none',
                     borderRadius: '4px',
                     cursor: 'pointer',
                     fontSize: '0.875rem',
                   }}
                 >
-                  削除（保存で反映）
+                  <IconText icon={<FiTrash2 />}>削除（保存で反映）</IconText>
                 </button>
               )}
             </div>
             {pendingImageAction !== 'none' && (
-              <div style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#6c757d' }}>
+              <div style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>
                 {pendingImageAction === 'upload'
                   ? '画像の変更が保留中です（保存でアップロード）。'
                   : '画像の削除が保留中です（保存で削除）。'}
@@ -385,7 +385,7 @@ export const CharacterEdit = () => {
             <>
               <BasicInfoForm
                 data={cthulhuSheetData}
-                onChange={(data) => setCthulhuSheetData(data)}
+                onChange={(data) => setCthulhuSheetData(data as CthulhuSheetData)}
                 system={character.system}
                 name={name}
                 onNameChange={setName}
@@ -397,7 +397,7 @@ export const CharacterEdit = () => {
             <>
               <BasicInfoForm
                 data={shinobigamiSheetData}
-                onChange={(data) => setShinobigamiSheetData(data)}
+                onChange={(data) => setShinobigamiSheetData(data as ShinobigamiSheetData)}
                 system={character.system}
                 name={name}
                 onNameChange={setName}
@@ -411,14 +411,14 @@ export const CharacterEdit = () => {
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                   システム
                 </label>
-                <div style={{ padding: '0.75rem', backgroundColor: '#f5f5f5', borderRadius: '4px' }}>
+                <div style={{ padding: '0.75rem', backgroundColor: 'var(--color-surface-muted)', borderRadius: '4px', border: '1px solid var(--color-border)' }}>
                   {SYSTEM_NAMES[character.system]}
                 </div>
               </div>
 
               <div style={{ marginBottom: '1.5rem' }}>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                  名前 <span style={{ color: 'red' }}>*</span>
+                  名前 <span style={{ color: 'var(--color-danger)' }}>*</span>
                 </label>
                 <input
                   type="text"
@@ -431,12 +431,12 @@ export const CharacterEdit = () => {
                     maxWidth: '400px',
                     padding: '0.75rem',
                     fontSize: '1rem',
-                    border: nameError ? '1px solid #dc3545' : '1px solid #ddd',
+                    border: nameError ? '1px solid var(--color-danger)' : '1px solid var(--color-border)',
                     borderRadius: '4px',
                   }}
                 />
                 {nameError && (
-                  <div style={{ color: '#dc3545', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                  <div style={{ color: 'var(--color-danger)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
                     {nameError}
                   </div>
                 )}
@@ -452,8 +452,8 @@ export const CharacterEdit = () => {
                       key={tag}
                       style={{
                         padding: '0.25rem 0.5rem',
-                        backgroundColor: '#007bff',
-                        color: '#fff',
+                        backgroundColor: 'var(--color-primary)',
+                        color: 'var(--color-text-inverse)',
                         borderRadius: '4px',
                         fontSize: '0.875rem',
                         display: 'flex',
@@ -468,12 +468,12 @@ export const CharacterEdit = () => {
                         style={{
                           background: 'none',
                           border: 'none',
-                          color: '#fff',
+                          color: 'var(--color-text-inverse)',
                           cursor: 'pointer',
                           fontSize: '1rem',
                         }}
                       >
-                        ×
+                        <span aria-hidden>×</span>
                       </button>
                     </span>
                   ))}
@@ -493,7 +493,7 @@ export const CharacterEdit = () => {
                     style={{
                       padding: '0.5rem',
                       fontSize: '0.875rem',
-                      border: '1px solid #ddd',
+                      border: '1px solid var(--color-border)',
                       borderRadius: '4px',
                       flex: 1,
                       maxWidth: '300px',
@@ -504,14 +504,15 @@ export const CharacterEdit = () => {
                     onClick={handleAddTag}
                     style={{
                       padding: '0.5rem 1rem',
-                      backgroundColor: '#6c757d',
-                      color: '#fff',
+                      backgroundColor: 'var(--color-success)',
+                      color: 'var(--color-text-inverse)',
                       border: 'none',
                       borderRadius: '4px',
                       cursor: 'pointer',
+                      fontWeight: 'bold',
                     }}
                   >
-                    追加
+                    <IconText icon={<FiPlus />}>追加</IconText>
                   </button>
                 </div>
               </div>
@@ -522,14 +523,14 @@ export const CharacterEdit = () => {
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                   システム
                 </label>
-                <div style={{ padding: '0.75rem', backgroundColor: '#f5f5f5', borderRadius: '4px' }}>
+                <div style={{ padding: '0.75rem', backgroundColor: 'var(--color-surface-muted)', borderRadius: '4px', border: '1px solid var(--color-border)' }}>
                   {SYSTEM_NAMES[character.system]}
                 </div>
               </div>
 
               <div style={{ marginBottom: '1.5rem' }}>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                  名前 <span style={{ color: 'red' }}>*</span>
+                  名前 <span style={{ color: 'var(--color-danger)' }}>*</span>
                 </label>
                 <input
                   type="text"
@@ -542,12 +543,12 @@ export const CharacterEdit = () => {
                     maxWidth: '400px',
                     padding: '0.75rem',
                     fontSize: '1rem',
-                    border: nameError ? '1px solid #dc3545' : '1px solid #ddd',
+                    border: nameError ? '1px solid var(--color-danger)' : '1px solid var(--color-border)',
                     borderRadius: '4px',
                   }}
                 />
                 {nameError && (
-                  <div style={{ color: '#dc3545', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                  <div style={{ color: 'var(--color-danger)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
                     {nameError}
                   </div>
                 )}
@@ -563,8 +564,8 @@ export const CharacterEdit = () => {
                       key={tag}
                       style={{
                         padding: '0.25rem 0.5rem',
-                        backgroundColor: '#007bff',
-                        color: '#fff',
+                        backgroundColor: 'var(--color-primary)',
+                        color: 'var(--color-text-inverse)',
                         borderRadius: '4px',
                         fontSize: '0.875rem',
                         display: 'flex',
@@ -579,12 +580,12 @@ export const CharacterEdit = () => {
                         style={{
                           background: 'none',
                           border: 'none',
-                          color: '#fff',
+                          color: 'var(--color-text-inverse)',
                           cursor: 'pointer',
                           fontSize: '1rem',
                         }}
                       >
-                        ×
+                        <span aria-hidden>×</span>
                       </button>
                     </span>
                   ))}
@@ -604,7 +605,7 @@ export const CharacterEdit = () => {
                     style={{
                       padding: '0.5rem',
                       fontSize: '0.875rem',
-                      border: '1px solid #ddd',
+                      border: '1px solid var(--color-border)',
                       borderRadius: '4px',
                       flex: 1,
                       maxWidth: '300px',
@@ -615,14 +616,15 @@ export const CharacterEdit = () => {
                     onClick={handleAddTag}
                     style={{
                       padding: '0.5rem 1rem',
-                      backgroundColor: '#6c757d',
-                      color: '#fff',
+                      backgroundColor: 'var(--color-success)',
+                      color: 'var(--color-text-inverse)',
                       border: 'none',
                       borderRadius: '4px',
                       cursor: 'pointer',
+                      fontWeight: 'bold',
                     }}
                   >
-                    追加
+                    <IconText icon={<FiPlus />}>追加</IconText>
                   </button>
                 </div>
               </div>
@@ -654,9 +656,9 @@ export const CharacterEdit = () => {
             )}
 
             {character.system === 'sw25' && (
-              <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '4px', border: '1px solid #dee2e6' }}>
+              <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: 'var(--color-surface-muted)', borderRadius: '4px', border: '1px solid var(--color-border)' }}>
                 <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: 'bold' }}>能力値初期値ダイスロール</h3>
-                <p style={{ marginBottom: '1rem', fontSize: '0.875rem', color: '#666' }}>
+                <p style={{ marginBottom: '1rem', fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>
                   種族に応じた能力値初期値を自動でダイスロールします。<br />
                   ※基本情報で種族を選択してから使用してください。
                 </p>
@@ -684,8 +686,8 @@ export const CharacterEdit = () => {
                   }}
                   style={{
                     padding: '0.5rem 1rem',
-                    backgroundColor: '#28a745',
-                    color: 'white',
+                    backgroundColor: 'var(--color-success)',
+                    color: 'var(--color-text-inverse)',
                     border: 'none',
                     borderRadius: '4px',
                     cursor: 'pointer',
@@ -693,7 +695,7 @@ export const CharacterEdit = () => {
                     fontWeight: 'bold',
                   }}
                 >
-                  🎲 能力値初期値をダイスロール
+                  <IconText icon={<FaDiceD20 />}>能力値初期値をダイスロール</IconText>
                 </button>
               </div>
             )}
@@ -736,7 +738,7 @@ export const CharacterEdit = () => {
                   padding: '0.75rem',
                   fontSize: '0.875rem',
                   fontFamily: 'monospace',
-                  border: '1px solid #ddd',
+                  border: '1px solid var(--color-border)',
                   borderRadius: '4px',
                 }}
               />
@@ -750,30 +752,30 @@ export const CharacterEdit = () => {
             disabled={saving || !name.trim() || !!nameError}
             style={{
               padding: '0.75rem 2rem',
-              backgroundColor: saving || !name.trim() || !!nameError ? '#ccc' : '#007bff',
-              color: '#fff',
+              backgroundColor: saving || !name.trim() || !!nameError ? 'var(--color-disabled-bg)' : 'var(--color-primary)',
+              color: saving || !name.trim() || !!nameError ? 'var(--color-disabled-text)' : 'var(--color-text-inverse)',
               border: 'none',
               borderRadius: '4px',
               cursor: saving || !name.trim() || !!nameError ? 'not-allowed' : 'pointer',
               fontSize: '1rem',
             }}
           >
-            {saving ? '保存中...' : '保存'}
+            {saving ? '保存中...' : <IconText icon={<FiSave />}>保存</IconText>}
           </button>
           <button
             type="button"
             onClick={() => navigate(`/characters/${id}`)}
             style={{
               padding: '0.75rem 2rem',
-              backgroundColor: '#6c757d',
-              color: '#fff',
+              backgroundColor: 'var(--color-secondary)',
+              color: 'var(--color-text-inverse)',
               border: 'none',
               borderRadius: '4px',
               cursor: 'pointer',
               fontSize: '1rem',
             }}
           >
-            キャンセル
+            <IconText icon={<FiArrowLeft />}>詳細に戻る</IconText>
           </button>
         </div>
       </form>
@@ -783,7 +785,7 @@ export const CharacterEdit = () => {
         title="保存の確認"
         message="変更内容を保存しますか？"
         confirmText="保存"
-        cancelText="キャンセル"
+        cancelText="閉じる"
         onConfirm={handleConfirmSave}
         onCancel={() => setShowConfirmDialog(false)}
       />

@@ -71,14 +71,6 @@ export const CharacterSheetForm = ({ data, onChange }: CharacterSheetFormProps) 
     onChange(newData);
   };
 
-  const getNestedValue = (path: string[]): any => {
-    let current: any = formData;
-    for (const key of path) {
-      current = current?.[key];
-    }
-    return current;
-  };
-
   const renderObjectField = (key: string, value: any, path: string[] = []) => {
     if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
       return (
