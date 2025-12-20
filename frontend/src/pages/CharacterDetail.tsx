@@ -40,7 +40,7 @@ export const CharacterDetail = () => {
   const [isCocofoliaModalOpen, setIsCocofoliaModalOpen] = useState(false);
   const [cocofoliaSkillScope, setCocofoliaSkillScope] = useState<'changed' | 'all'>('changed');
   const [cocofoliaDice, setCocofoliaDice] = useState<'CCB' | 'CC'>('CCB');
-  const [cocofoliaIncludeIcon, setCocofoliaIncludeIcon] = useState(true);
+  const [cocofoliaIncludeIcon, setCocofoliaIncludeIcon] = useState(false);
   const [cocofoliaLoading, setCocofoliaLoading] = useState(false);
   const [cocofoliaText, setCocofoliaText] = useState<string>('');
 
@@ -123,7 +123,7 @@ export const CharacterDetail = () => {
   const openCocofoliaModal = () => {
     setCocofoliaSkillScope('changed');
     setCocofoliaDice('CCB');
-    setCocofoliaIncludeIcon(true);
+    setCocofoliaIncludeIcon(false);
     setCocofoliaText('');
     setIsCocofoliaModalOpen(true);
   };
@@ -1120,6 +1120,7 @@ export const CharacterDetail = () => {
               <div>
                 <h2 style={{ margin: 0 }}>ココフォリア出力</h2>
                 <div className="text-small text-muted">出力したJSONをコピーして、ココフォリアに貼り付けてください。</div>
+                <div className="text-small text-muted">キャラクターを公開している場合は、参照URLに共有リンクが付与されます。</div>
               </div>
               <button
                 className="btn btn-outline-danger"
@@ -1135,17 +1136,53 @@ export const CharacterDetail = () => {
             <div style={{ display: 'grid', gap: '0.75rem', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', marginBottom: '1rem' }}>
               <div>
                 <div className="text-small font-bold mb-xs">技能の出力範囲</div>
-                <select className="select w-full" value={cocofoliaSkillScope} onChange={(e) => setCocofoliaSkillScope(e.target.value as any)}>
-                  <option value="changed">変更された技能のみ</option>
-                  <option value="all">すべての技能</option>
-                </select>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <input
+                      type="radio"
+                      name="cocofolia-skill-scope"
+                      value="changed"
+                      checked={cocofoliaSkillScope === 'changed'}
+                      onChange={() => setCocofoliaSkillScope('changed')}
+                    />
+                    変更された技能のみ
+                  </label>
+                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <input
+                      type="radio"
+                      name="cocofolia-skill-scope"
+                      value="all"
+                      checked={cocofoliaSkillScope === 'all'}
+                      onChange={() => setCocofoliaSkillScope('all')}
+                    />
+                    すべての技能
+                  </label>
+                </div>
               </div>
               <div>
                 <div className="text-small font-bold mb-xs">ダイスコマンド形式</div>
-                <select className="select w-full" value={cocofoliaDice} onChange={(e) => setCocofoliaDice(e.target.value as any)}>
-                  <option value="CCB">CCB</option>
-                  <option value="CC">CC</option>
-                </select>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <input
+                      type="radio"
+                      name="cocofolia-dice"
+                      value="CCB"
+                      checked={cocofoliaDice === 'CCB'}
+                      onChange={() => setCocofoliaDice('CCB')}
+                    />
+                    CCB
+                  </label>
+                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <input
+                      type="radio"
+                      name="cocofolia-dice"
+                      value="CC"
+                      checked={cocofoliaDice === 'CC'}
+                      onChange={() => setCocofoliaDice('CC')}
+                    />
+                    CC
+                  </label>
+                </div>
               </div>
               <div>
                 <div className="text-small font-bold mb-xs">画像（iconUrl）</div>
