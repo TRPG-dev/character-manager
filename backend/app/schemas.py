@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 from uuid import UUID
 from datetime import datetime
 from typing import Optional, List, Dict, Any
+import enum
 from app.models import SystemEnum
 
 
@@ -91,4 +92,27 @@ class AutoRollAttributesRequest(BaseModel):
 class AutoRollAttributesResponse(BaseModel):
     attributes: Dict[str, int] = Field(..., description="能力値")
     derived: Dict[str, Any] = Field(..., description="派生値")
+
+
+class ExportSkillScope(str, enum.Enum):
+    changed = "changed"
+    all = "all"
+
+
+class ExportDiceStyle(str, enum.Enum):
+    CCB = "CCB"
+    CC = "CC"
+
+
+class CocofoliaExportMeta(BaseModel):
+    system: SystemEnum
+    skill_scope: ExportSkillScope
+    dice: ExportDiceStyle
+    include_icon: bool = True
+
+
+class CocofoliaExportResponse(BaseModel):
+    clipboard: Dict[str, Any]
+    clipboardText: str
+    meta: CocofoliaExportMeta
 
