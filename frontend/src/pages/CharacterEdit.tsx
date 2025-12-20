@@ -504,11 +504,12 @@ export const CharacterEdit = () => {
                     onClick={handleAddTag}
                     style={{
                       padding: '0.5rem 1rem',
-                      backgroundColor: 'var(--color-secondary)',
+                      backgroundColor: 'var(--color-success)',
                       color: 'var(--color-text-inverse)',
                       border: 'none',
                       borderRadius: '4px',
                       cursor: 'pointer',
+                      fontWeight: 'bold',
                     }}
                   >
                     <IconText icon={<FiPlus />}>追加</IconText>
@@ -615,11 +616,12 @@ export const CharacterEdit = () => {
                     onClick={handleAddTag}
                     style={{
                       padding: '0.5rem 1rem',
-                      backgroundColor: 'var(--color-secondary)',
+                      backgroundColor: 'var(--color-success)',
                       color: 'var(--color-text-inverse)',
                       border: 'none',
                       borderRadius: '4px',
                       cursor: 'pointer',
+                      fontWeight: 'bold',
                     }}
                   >
                     <IconText icon={<FiPlus />}>追加</IconText>

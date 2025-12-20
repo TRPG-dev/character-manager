@@ -82,12 +82,13 @@ export const BasicInfoForm = ({
               style={{
                 marginTop: '0.5rem',
                 padding: '0.25rem 0.5rem',
-                backgroundColor: '#6c757d',
-                color: '#fff',
+                backgroundColor: 'var(--color-success)',
+                color: 'var(--color-text-inverse)',
                 border: 'none',
                 borderRadius: '4px',
                 cursor: 'pointer',
                 fontSize: '0.875rem',
+                fontWeight: 'bold',
               }}
             >
               変更
@@ -180,11 +181,12 @@ export const BasicInfoForm = ({
             onClick={handleAddTag}
             style={{
               padding: '0.5rem 1rem',
-              backgroundColor: '#6c757d',
-              color: '#fff',
+              backgroundColor: 'var(--color-success)',
+              color: 'var(--color-text-inverse)',
               border: 'none',
               borderRadius: '4px',
               cursor: 'pointer',
+              fontWeight: 'bold',
             }}
           >
             追加
