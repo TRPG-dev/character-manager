@@ -87,28 +87,25 @@ export const Landing = () => {
             >
               <div>
                 <div className="tag tag-secondary mb-sm" style={{ backgroundColor: 'var(--color-primary-light)', border: '1px solid var(--color-border-light)' }}>
-                  キャラクターシート管理を一つに
+                作って、見返して、共有する
                 </div>
                 <h1 style={{ fontSize: 'clamp(1.6rem, 2.6vw, 2.4rem)', marginBottom: '0.75rem' }}>
-                  書いて、見返して、共有する。
-                  <br />
-                  TRPGの“いつもの作業”を楽に。
+                キャラシ管理を一つに
                 </h1>
                 <p className="text-muted" style={{ fontSize: '1rem', margin: 0 }}>
-                  クトゥルフ / シノビガミ / SW2.5 に対応。画像アップロードや共有リンク発行で、セッション準備と運用をスムーズにします。
+                  クトゥルフ / シノビガミ / SW2.5 に対応
+                  <br></br>
+                  COCOFOLIA連携や共有リンク発行で、セッション準備と運用をスムーズに
                 </p>
 
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginTop: '1.5rem' }}>
                   <button className="btn btn-primary btn-lg" onClick={login} type="button">
                     <IconText icon={<FiLogIn />}>ログインして始める</IconText>
                   </button>
-                  <a className="btn btn-secondary btn-lg" href="#share" style={{ display: 'inline-flex', alignItems: 'center' }}>
-                    <IconText icon={<FiShare2 />}>共有リンクを開く</IconText>
-                  </a>
                 </div>
 
                 <p className="text-xs text-muted mt-sm" style={{ marginBottom: 0 }}>
-                  ログインは Auth0 を利用します。公開（共有）するのはあなたが共有リンクを発行したキャラだけです。
+                  ログインは Auth0 を利用します。
                 </p>
               </div>
 
@@ -125,28 +122,28 @@ export const Landing = () => {
                     <span aria-hidden style={{ color: 'var(--color-primary)', marginTop: '0.15rem' }}><FiEdit3 /></span>
                     <div>
                       <div className="font-bold">キャラシ作成 / 編集</div>
-                      <div className="text-small text-muted">フォームで入力して、見やすいシート表示に。</div>
+                      <div className="text-small text-muted">フォームで入力し、シートとして表示</div>
+                    </div>
+                  </div>
+                  <div className="card" style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+                    <span aria-hidden style={{ color: 'var(--color-primary)', marginTop: '0.15rem' }}><FiImage /></span>
+                    <div>
+                      <div className="font-bold">キャラシ一覧 / 詳細</div>
+                      <div className="text-small text-muted">作成したキャラクターを一覧管理・詳細を確認</div>
                     </div>
                   </div>
                   <div className="card" style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
                     <span aria-hidden style={{ color: 'var(--color-primary)', marginTop: '0.15rem' }}><FiLayers /></span>
                     <div>
                       <div className="font-bold">システム別シート対応</div>
-                      <div className="text-small text-muted">クトゥルフ / シノビガミ / SW2.5。</div>
-                    </div>
-                  </div>
-                  <div className="card" style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
-                    <span aria-hidden style={{ color: 'var(--color-primary)', marginTop: '0.15rem' }}><FiImage /></span>
-                    <div>
-                      <div className="font-bold">画像アップロード</div>
-                      <div className="text-small text-muted">立ち絵や資料画像を紐付けて管理。</div>
+                      <div className="text-small text-muted">クトゥルフ / シノビガミ / SW2.5</div>
                     </div>
                   </div>
                   <div className="card" style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
                     <span aria-hidden style={{ color: 'var(--color-primary)', marginTop: '0.15rem' }}><FiShare2 /></span>
                     <div>
                       <div className="font-bold">共有リンク発行</div>
-                      <div className="text-small text-muted">GM/同卓に URL を渡すだけで閲覧できます。</div>
+                      <div className="text-small text-muted">GM/同卓に URL を渡すだけで閲覧が可能</div>
                     </div>
                   </div>
                 </div>
@@ -228,8 +225,6 @@ export const Landing = () => {
         <div className="container">
           <div className="text-xs text-muted" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center' }}>
             <span>© きゃらまね</span>
-            <span aria-hidden>・</span>
-            <a href="#share">共有リンクを開く</a>
           </div>
         </div>
       </footer>
