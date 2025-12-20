@@ -3,7 +3,7 @@ import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth, characters, share, images, dice
+from app.routers import auth, characters, share, images, dice, export
 from alembic.config import Config
 from alembic import command
 
@@ -57,6 +57,7 @@ app.include_router(characters.router)
 app.include_router(share.router)
 app.include_router(images.router)
 app.include_router(dice.router)
+app.include_router(export.router)
 
 
 @app.get("/")
