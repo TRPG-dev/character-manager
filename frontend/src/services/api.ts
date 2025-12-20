@@ -11,6 +11,15 @@ export interface User {
 
 export type SystemEnum = 'cthulhu' | 'shinobigami' | 'sw25' | 'satasupe';
 
+export type CharacterSort =
+  | 'name_asc'
+  | 'name_desc'
+  | 'created_asc'
+  | 'created_desc'
+  | 'updated_asc'
+  | 'updated_desc'
+  | 'system_asc';
+
 export interface Character {
   id: string;
   user_id: string;
@@ -85,6 +94,7 @@ export const getCharacters = async (
     query?: string;
     tags?: string[];
     system?: SystemEnum;
+    sort?: CharacterSort;
     page?: number;
     limit?: number;
   }
@@ -93,6 +103,7 @@ export const getCharacters = async (
   if (params?.query) queryParams.append('query', params.query);
   if (params?.tags) params.tags.forEach(tag => queryParams.append('tags', tag));
   if (params?.system) queryParams.append('system', params.system);
+  if (params?.sort) queryParams.append('sort', params.sort);
   if (params?.page) queryParams.append('page', params.page.toString());
   if (params?.limit) queryParams.append('limit', params.limit.toString());
 

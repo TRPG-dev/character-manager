@@ -2,6 +2,7 @@ import uuid
 import secrets
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import String, cast
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -67,6 +68,10 @@ async def list_characters(
     query: Optional[str] = Query(None, description="名前で検索"),
     tags: Optional[List[str]] = Query(None, description="タグでフィルタ"),
     system: Optional[SystemEnum] = Query(None, description="システムでフィルタ"),
+    sort: str = Query(
+        "updated_desc",
+        description="並び替え（name_asc|name_desc|created_asc|created_desc|updated_asc|updated_desc|system_asc）",
+    ),
     page: int = Query(1, ge=1, description="ページ番号"),
     limit: int = Query(20, ge=1, le=100, description="1ページあたりの件数"),
     current_user: User = Depends(get_current_user),
@@ -91,11 +96,28 @@ async def list_characters(
         for tag in tags:
             q = q.filter(Character.tags.op('@>')(f'{{{tag}}}'))
 
+    # 並び替え
+    # - system_asc は PostgreSQL enum の定義順ではなく文字列として昇順（cthulhu, ...）にする
+    order_by_map = {
+        "name_asc": [Character.name.asc(), Character.updated_at.desc(), Character.id.asc()],
+        "name_desc": [Character.name.desc(), Character.updated_at.desc(), Character.id.asc()],
+        "created_asc": [Character.created_at.asc(), Character.id.asc()],
+        "created_desc": [Character.created_at.desc(), Character.id.asc()],
+        "updated_asc": [Character.updated_at.asc(), Character.id.asc()],
+        "updated_desc": [Character.updated_at.desc(), Character.id.asc()],
+        "system_asc": [cast(Character.system, String).asc(), Character.name.asc(), Character.updated_at.desc(), Character.id.asc()],
+    }
+    if sort not in order_by_map:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid sort option: {sort}",
+        )
+
     # 総件数を取得
     total = q.count()
 
     # ページネーション
-    characters = q.order_by(Character.updated_at.desc()).offset(offset).limit(limit).all()
+    characters = q.order_by(*order_by_map[sort]).offset(offset).limit(limit).all()
 
     # 画像URLは、非公開バケットでも表示できるよう署名付きURLに差し替え（失敗時は元URL）
     items: List[CharacterResponse] = [_to_character_response(c) for c in characters]
