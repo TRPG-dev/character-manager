@@ -574,7 +574,7 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
       {/* 言語セクション */}
       <CollapsibleSection title="言語" defaultOpen={false}>
         <Sw25LanguagesSection
-          languages={sheetData.languages}
+          languages={sheetData.languages || []}
           race={sheetData.race || ''}
           classes={sheetData.classes}
           onAddLanguage={addLanguage}

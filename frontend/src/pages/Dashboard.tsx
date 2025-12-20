@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
 import { getCharacters } from '../services/api';
@@ -71,7 +71,7 @@ export const Dashboard = () => {
     setCurrentPage(1);
   };
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = (e: FormEvent) => {
     e.preventDefault();
     setAppliedSearchQuery(searchQuery);
     setCurrentPage(1);
@@ -89,8 +89,8 @@ export const Dashboard = () => {
           onClick={() => navigate('/characters/new')}
           style={{
             padding: '0.75rem 1.5rem',
-            backgroundColor: '#007bff',
-            color: '#fff',
+            backgroundColor: 'var(--color-primary)',
+            color: 'var(--color-text-inverse)',
             border: 'none',
             borderRadius: '4px',
             cursor: 'pointer',
@@ -102,7 +102,7 @@ export const Dashboard = () => {
       </div>
 
       {/* 検索・フィルター */}
-      <div style={{ marginBottom: '2rem', padding: '1.5rem', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
+      <div style={{ marginBottom: '2rem', padding: '1.5rem', backgroundColor: 'var(--color-surface-muted)', border: '1px solid var(--color-border)', borderRadius: '8px' }}>
         <form onSubmit={handleSearch}>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
             {/* 名前検索 */}
@@ -116,8 +116,10 @@ export const Dashboard = () => {
                 minWidth: '150px',
                 padding: '0.5rem',
                 fontSize: '0.875rem',
-                border: '1px solid #ddd',
+                border: '1px solid var(--color-border)',
                 borderRadius: '4px',
+                backgroundColor: 'var(--color-surface)',
+                color: 'var(--color-text)',
               }}
             />
             
@@ -126,8 +128,8 @@ export const Dashboard = () => {
               type="submit"
               style={{
                 padding: '0.5rem 1rem',
-                backgroundColor: '#28a745',
-                color: '#fff',
+                backgroundColor: 'var(--color-success)',
+                color: 'var(--color-text-inverse)',
                 border: 'none',
                 borderRadius: '4px',
                 cursor: 'pointer',
@@ -150,8 +152,10 @@ export const Dashboard = () => {
                 flex: '0 1 180px',
                 padding: '0.5rem',
                 fontSize: '0.875rem',
-                border: '1px solid #ddd',
+                border: '1px solid var(--color-border)',
                 borderRadius: '4px',
+                backgroundColor: 'var(--color-surface)',
+                color: 'var(--color-text)',
               }}
             >
               <option value="">すべてのシステム</option>
@@ -179,8 +183,10 @@ export const Dashboard = () => {
                   minWidth: '120px',
                   padding: '0.5rem',
                   fontSize: '0.875rem',
-                  border: '1px solid #ddd',
+                  border: '1px solid var(--color-border)',
                   borderRadius: '4px',
+                  backgroundColor: 'var(--color-surface)',
+                  color: 'var(--color-text)',
                 }}
               />
               <button
@@ -188,8 +194,8 @@ export const Dashboard = () => {
                 onClick={handleAddTag}
                 style={{
                   padding: '0.5rem 0.75rem',
-                  backgroundColor: '#6c757d',
-                  color: '#fff',
+                  backgroundColor: 'var(--color-secondary)',
+                  color: 'var(--color-text-inverse)',
                   border: 'none',
                   borderRadius: '4px',
                   cursor: 'pointer',
@@ -205,14 +211,14 @@ export const Dashboard = () => {
           {/* 選択されたタグの表示 */}
           {selectedTags.length > 0 && (
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '1rem' }}>
-              <span style={{ fontSize: '0.875rem', color: '#666', alignSelf: 'center' }}>タグ:</span>
+              <span style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', alignSelf: 'center' }}>タグ:</span>
               {selectedTags.map(tag => (
                 <span
                   key={tag}
                   style={{
                     padding: '0.25rem 0.5rem',
-                    backgroundColor: '#007bff',
-                    color: '#fff',
+                    backgroundColor: 'var(--color-primary)',
+                    color: 'var(--color-text-inverse)',
                     borderRadius: '4px',
                     fontSize: '0.875rem',
                     display: 'flex',
@@ -227,7 +233,7 @@ export const Dashboard = () => {
                     style={{
                       background: 'none',
                       border: 'none',
-                      color: '#fff',
+                      color: 'var(--color-text-inverse)',
                       cursor: 'pointer',
                       fontSize: '1rem',
                       padding: 0,
@@ -247,8 +253,8 @@ export const Dashboard = () => {
                 style={{
                   padding: '0.25rem 0.5rem',
                   backgroundColor: 'transparent',
-                  color: '#dc3545',
-                  border: '1px solid #dc3545',
+                  color: 'var(--color-danger)',
+                  border: '1px solid var(--color-danger)',
                   borderRadius: '4px',
                   cursor: 'pointer',
                   fontSize: '0.75rem',
@@ -263,14 +269,14 @@ export const Dashboard = () => {
 
       {/* キャラクター一覧 */}
       {characters.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '3rem', color: '#666' }}>
+        <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--color-text-muted)' }}>
           <p>キャラクターがありません。</p>
           <button
             onClick={() => navigate('/characters/new')}
             style={{
               padding: '0.75rem 1.5rem',
-              backgroundColor: '#007bff',
-              color: '#fff',
+              backgroundColor: 'var(--color-primary)',
+              color: 'var(--color-text-inverse)',
               border: 'none',
               borderRadius: '4px',
               cursor: 'pointer',
@@ -288,15 +294,16 @@ export const Dashboard = () => {
                 key={character.id}
                 onClick={() => navigate(`/characters/${character.id}`)}
                 style={{
-                  border: '1px solid #ddd',
+                  border: '1px solid var(--color-border)',
                   borderRadius: '8px',
                   padding: '1rem',
                   cursor: 'pointer',
                   transition: 'transform 0.2s, box-shadow 0.2s',
+                  backgroundColor: 'var(--color-surface)',
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-4px)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+                  e.currentTarget.style.boxShadow = 'var(--shadow-hover)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)';
@@ -317,7 +324,7 @@ export const Dashboard = () => {
                   />
                 )}
                 <h3 style={{ margin: '0 0 0.5rem 0' }}>{character.name}</h3>
-                <p style={{ margin: '0 0 0.5rem 0', color: '#666', fontSize: '0.875rem' }}>
+                <p style={{ margin: '0 0 0.5rem 0', color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>
                   {SYSTEM_NAMES[character.system]}
                 </p>
                 {character.tags.length > 0 && (
@@ -327,7 +334,7 @@ export const Dashboard = () => {
                         key={tag}
                         style={{
                           padding: '0.25rem 0.5rem',
-                          backgroundColor: '#e9ecef',
+                          backgroundColor: 'var(--color-surface-muted)',
                           borderRadius: '4px',
                           fontSize: '0.75rem',
                         }}
@@ -336,7 +343,7 @@ export const Dashboard = () => {
                       </span>
                     ))}
                     {character.tags.length > 3 && (
-                      <span style={{ fontSize: '0.75rem', color: '#666' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
                         +{character.tags.length - 3}
                       </span>
                     )}
@@ -354,8 +361,8 @@ export const Dashboard = () => {
                 disabled={currentPage === 1}
                 style={{
                   padding: '0.5rem 1rem',
-                  backgroundColor: currentPage === 1 ? '#ccc' : '#007bff',
-                  color: '#fff',
+                  backgroundColor: currentPage === 1 ? 'var(--color-disabled-bg)' : 'var(--color-primary)',
+                  color: currentPage === 1 ? 'var(--color-disabled-text)' : 'var(--color-text-inverse)',
                   border: 'none',
                   borderRadius: '4px',
                   cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
@@ -371,8 +378,8 @@ export const Dashboard = () => {
                 disabled={currentPage >= Math.ceil(total / 20)}
                 style={{
                   padding: '0.5rem 1rem',
-                  backgroundColor: currentPage >= Math.ceil(total / 20) ? '#ccc' : '#007bff',
-                  color: '#fff',
+                  backgroundColor: currentPage >= Math.ceil(total / 20) ? 'var(--color-disabled-bg)' : 'var(--color-primary)',
+                  color: currentPage >= Math.ceil(total / 20) ? 'var(--color-disabled-text)' : 'var(--color-text-inverse)',
                   border: 'none',
                   borderRadius: '4px',
                   cursor: currentPage >= Math.ceil(total / 20) ? 'not-allowed' : 'pointer',

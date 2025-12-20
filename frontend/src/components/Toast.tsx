@@ -23,10 +23,10 @@ export const Toast = ({ message, type, isVisible, onClose, duration = 3000 }: To
   if (!isVisible) return null;
 
   const backgroundColor =
-    type === 'success' ? '#28a745' :
-    type === 'error' ? '#dc3545' :
-    type === 'warning' ? '#ffc107' :
-    '#007bff';
+    type === 'success' ? 'var(--color-success)' :
+    type === 'error' ? 'var(--color-danger)' :
+    type === 'warning' ? 'var(--color-warning)' :
+    'var(--color-info)';
 
   return (
     <div
@@ -35,11 +35,11 @@ export const Toast = ({ message, type, isVisible, onClose, duration = 3000 }: To
         top: '2rem',
         right: '2rem',
         backgroundColor,
-        color: '#fff',
+        color: 'var(--color-text-inverse)',
         padding: '1rem 1.5rem',
         borderRadius: '8px',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-        zIndex: 2000,
+        boxShadow: 'var(--shadow-lg)',
+        zIndex: 'var(--z-toast)',
         minWidth: '250px',
         maxWidth: '400px',
         animation: 'slideIn 0.3s ease-out',
@@ -53,7 +53,7 @@ export const Toast = ({ message, type, isVisible, onClose, duration = 3000 }: To
           style={{
             background: 'none',
             border: 'none',
-            color: '#fff',
+            color: 'var(--color-text-inverse)',
             cursor: 'pointer',
             fontSize: '1.25rem',
             padding: 0,

@@ -76,7 +76,7 @@ export const SharedCharacter = () => {
                 key={tag}
                 style={{
                   padding: '0.25rem 0.5rem',
-                  backgroundColor: '#e9ecef',
+                  backgroundColor: 'var(--color-surface-muted)',
                   borderRadius: '4px',
                   fontSize: '0.875rem',
                 }}
@@ -92,7 +92,8 @@ export const SharedCharacter = () => {
         <h2>キャラクターシート</h2>
         <pre style={{
           padding: '1rem',
-          backgroundColor: '#f5f5f5',
+          backgroundColor: 'var(--color-surface-muted)',
+          border: '1px solid var(--color-border)',
           borderRadius: '4px',
           overflow: 'auto',
           whiteSpace: 'pre-wrap',

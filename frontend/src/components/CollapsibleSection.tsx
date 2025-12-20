@@ -1,4 +1,4 @@
-import { useState, ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 
 interface CollapsibleSectionProps {
   title: string;
@@ -12,9 +12,11 @@ export const CollapsibleSection = ({ title, children, defaultOpen = true }: Coll
   return (
     <div style={{
       marginBottom: '1.5rem',
-      border: '1px solid #dee2e6',
+      border: '1px solid var(--color-border)',
       borderRadius: '8px',
       overflow: 'hidden',
+      backgroundColor: 'var(--color-surface)',
+      boxShadow: 'var(--shadow-sm)',
     }}>
       <button
         type="button"
@@ -22,15 +24,16 @@ export const CollapsibleSection = ({ title, children, defaultOpen = true }: Coll
         style={{
           width: '100%',
           padding: '1rem',
-          backgroundColor: '#f8f9fa',
+          backgroundColor: 'var(--color-surface-muted)',
           border: 'none',
-          borderBottom: isOpen ? '1px solid #dee2e6' : 'none',
+          borderBottom: isOpen ? '1px solid var(--color-border)' : 'none',
           cursor: 'pointer',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           fontSize: '1.125rem',
           fontWeight: 'bold',
+          color: 'var(--color-text)',
         }}
       >
         <span>{title}</span>
