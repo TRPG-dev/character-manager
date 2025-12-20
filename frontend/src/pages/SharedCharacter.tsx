@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { FiShare2 } from 'react-icons/fi';
 import { getSharedCharacter } from '../services/api';
 import type { Character, SystemEnum } from '../services/api';
+import { LoadingSpinner } from '../components/LoadingSpinner';
+import { IconText } from '../components/IconText';
 
 const SYSTEM_NAMES: Record<SystemEnum, string> = {
   cthulhu: 'クトゥルフ神話TRPG',
@@ -33,7 +36,7 @@ export const SharedCharacter = () => {
   }, [token]);
 
   if (loading) {
-    return <div>読み込み中...</div>;
+    return <LoadingSpinner fullScreen message="キャラクターを読み込み中..." />;
   }
 
   if (!character) {
@@ -47,7 +50,12 @@ export const SharedCharacter = () => {
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem' }}>
-      <h1>{character.name}</h1>
+      <div>
+        <h1 style={{ margin: 0 }}>
+          <IconText icon={<FiShare2 />}>共有キャラクター</IconText>
+        </h1>
+        <div style={{ marginTop: '0.25rem', fontSize: '1.25rem', fontWeight: 'bold' }}>{character.name}</div>
+      </div>
 
       {character.profile_image_url && (
         <div style={{ marginBottom: '2rem' }}>

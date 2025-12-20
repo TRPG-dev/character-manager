@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { FiHome, FiLogOut, FiPlus } from 'react-icons/fi';
 import { useAuth } from '../auth/useAuth';
+import { IconText } from './IconText';
 
 interface LayoutProps {
   children: ReactNode;
@@ -31,10 +33,10 @@ export const Layout = ({ children }: LayoutProps) => {
         </Link>
         <nav style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <Link to="/dashboard" style={{ color: 'var(--color-text-inverse)', textDecoration: 'none' }}>
-            ダッシュボード
+            <IconText icon={<FiHome />}>マイページ</IconText>
           </Link>
           <Link to="/characters/new" style={{ color: 'var(--color-text-inverse)', textDecoration: 'none' }}>
-            新規作成
+            <IconText icon={<FiPlus />}>キャラクター作成</IconText>
           </Link>
           <button
             onClick={handleLogout}
@@ -47,7 +49,7 @@ export const Layout = ({ children }: LayoutProps) => {
               cursor: 'pointer',
             }}
           >
-            ログアウト
+            <IconText icon={<FiLogOut />}>ログアウト</IconText>
           </button>
         </nav>
       </header>

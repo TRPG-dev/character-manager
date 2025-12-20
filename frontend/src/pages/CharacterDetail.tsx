@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { FiArrowLeft, FiCopy, FiEdit, FiGlobe, FiLock, FiTrash2 } from 'react-icons/fi';
 import { useAuth } from '../auth/useAuth';
 import { getCharacter, deleteCharacter, publishCharacter } from '../services/api';
 import type { Character, SystemEnum } from '../services/api';
@@ -17,6 +18,7 @@ import { ImageModal } from '../components/ImageModal';
 import { useToast } from '../contexts/ToastContext';
 import { handleApiError, formatErrorMessage } from '../utils/errorHandler';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { IconText } from '../components/IconText';
 
 const SYSTEM_NAMES: Record<SystemEnum, string> = {
   cthulhu: 'クトゥルフ神話TRPG',
@@ -132,7 +134,7 @@ export const CharacterDetail = () => {
             cursor: 'pointer',
           }}
         >
-          ダッシュボードに戻る
+          <IconText icon={<FiArrowLeft />}>マイページに戻る</IconText>
         </button>
       </div>
     );
@@ -142,6 +144,23 @@ export const CharacterDetail = () => {
     <div style={{ width: '100%', margin: '0 auto', padding: '2rem' }}>
       {/* ヘッダーセクション */}
       <section style={{ marginBottom: '2rem' }}>
+        <div style={{ marginBottom: '1rem' }}>
+          <button
+            type="button"
+            onClick={() => navigate('/dashboard')}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: 'var(--color-secondary)',
+              color: 'var(--color-text-inverse)',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+            }}
+          >
+            <IconText icon={<FiArrowLeft />}>マイページに戻る</IconText>
+          </button>
+        </div>
         <div style={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
@@ -150,7 +169,10 @@ export const CharacterDetail = () => {
           gap: '1rem',
           marginBottom: '1.5rem'
         }}>
-          <h1 style={{ margin: 0, fontSize: '2rem', fontWeight: 'bold' }}>{character.name}</h1>
+          <div>
+            <h1 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 'bold' }}>キャラクター詳細</h1>
+            <div style={{ marginTop: '0.25rem', fontSize: '1.25rem', fontWeight: 'bold' }}>{character.name}</div>
+          </div>
           {isOwner && (
             <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
               <button
@@ -166,7 +188,7 @@ export const CharacterDetail = () => {
                   fontWeight: '500',
                 }}
               >
-                編集
+                <IconText icon={<FiEdit />}>編集</IconText>
               </button>
               <button
                 onClick={handleTogglePublish}
@@ -181,7 +203,11 @@ export const CharacterDetail = () => {
                   fontWeight: '500',
                 }}
               >
-                {character.is_public ? '非公開にする' : '公開する'}
+                {character.is_public ? (
+                  <IconText icon={<FiLock />}>非公開</IconText>
+                ) : (
+                  <IconText icon={<FiGlobe />}>公開</IconText>
+                )}
               </button>
               <button
                 onClick={handleDelete}
@@ -196,7 +222,7 @@ export const CharacterDetail = () => {
                   fontWeight: '500',
                 }}
               >
-                削除
+                <IconText icon={<FiTrash2 />}>削除</IconText>
               </button>
             </div>
           )}
@@ -236,7 +262,7 @@ export const CharacterDetail = () => {
                   whiteSpace: 'nowrap',
                 }}
               >
-                コピー
+                <IconText icon={<FiCopy />}>コピー</IconText>
               </button>
             </div>
           </div>

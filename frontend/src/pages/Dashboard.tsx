@@ -1,11 +1,13 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FiChevronLeft, FiChevronRight, FiFilter, FiPlus, FiSearch, FiXCircle } from 'react-icons/fi';
 import { useAuth } from '../auth/useAuth';
 import { getCharacters } from '../services/api';
 import type { Character, SystemEnum } from '../services/api';
 import { useToast } from '../contexts/ToastContext';
 import { handleApiError, formatErrorMessage } from '../utils/errorHandler';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { IconText } from '../components/IconText';
 
 const SYSTEM_NAMES: Record<SystemEnum, string> = {
   cthulhu: 'クトゥルフ神話TRPG',
@@ -84,7 +86,10 @@ export const Dashboard = () => {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <h1>キャラクター一覧</h1>
+        <div>
+          <h1 style={{ margin: 0 }}>マイページ</h1>
+          <div style={{ marginTop: '0.25rem', color: 'var(--color-text-muted)' }}>キャラクター一覧</div>
+        </div>
         <button
           onClick={() => navigate('/characters/new')}
           style={{
@@ -97,7 +102,7 @@ export const Dashboard = () => {
             fontSize: '1rem',
           }}
         >
-          + 新規作成
+          <IconText icon={<FiPlus />}>キャラクター作成</IconText>
         </button>
       </div>
 
@@ -138,7 +143,7 @@ export const Dashboard = () => {
                 whiteSpace: 'nowrap',
               }}
             >
-              検索
+              <IconText icon={<FiSearch />}>検索</IconText>
             </button>
 
             {/* システム選択 */}
@@ -203,7 +208,7 @@ export const Dashboard = () => {
                   whiteSpace: 'nowrap',
                 }}
               >
-                絞り込み
+                <IconText icon={<FiFilter />}>絞り込み</IconText>
               </button>
             </div>
           </div>
@@ -260,7 +265,7 @@ export const Dashboard = () => {
                   fontSize: '0.75rem',
                 }}
               >
-                すべてクリア
+                <IconText icon={<FiXCircle />}>クリア</IconText>
               </button>
             </div>
           )}
@@ -283,7 +288,7 @@ export const Dashboard = () => {
               marginTop: '1rem',
             }}
           >
-            最初のキャラクターを作成
+            <IconText icon={<FiPlus />}>最初のキャラクターを作成</IconText>
           </button>
         </div>
       ) : (
@@ -368,7 +373,7 @@ export const Dashboard = () => {
                   cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
                 }}
               >
-                前へ
+                <IconText icon={<FiChevronLeft />}>前へ</IconText>
               </button>
               <span style={{ display: 'flex', alignItems: 'center' }}>
                 ページ {currentPage} / {Math.ceil(total / 20)}
@@ -385,7 +390,7 @@ export const Dashboard = () => {
                   cursor: currentPage >= Math.ceil(total / 20) ? 'not-allowed' : 'pointer',
                 }}
               >
-                次へ
+                <IconText icon={<FiChevronRight />}>次へ</IconText>
               </button>
             </div>
           )}

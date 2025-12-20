@@ -1,5 +1,7 @@
 import { useState, useRef, type ChangeEvent, type FormEvent, type MouseEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FiArrowLeft, FiEye, FiPlus, FiSave } from 'react-icons/fi';
+import { FaDiceD20 } from 'react-icons/fa';
 import { useAuth } from '../auth/useAuth';
 import { createCharacter, updateCharacter, uploadCharacterImage } from '../services/api';
 import type { SystemEnum } from '../services/api';
@@ -18,6 +20,7 @@ import { CollapsibleSection } from '../components/CollapsibleSection';
 import { BasicInfoForm } from '../components/BasicInfoForm';
 import { useToast } from '../contexts/ToastContext';
 import { handleApiError, formatErrorMessage } from '../utils/errorHandler';
+import { IconText } from '../components/IconText';
 
 const SYSTEM_NAMES: Record<SystemEnum, string> = {
   cthulhu: 'クトゥルフ神話TRPG',
@@ -161,7 +164,7 @@ export const CharacterCreate = () => {
 
     try {
       await uploadCharacterImage(token, characterId, file, (percent) => setUploadProgress(percent));
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to upload image:', error);
       throw error;
     } finally {
@@ -213,14 +216,14 @@ export const CharacterCreate = () => {
         try {
           await uploadImageAfterCreate(character.id, selectedImage, token);
           showSuccess('画像のアップロードが完了しました');
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error('Failed to upload image:', error);
           showWarning('画像のアップロードに失敗しましたが、キャラクターは作成されました');
         }
       }
 
       showSuccess('キャラクターを作成しました。続けて編集できます。');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to create character:', error);
       const apiError = handleApiError(error);
       showError(formatErrorMessage(apiError));
@@ -232,7 +235,10 @@ export const CharacterCreate = () => {
   if (step === 'select') {
     return (
       <div>
-        <h1>システムを選択</h1>
+        <div>
+          <h1 style={{ margin: 0 }}>キャラクター作成</h1>
+          <div style={{ marginTop: '0.25rem', color: 'var(--color-text-muted)' }}>システムを選択</div>
+        </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1.5rem', marginTop: '2rem' }}>
           {Object.entries(SYSTEM_NAMES).map(([value, label]) => (
             <button
@@ -272,7 +278,7 @@ export const CharacterCreate = () => {
             cursor: 'pointer',
           }}
         >
-          キャンセル
+          <IconText icon={<FiArrowLeft />}>戻る</IconText>
         </button>
       </div>
     );
@@ -407,7 +413,7 @@ export const CharacterCreate = () => {
                     fontWeight: 'bold',
                   }}
                 >
-                  🎲 能力値初期値をダイスロール
+                  <IconText icon={<FaDiceD20 />}>能力値初期値をダイスロール</IconText>
                 </button>
               </div>
             )}
@@ -451,7 +457,7 @@ export const CharacterCreate = () => {
                   fontSize: '1rem',
                 }}
               >
-                {loading ? '作成中...' : '作成'}
+                {loading ? '作成中...' : <IconText icon={<FiPlus />}>作成</IconText>}
               </button>
               <button
                 type="button"
@@ -466,7 +472,7 @@ export const CharacterCreate = () => {
                   fontSize: '1rem',
                 }}
               >
-                キャンセル
+                <IconText icon={<FiArrowLeft />}>戻る</IconText>
               </button>
             </>
           ) : (
@@ -488,7 +494,7 @@ export const CharacterCreate = () => {
                     });
                     showSuccess('更新が完了しました');
                     navigate(`/characters/${createdCharacterId}`);
-                  } catch (error: any) {
+                  } catch (error: unknown) {
                     console.error('Failed to update character:', error);
                     const apiError = handleApiError(error);
                     showError(formatErrorMessage(apiError));
@@ -507,7 +513,7 @@ export const CharacterCreate = () => {
                   fontSize: '1rem',
                 }}
               >
-                {loading ? '保存中...' : '保存'}
+                {loading ? '保存中...' : <IconText icon={<FiSave />}>保存</IconText>}
               </button>
               <button
                 type="button"
@@ -522,7 +528,7 @@ export const CharacterCreate = () => {
                   fontSize: '1rem',
                 }}
               >
-                詳細を見る
+                <IconText icon={<FiEye />}>詳細を見る</IconText>
               </button>
             </>
           )}
