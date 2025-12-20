@@ -234,11 +234,8 @@ export const CharacterCreate = () => {
 
   if (step === 'select') {
     return (
-      <div>
-        <div>
-          <h1 style={{ margin: 0 }}>キャラクター作成</h1>
-          <div style={{ marginTop: '0.25rem', color: 'var(--color-text-muted)' }}>システムを選択</div>
-        </div>
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }}>
+        <h1 style={{ margin: 0 }}>キャラクター作成</h1>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1.5rem', marginTop: '2rem' }}>
           {Object.entries(SYSTEM_NAMES).map(([value, label]) => (
             <button
@@ -285,8 +282,8 @@ export const CharacterCreate = () => {
   }
 
   return (
-    <div>
-      <h1>キャラクター作成</h1>
+    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }}>
+      <h1 style={{ marginTop: 0 }}>キャラクター作成</h1>
       <form onSubmit={handleSubmit}>
         <CollapsibleSection title="基本情報" defaultOpen={true}>
           {selectedSystem === 'cthulhu' && sheetData && (

@@ -85,25 +85,8 @@ export const Dashboard = () => {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <div>
-          <h1 style={{ margin: 0 }}>マイページ</h1>
-          <div style={{ marginTop: '0.25rem', color: 'var(--color-text-muted)' }}>キャラクター一覧</div>
-        </div>
-        <button
-          onClick={() => navigate('/characters/new')}
-          style={{
-            padding: '0.75rem 1.5rem',
-            backgroundColor: 'var(--color-primary)',
-            color: 'var(--color-text-inverse)',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '1rem',
-          }}
-        >
-          <IconText icon={<FiPlus />}>キャラクター作成</IconText>
-        </button>
+      <div style={{ marginBottom: '2rem' }}>
+        <h1 style={{ margin: 0 }}>マイページ</h1>
       </div>
 
       {/* 検索・フィルター */}
@@ -273,28 +256,46 @@ export const Dashboard = () => {
       </div>
 
       {/* キャラクター一覧 */}
-      {characters.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--color-text-muted)' }}>
-          <p>キャラクターがありません。</p>
-          <button
+      <>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+          {/* 新規作成カード（一覧の先頭） */}
+          <div
             onClick={() => navigate('/characters/new')}
             style={{
-              padding: '0.75rem 1.5rem',
-              backgroundColor: 'var(--color-primary)',
-              color: 'var(--color-text-inverse)',
-              border: 'none',
-              borderRadius: '4px',
+              border: '2px dashed var(--color-border)',
+              borderRadius: '8px',
+              padding: '1.5rem',
               cursor: 'pointer',
-              marginTop: '1rem',
+              transition: 'transform 0.2s, box-shadow 0.2s, border-color 0.2s',
+              backgroundColor: 'var(--color-surface-muted)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minHeight: '260px',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-4px)';
+              e.currentTarget.style.boxShadow = 'var(--shadow-hover)';
+              e.currentTarget.style.borderColor = 'var(--color-primary)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.borderColor = 'var(--color-border)';
             }}
           >
-            <IconText icon={<FiPlus />}>最初のキャラクターを作成</IconText>
-          </button>
-        </div>
-      ) : (
-        <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
-            {characters.map((character) => (
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem', color: 'var(--color-primary)' }}>＋</div>
+              <div style={{ fontSize: '1rem', fontWeight: 'bold' }}>
+                <IconText icon={<FiPlus />}>キャラクター作成</IconText>
+              </div>
+              <div style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>
+                新しいキャラクターを作成します
+              </div>
+            </div>
+          </div>
+
+          {characters.map((character) => (
               <div
                 key={character.id}
                 onClick={() => navigate(`/characters/${character.id}`)}
@@ -355,47 +356,52 @@ export const Dashboard = () => {
                   </div>
                 )}
               </div>
-            ))}
-          </div>
+          ))}
+        </div>
 
-          {/* ページネーション */}
-          {total > 20 && (
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '2rem' }}>
-              <button
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                style={{
-                  padding: '0.5rem 1rem',
-                  backgroundColor: currentPage === 1 ? 'var(--color-disabled-bg)' : 'var(--color-primary)',
-                  color: currentPage === 1 ? 'var(--color-disabled-text)' : 'var(--color-text-inverse)',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-                }}
-              >
-                <IconText icon={<FiChevronLeft />}>前へ</IconText>
-              </button>
-              <span style={{ display: 'flex', alignItems: 'center' }}>
-                ページ {currentPage} / {Math.ceil(total / 20)}
-              </span>
-              <button
-                onClick={() => setCurrentPage(p => p + 1)}
-                disabled={currentPage >= Math.ceil(total / 20)}
-                style={{
-                  padding: '0.5rem 1rem',
-                  backgroundColor: currentPage >= Math.ceil(total / 20) ? 'var(--color-disabled-bg)' : 'var(--color-primary)',
-                  color: currentPage >= Math.ceil(total / 20) ? 'var(--color-disabled-text)' : 'var(--color-text-inverse)',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: currentPage >= Math.ceil(total / 20) ? 'not-allowed' : 'pointer',
-                }}
-              >
-                <IconText icon={<FiChevronRight />}>次へ</IconText>
-              </button>
-            </div>
-          )}
-        </>
-      )}
+        {characters.length === 0 && (
+          <div style={{ textAlign: 'center', marginTop: '1.5rem', color: 'var(--color-text-muted)' }}>
+            キャラクターがありません。
+          </div>
+        )}
+
+        {/* ページネーション */}
+        {total > 20 && (
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '2rem' }}>
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: currentPage === 1 ? 'var(--color-disabled-bg)' : 'var(--color-primary)',
+                color: currentPage === 1 ? 'var(--color-disabled-text)' : 'var(--color-text-inverse)',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+              }}
+            >
+              <IconText icon={<FiChevronLeft />}>前へ</IconText>
+            </button>
+            <span style={{ display: 'flex', alignItems: 'center' }}>
+              ページ {currentPage} / {Math.ceil(total / 20)}
+            </span>
+            <button
+              onClick={() => setCurrentPage(p => p + 1)}
+              disabled={currentPage >= Math.ceil(total / 20)}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: currentPage >= Math.ceil(total / 20) ? 'var(--color-disabled-bg)' : 'var(--color-primary)',
+                color: currentPage >= Math.ceil(total / 20) ? 'var(--color-disabled-text)' : 'var(--color-text-inverse)',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: currentPage >= Math.ceil(total / 20) ? 'not-allowed' : 'pointer',
+              }}
+            >
+              <IconText icon={<FiChevronRight />}>次へ</IconText>
+            </button>
+          </div>
+        )}
+      </>
     </div>
   );
 };

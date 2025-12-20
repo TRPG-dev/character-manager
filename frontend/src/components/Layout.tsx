@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FiHome, FiLogOut, FiPlus } from 'react-icons/fi';
+import { FiHome, FiLogOut } from 'react-icons/fi';
 import { useAuth } from '../auth/useAuth';
 import { IconText } from './IconText';
 
@@ -34,9 +34,6 @@ export const Layout = ({ children }: LayoutProps) => {
         <nav style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <Link to="/dashboard" style={{ color: 'var(--color-text-inverse)', textDecoration: 'none' }}>
             <IconText icon={<FiHome />}>マイページ</IconText>
-          </Link>
-          <Link to="/characters/new" style={{ color: 'var(--color-text-inverse)', textDecoration: 'none' }}>
-            <IconText icon={<FiPlus />}>キャラクター作成</IconText>
           </Link>
           <button
             onClick={handleLogout}
