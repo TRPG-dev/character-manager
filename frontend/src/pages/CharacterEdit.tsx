@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
-import { getCharacter, updateCharacter } from '../services/api';
+import { deleteCharacterImage, getCharacter, updateCharacter, uploadCharacterImage } from '../services/api';
 import type { Character, SystemEnum } from '../services/api';
 import { CthulhuSheetForm } from '../components/CthulhuSheetForm';
 import type { CthulhuSheetData } from '../types/cthulhu';
@@ -13,7 +13,6 @@ import { Sw25SheetForm } from '../components/Sw25SheetForm';
 import type { Sw25SheetData } from '../types/sw25';
 import { normalizeSheetData as normalizeSw25SheetData, rollAttributeInitialsByRace } from '../utils/sw25';
 import { CharacterSheetForm } from '../components/CharacterSheetForm';
-import { ImageUpload } from '../components/ImageUpload';
 import { DiceRoller } from '../components/DiceRoller';
 import { AutoRollAttributes } from '../components/AutoRollAttributes';
 import { CollapsibleSection } from '../components/CollapsibleSection';
@@ -43,6 +42,9 @@ export const CharacterEdit = () => {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [pendingImageAction, setPendingImageAction] = useState<'none' | 'upload' | 'delete'>('none');
   const [sheetData, setSheetData] = useState<string>('');
   const [cthulhuSheetData, setCthulhuSheetData] = useState<CthulhuSheetData | null>(null);
   const [shinobigamiSheetData, setShinobigamiSheetData] = useState<ShinobigamiSheetData | null>(null);
@@ -66,6 +68,9 @@ export const CharacterEdit = () => {
           setName(char.name);
           setTags(char.tags);
           setProfileImageUrl(char.profile_image_url || null);
+          setImagePreview(char.profile_image_url || null);
+          setSelectedImage(null);
+          setPendingImageAction('none');
           setSheetData(JSON.stringify(char.sheet_data, null, 2));
           // システムに応じてシートデータを正規化
           if (char.system === 'cthulhu') {
@@ -129,6 +134,44 @@ export const CharacterEdit = () => {
     setTags(tags.filter(t => t !== tag));
   };
 
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+  const ALLOWED_MIME_TYPES = ['image/png', 'image/jpeg', 'image/jpg'];
+
+  const validateImageFile = (file: File): string | null => {
+    if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+      return 'PNGまたはJPEG形式の画像を選択してください';
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      return 'ファイルサイズは5MB以下にしてください';
+    }
+    return null;
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const error = validateImageFile(file);
+    if (error) {
+      showError(error);
+      return;
+    }
+
+    setSelectedImage(file);
+    setPendingImageAction('upload');
+
+    const reader = new FileReader();
+    reader.onloadend = () => setImagePreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const handleImageRemove = () => {
+    // ここでは「削除予定」にするだけ（GCS操作は保存ボタン押下時）
+    setSelectedImage(null);
+    setPendingImageAction('delete');
+    setImagePreview(null);
+  };
+
   const handleSubmitClick = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateName(name)) {
@@ -190,16 +233,33 @@ export const CharacterEdit = () => {
           }
         }
 
+        // NOTE: 画像は専用エンドポイントでのみ更新/削除する。
+        // get/create/update は署名付きURLを返すため、それを profile_image_url として保存してしまう事故を避ける。
         await updateCharacter(token, id, {
           name: name.trim(),
           tags,
-          profile_image_url: profileImageUrl,
           sheet_data: parsedSheetData,
         });
+
+        // 画像の変更は「保存」タイミングで実行
+        if (pendingImageAction === 'delete') {
+          await deleteCharacterImage(token, id);
+          setProfileImageUrl(null);
+          setImagePreview(null);
+          setSelectedImage(null);
+          setPendingImageAction('none');
+        } else if (pendingImageAction === 'upload' && selectedImage) {
+          const { public_url } = await uploadCharacterImage(token, id, selectedImage);
+          setProfileImageUrl(public_url);
+          setImagePreview(public_url);
+          setSelectedImage(null);
+          setPendingImageAction('none');
+        }
+
         showSuccess('更新が完了しました');
         setTimeout(() => {
           navigate(`/characters/${id}`);
-        }, 1000);
+        }, 500);
       }
     } catch (error: any) {
       console.error('Failed to update character:', error);
@@ -241,26 +301,110 @@ export const CharacterEdit = () => {
       <h1 style={{ marginBottom: '2rem' }}>キャラクター編集</h1>
       <form onSubmit={handleSubmitClick}>
         <CollapsibleSection title="基本情報" defaultOpen={true}>
+          {/* 画像は保存ボタン押下時に反映 */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+              プロフィール画像（保存ボタン押下時に反映）
+            </label>
+            {imagePreview && (
+              <div style={{ marginBottom: '0.75rem', position: 'relative', display: 'inline-block' }}>
+                <img
+                  src={imagePreview}
+                  alt="プレビュー"
+                  style={{
+                    maxWidth: '300px',
+                    maxHeight: '300px',
+                    borderRadius: '8px',
+                    border: '1px solid #ddd',
+                    display: 'block',
+                  }}
+                />
+                {!saving && (
+                  <button
+                    type="button"
+                    onClick={handleImageRemove}
+                    style={{
+                      position: 'absolute',
+                      top: '0.5rem',
+                      right: '0.5rem',
+                      padding: '0.25rem 0.5rem',
+                      backgroundColor: 'rgba(220, 53, 69, 0.9)',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                    }}
+                  >
+                    削除（保存で反映）
+                  </button>
+                )}
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/jpg"
+                onChange={handleImageSelect}
+                disabled={saving}
+                style={{
+                  padding: '0.5rem',
+                  fontSize: '0.875rem',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                }}
+              />
+              {!imagePreview && profileImageUrl && !saving && (
+                <button
+                  type="button"
+                  onClick={handleImageRemove}
+                  style={{
+                    padding: '0.5rem 0.75rem',
+                    backgroundColor: '#dc3545',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                  }}
+                >
+                  削除（保存で反映）
+                </button>
+              )}
+            </div>
+            {pendingImageAction !== 'none' && (
+              <div style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#6c757d' }}>
+                {pendingImageAction === 'upload'
+                  ? '画像の変更が保留中です（保存でアップロード）。'
+                  : '画像の削除が保留中です（保存で削除）。'}
+              </div>
+            )}
+          </div>
+
           {character.system === 'cthulhu' && cthulhuSheetData ? (
-            <BasicInfoForm
-              data={cthulhuSheetData}
-              onChange={(data) => setCthulhuSheetData(data)}
-              system={character.system}
-              name={name}
-              onNameChange={setName}
-              tags={tags}
-              onTagsChange={setTags}
-            />
+            <>
+              <BasicInfoForm
+                data={cthulhuSheetData}
+                onChange={(data) => setCthulhuSheetData(data)}
+                system={character.system}
+                name={name}
+                onNameChange={setName}
+                tags={tags}
+                onTagsChange={setTags}
+              />
+            </>
           ) : character.system === 'shinobigami' && shinobigamiSheetData ? (
-            <BasicInfoForm
-              data={shinobigamiSheetData}
-              onChange={(data) => setShinobigamiSheetData(data)}
-              system={character.system}
-              name={name}
-              onNameChange={setName}
-              tags={tags}
-              onTagsChange={setTags}
-            />
+            <>
+              <BasicInfoForm
+                data={shinobigamiSheetData}
+                onChange={(data) => setShinobigamiSheetData(data)}
+                system={character.system}
+                name={name}
+                onNameChange={setName}
+                tags={tags}
+                onTagsChange={setTags}
+              />
+            </>
           ) : character.system === 'sw25' && sw25SheetData ? (
             <>
               <div style={{ marginBottom: '1.5rem' }}>
@@ -297,23 +441,6 @@ export const CharacterEdit = () => {
                   </div>
                 )}
               </div>
-
-              {id && accessToken && (
-                <div style={{ marginBottom: '1.5rem' }}>
-                  <ImageUpload
-                    characterId={id}
-                    accessToken={accessToken}
-                    currentImageUrl={profileImageUrl}
-                    onUploadSuccess={(imageUrl) => {
-                      setProfileImageUrl(imageUrl);
-                      showSuccess('画像のアップロードが完了しました');
-                    }}
-                    onError={(error) => {
-                      showError(`エラー: ${error}`);
-                    }}
-                  />
-                </div>
-              )}
 
               <div style={{ marginBottom: '1.5rem' }}>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
@@ -425,23 +552,6 @@ export const CharacterEdit = () => {
                   </div>
                 )}
               </div>
-
-              {id && accessToken && (
-                <div style={{ marginBottom: '1.5rem' }}>
-                  <ImageUpload
-                    characterId={id}
-                    accessToken={accessToken}
-                    currentImageUrl={profileImageUrl}
-                    onUploadSuccess={(imageUrl) => {
-                      setProfileImageUrl(imageUrl);
-                      showSuccess('画像のアップロードが完了しました');
-                    }}
-                    onError={(error) => {
-                      showError(`エラー: ${error}`);
-                    }}
-                  />
-                </div>
-              )}
 
               <div style={{ marginBottom: '1.5rem' }}>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>

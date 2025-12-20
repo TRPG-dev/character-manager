@@ -20,8 +20,27 @@ from app.schemas import (
 from app.templates import generate_template
 from app.validators import validate_cthulhu_skill_points
 from app.services.dice import generate_cthulhu_attributes
+from app.services.gcs import maybe_sign_read_url
 
 router = APIRouter(prefix="/api/characters", tags=["characters"])
+
+def _to_character_response(c: Character) -> CharacterResponse:
+    """Character → APIレスポンス（画像URLは署名付きに差し替え）"""
+    return CharacterResponse.model_validate(
+        {
+            "id": c.id,
+            "user_id": c.user_id,
+            "system": c.system,
+            "name": c.name,
+            "tags": c.tags,
+            "profile_image_url": maybe_sign_read_url(c.profile_image_url),
+            "sheet_data": c.sheet_data,
+            "is_public": c.is_public,
+            "share_token": c.share_token,
+            "created_at": c.created_at,
+            "updated_at": c.updated_at,
+        }
+    )
 
 
 def create_audit_log(
@@ -78,8 +97,11 @@ async def list_characters(
     # ページネーション
     characters = q.order_by(Character.updated_at.desc()).offset(offset).limit(limit).all()
 
+    # 画像URLは、非公開バケットでも表示できるよう署名付きURLに差し替え（失敗時は元URL）
+    items: List[CharacterResponse] = [_to_character_response(c) for c in characters]
+
     return CharacterListResponse(
-        items=characters,
+        items=items,
         total=total,
         page=page,
         limit=limit,
@@ -120,7 +142,8 @@ async def create_character(
     # 監査ログ
     create_audit_log(db, current_user.id, character.id, ActionEnum.create)
 
-    return character
+    # APIの画像URL返却形式を統一（署名付きURL）
+    return _to_character_response(character)
 
 
 @router.get("/{character_id}", response_model=CharacterResponse)
@@ -145,7 +168,8 @@ async def get_character(
             detail="Access denied",
         )
 
-    return character
+    # 画像URLは、非公開バケットでも表示できるよう署名付きURLに差し替え
+    return _to_character_response(character)
 
 
 @router.put("/{character_id}", response_model=CharacterResponse)
@@ -189,7 +213,8 @@ async def update_character(
     # 監査ログ
     create_audit_log(db, current_user.id, character.id, ActionEnum.update)
 
-    return character
+    # APIの画像URL返却形式を統一（署名付きURL）
+    return _to_character_response(character)
 
 
 @router.delete("/{character_id}", status_code=status.HTTP_204_NO_CONTENT)

@@ -2,6 +2,9 @@
 .env
 .env.local
 
+# GCP service account key (never commit)
+backend/gcp-service-account.json
+
 # メモ用フォルダ
 docs/
 

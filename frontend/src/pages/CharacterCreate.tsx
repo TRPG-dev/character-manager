@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
-import { createCharacter, getImageUploadUrl, updateCharacter } from '../services/api';
+import { createCharacter, uploadCharacterImage } from '../services/api';
 import type { SystemEnum } from '../services/api';
 import { CthulhuSheetForm } from '../components/CthulhuSheetForm';
 import type { CthulhuSheetData } from '../types/cthulhu';
@@ -160,65 +160,9 @@ export const CharacterCreate = () => {
     setUploadProgress(0);
 
     try {
-      // 1. 署名付きURLを取得
-      const { upload_url, public_url } = await getImageUploadUrl(token, characterId, file.type);
-      
-      console.log('Upload URL received:', upload_url);
-      console.log('Public URL:', public_url);
-      console.log('File type:', file.type);
-      console.log('File size:', file.size);
-
-      // 2. 署名付きURLにPUTリクエストで画像をアップロード
-      const xhr = new XMLHttpRequest();
-
-      return new Promise<void>((resolve, reject) => {
-        xhr.upload.addEventListener('progress', (e) => {
-          if (e.lengthComputable) {
-            const percentComplete = (e.loaded / e.total) * 100;
-            setUploadProgress(percentComplete);
-          }
-        });
-
-        xhr.addEventListener('load', async () => {
-          console.log('XHR load event - Status:', xhr.status);
-          console.log('Response:', xhr.responseText);
-          if (xhr.status === 200 || xhr.status === 204) {
-            try {
-              // 3. キャラクターのprofile_image_urlを更新
-              await updateCharacter(token, characterId, {
-                profile_image_url: public_url,
-              });
-              resolve();
-            } catch (error: any) {
-              console.error('Failed to update character:', error);
-              reject(error);
-            }
-          } else {
-            const errorMsg = `アップロードに失敗しました (ステータス: ${xhr.status}, レスポンス: ${xhr.responseText || 'なし'})`;
-            console.error(errorMsg);
-            reject(new Error(errorMsg));
-          }
-        });
-
-        xhr.addEventListener('error', (e) => {
-          console.error('XHR error:', e);
-          console.error('Upload URL:', upload_url);
-          console.error('File type:', file.type);
-          console.error('File size:', file.size);
-          reject(new Error(`アップロード中にエラーが発生しました。URL: ${upload_url}`));
-        });
-
-        xhr.addEventListener('timeout', () => {
-          reject(new Error('アップロードがタイムアウトしました'));
-        });
-
-        xhr.open('PUT', upload_url);
-        xhr.setRequestHeader('Content-Type', file.type);
-        xhr.timeout = 30000; // 30秒のタイムアウト
-        xhr.send(file);
-      });
+      await uploadCharacterImage(token, characterId, file, (percent) => setUploadProgress(percent));
     } catch (error: any) {
-      console.error('Failed to get upload URL:', error);
+      console.error('Failed to upload image:', error);
       throw error;
     } finally {
       setUploadingImage(false);

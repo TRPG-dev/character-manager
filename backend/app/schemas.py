@@ -71,6 +71,10 @@ class ImageUploadUrlResponse(BaseModel):
     expires_at: datetime
 
 
+class ImageUploadResponse(BaseModel):
+    public_url: str
+
+
 class DiceRollRequest(BaseModel):
     formula: str = Field(..., description="ダイス式（例: 3d6）")
 

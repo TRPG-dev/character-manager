@@ -1,4 +1,5 @@
 import axios from 'axios';
+import type { AxiosProgressEvent } from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
@@ -63,6 +64,10 @@ export interface ImageUploadUrlResponse {
   upload_url: string;
   public_url: string;
   expires_at: string;
+}
+
+export interface ImageUploadResponse {
+  public_url: string;
 }
 
 export const getUser = async (accessToken: string): Promise<User> => {
@@ -200,6 +205,46 @@ export const getImageUploadUrl = async (
     }
   );
   return response.data;
+};
+
+export const uploadCharacterImage = async (
+  accessToken: string,
+  characterId: string,
+  file: File,
+  onUploadProgress?: (percent: number) => void
+): Promise<ImageUploadResponse> => {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await axios.post<ImageUploadResponse>(
+    `${API_BASE_URL}/api/characters/${characterId}/image`,
+    formData,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        // Content-Typeはaxiosがmultipart boundary付きで自動設定するため指定しない
+      },
+      onUploadProgress: (evt: AxiosProgressEvent) => {
+        if (!onUploadProgress) return;
+        const total = evt.total ?? 0;
+        if (total > 0) {
+          onUploadProgress((evt.loaded / total) * 100);
+        }
+      },
+    }
+  );
+  return response.data;
+};
+
+export const deleteCharacterImage = async (
+  accessToken: string,
+  characterId: string
+): Promise<void> => {
+  await axios.delete(`${API_BASE_URL}/api/characters/${characterId}/image`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
 };
 
 export interface DiceRollRequest {

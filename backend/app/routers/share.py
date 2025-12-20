@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Character
 from app.schemas import CharacterResponse
+from app.services.gcs import maybe_sign_read_url
 
 router = APIRouter(prefix="/api/share", tags=["share"])
 
@@ -28,7 +29,22 @@ async def get_shared_character(
             detail="Character not found or not public",
         )
 
-    return character
+    # 公開閲覧でも画像は表示できるよう、GCS URL は署名付きURLに差し替え
+    return CharacterResponse.model_validate(
+        {
+            "id": character.id,
+            "user_id": character.user_id,
+            "system": character.system,
+            "name": character.name,
+            "tags": character.tags,
+            "profile_image_url": maybe_sign_read_url(character.profile_image_url),
+            "sheet_data": character.sheet_data,
+            "is_public": character.is_public,
+            "share_token": character.share_token,
+            "created_at": character.created_at,
+            "updated_at": character.updated_at,
+        }
+    )
 
 
 
