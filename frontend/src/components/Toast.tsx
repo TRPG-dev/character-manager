@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { FiAlertTriangle, FiCheckCircle, FiInfo, FiX, FiXCircle } from 'react-icons/fi';
 
 export type ToastType = 'success' | 'error' | 'info' | 'warning';
 
@@ -28,6 +29,12 @@ export const Toast = ({ message, type, isVisible, onClose, duration = 3000 }: To
     type === 'warning' ? 'var(--color-warning)' :
     'var(--color-info)';
 
+  const icon =
+    type === 'success' ? <FiCheckCircle /> :
+    type === 'error' ? <FiXCircle /> :
+    type === 'warning' ? <FiAlertTriangle /> :
+    <FiInfo />;
+
   return (
     <div
       style={{
@@ -46,10 +53,14 @@ export const Toast = ({ message, type, isVisible, onClose, duration = 3000 }: To
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
-        <span>{message}</span>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span aria-hidden style={{ display: 'inline-flex' }}>{icon}</span>
+          <span>{message}</span>
+        </span>
         <button
           type="button"
           onClick={onClose}
+          aria-label="閉じる"
           style={{
             background: 'none',
             border: 'none',
@@ -60,7 +71,9 @@ export const Toast = ({ message, type, isVisible, onClose, duration = 3000 }: To
             lineHeight: 1,
           }}
         >
-          ×
+          <span aria-hidden>
+            <FiX />
+          </span>
         </button>
       </div>
       <style>{`

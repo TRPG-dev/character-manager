@@ -1,5 +1,7 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { FiArrowLeft, FiPlus, FiSave, FiTrash2 } from 'react-icons/fi';
+import { FaDiceD20 } from 'react-icons/fa';
 import { useAuth } from '../auth/useAuth';
 import { deleteCharacterImage, getCharacter, updateCharacter, uploadCharacterImage } from '../services/api';
 import type { Character, SystemEnum } from '../services/api';
@@ -21,6 +23,7 @@ import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useToast } from '../contexts/ToastContext';
 import { handleApiError, formatErrorMessage } from '../utils/errorHandler';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { IconText } from '../components/IconText';
 
 const SYSTEM_NAMES: Record<SystemEnum, string> = {
   cthulhu: 'クトゥルフ神話TRPG',
@@ -223,7 +226,7 @@ export const CharacterEdit = () => {
           // フォールバック: JSONテキストエリアから取得
           try {
             parsedSheetData = JSON.parse(sheetData);
-          } catch (error) {
+          } catch {
             showError('シートデータが正しいJSON形式ではありません');
             setSaving(false);
             return;
@@ -258,7 +261,7 @@ export const CharacterEdit = () => {
           navigate(`/characters/${id}`);
         }, 500);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to update character:', error);
       const apiError = handleApiError(error);
       showError(formatErrorMessage(apiError));
@@ -287,7 +290,7 @@ export const CharacterEdit = () => {
             cursor: 'pointer',
           }}
         >
-          ダッシュボードに戻る
+          <IconText icon={<FiArrowLeft />}>マイページに戻る</IconText>
         </button>
       </div>
     );
@@ -333,7 +336,7 @@ export const CharacterEdit = () => {
                       fontSize: '0.875rem',
                     }}
                   >
-                    削除（保存で反映）
+                    <IconText icon={<FiTrash2 />}>削除（保存で反映）</IconText>
                   </button>
                 )}
               </div>
@@ -365,7 +368,7 @@ export const CharacterEdit = () => {
                     fontSize: '0.875rem',
                   }}
                 >
-                  削除（保存で反映）
+                  <IconText icon={<FiTrash2 />}>削除（保存で反映）</IconText>
                 </button>
               )}
             </div>
@@ -470,7 +473,7 @@ export const CharacterEdit = () => {
                           fontSize: '1rem',
                         }}
                       >
-                        ×
+                        <span aria-hidden>×</span>
                       </button>
                     </span>
                   ))}
@@ -501,14 +504,15 @@ export const CharacterEdit = () => {
                     onClick={handleAddTag}
                     style={{
                       padding: '0.5rem 1rem',
-                      backgroundColor: 'var(--color-secondary)',
+                      backgroundColor: 'var(--color-success)',
                       color: 'var(--color-text-inverse)',
                       border: 'none',
                       borderRadius: '4px',
                       cursor: 'pointer',
+                      fontWeight: 'bold',
                     }}
                   >
-                    追加
+                    <IconText icon={<FiPlus />}>追加</IconText>
                   </button>
                 </div>
               </div>
@@ -581,7 +585,7 @@ export const CharacterEdit = () => {
                           fontSize: '1rem',
                         }}
                       >
-                        ×
+                        <span aria-hidden>×</span>
                       </button>
                     </span>
                   ))}
@@ -612,14 +616,15 @@ export const CharacterEdit = () => {
                     onClick={handleAddTag}
                     style={{
                       padding: '0.5rem 1rem',
-                      backgroundColor: 'var(--color-secondary)',
+                      backgroundColor: 'var(--color-success)',
                       color: 'var(--color-text-inverse)',
                       border: 'none',
                       borderRadius: '4px',
                       cursor: 'pointer',
+                      fontWeight: 'bold',
                     }}
                   >
-                    追加
+                    <IconText icon={<FiPlus />}>追加</IconText>
                   </button>
                 </div>
               </div>
@@ -690,7 +695,7 @@ export const CharacterEdit = () => {
                     fontWeight: 'bold',
                   }}
                 >
-                  🎲 能力値初期値をダイスロール
+                  <IconText icon={<FaDiceD20 />}>能力値初期値をダイスロール</IconText>
                 </button>
               </div>
             )}
@@ -755,7 +760,7 @@ export const CharacterEdit = () => {
               fontSize: '1rem',
             }}
           >
-            {saving ? '保存中...' : '保存'}
+            {saving ? '保存中...' : <IconText icon={<FiSave />}>保存</IconText>}
           </button>
           <button
             type="button"
@@ -770,7 +775,7 @@ export const CharacterEdit = () => {
               fontSize: '1rem',
             }}
           >
-            キャンセル
+            <IconText icon={<FiArrowLeft />}>詳細に戻る</IconText>
           </button>
         </div>
       </form>
@@ -780,7 +785,7 @@ export const CharacterEdit = () => {
         title="保存の確認"
         message="変更内容を保存しますか？"
         confirmText="保存"
-        cancelText="キャンセル"
+        cancelText="閉じる"
         onConfirm={handleConfirmSave}
         onCancel={() => setShowConfirmDialog(false)}
       />
