@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FiChevronLeft, FiChevronRight, FiFilter, FiPlus, FiSearch, FiXCircle } from 'react-icons/fi';
 import { useAuth } from '../auth/useAuth';
 import { getCharacters } from '../services/api';
-import type { Character, SystemEnum } from '../services/api';
+import type { Character, CharacterSort, SystemEnum } from '../services/api';
 import { useToast } from '../contexts/ToastContext';
 import { handleApiError, formatErrorMessage } from '../utils/errorHandler';
 import { LoadingSpinner } from '../components/LoadingSpinner';
@@ -16,6 +16,16 @@ const SYSTEM_NAMES: Record<SystemEnum, string> = {
   satasupe: 'サタスペ',
 };
 
+const SORT_OPTIONS: { value: CharacterSort; label: string }[] = [
+  { value: 'updated_desc', label: '更新日（新しい順）' },
+  { value: 'updated_asc', label: '更新日（古い順）' },
+  { value: 'created_desc', label: '作成日（新しい順）' },
+  { value: 'created_asc', label: '作成日（古い順）' },
+  { value: 'name_asc', label: '名前（昇順）' },
+  { value: 'name_desc', label: '名前（降順）' },
+  { value: 'system_asc', label: 'システム（昇順）' },
+];
+
 export const Dashboard = () => {
   const { isAuthenticated, getAccessToken } = useAuth();
   const navigate = useNavigate();
@@ -26,6 +36,7 @@ export const Dashboard = () => {
   const [appliedSearchQuery, setAppliedSearchQuery] = useState('');
   const [selectedSystem, setSelectedSystem] = useState<SystemEnum | ''>('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [sort, setSort] = useState<CharacterSort>('updated_desc');
   const [currentPage, setCurrentPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [tagInput, setTagInput] = useState('');
@@ -41,6 +52,7 @@ export const Dashboard = () => {
           query: appliedSearchQuery || undefined,
           system: selectedSystem || undefined,
           tags: selectedTags.length > 0 ? selectedTags : undefined,
+          sort,
           page: currentPage,
           limit: 20,
         });
@@ -58,7 +70,7 @@ export const Dashboard = () => {
 
   useEffect(() => {
     fetchCharacters();
-  }, [isAuthenticated, appliedSearchQuery, selectedSystem, selectedTags, currentPage]);
+  }, [isAuthenticated, appliedSearchQuery, selectedSystem, selectedTags, sort, currentPage]);
 
   const handleAddTag = () => {
     if (tagInput.trim() && !selectedTags.includes(tagInput.trim())) {
@@ -149,6 +161,31 @@ export const Dashboard = () => {
               <option value="">すべてのシステム</option>
               {Object.entries(SYSTEM_NAMES).map(([value, label]) => (
                 <option key={value} value={value}>{label}</option>
+              ))}
+            </select>
+
+            {/* 並び替え */}
+            <select
+              value={sort}
+              onChange={(e) => {
+                setSort(e.target.value as CharacterSort);
+                setCurrentPage(1);
+              }}
+              style={{
+                flex: '0 1 200px',
+                padding: '0.5rem',
+                fontSize: '0.875rem',
+                border: '1px solid var(--color-border)',
+                borderRadius: '4px',
+                backgroundColor: 'var(--color-surface)',
+                color: 'var(--color-text)',
+              }}
+              aria-label="並び替え"
+            >
+              {SORT_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
               ))}
             </select>
 
@@ -253,6 +290,11 @@ export const Dashboard = () => {
             </div>
           )}
         </form>
+
+        {/* 現在の並び替え状態 */}
+        <div style={{ marginTop: '0.75rem', fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>
+          並び替え: <strong style={{ color: 'var(--color-text)' }}>{SORT_OPTIONS.find(o => o.value === sort)?.label ?? sort}</strong>
+        </div>
       </div>
 
       {/* キャラクター一覧 */}
