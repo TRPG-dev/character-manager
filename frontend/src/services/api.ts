@@ -318,6 +318,49 @@ export const autoRollAttributes = async (
   return response.data;
 };
 
+export type ExportSkillScope = 'changed' | 'all';
+export type ExportDiceStyle = 'CCB' | 'CC';
+
+export interface CocofoliaExportResponse {
+  clipboard: Record<string, any>;
+  clipboardText: string;
+  meta: {
+    system: SystemEnum;
+    skill_scope: ExportSkillScope;
+    dice: ExportDiceStyle;
+    include_icon: boolean;
+  };
+}
+
+export const exportCocofolia = async (
+  accessToken: string,
+  characterId: string,
+  params: {
+    system: SystemEnum;
+    skill_scope: ExportSkillScope;
+    dice: ExportDiceStyle;
+    include_icon?: boolean;
+  }
+): Promise<CocofoliaExportResponse> => {
+  const queryParams = new URLSearchParams();
+  queryParams.append('system', params.system);
+  queryParams.append('skill_scope', params.skill_scope);
+  queryParams.append('dice', params.dice);
+  if (params.include_icon !== undefined) {
+    queryParams.append('include_icon', String(params.include_icon));
+  }
+
+  const response = await axios.get<CocofoliaExportResponse>(
+    `${API_BASE_URL}/api/characters/${characterId}/export/cocofolia?${queryParams.toString()}`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+  return response.data;
+};
+
 export default axios.create({
   baseURL: API_BASE_URL,
 });

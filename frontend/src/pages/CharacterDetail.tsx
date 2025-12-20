@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FiArrowLeft, FiCopy, FiEdit, FiGlobe, FiLock, FiTrash2 } from 'react-icons/fi';
+import { FiArrowLeft, FiCopy, FiEdit, FiGlobe, FiLock, FiShare2, FiTrash2, FiX } from 'react-icons/fi';
 import { useAuth } from '../auth/useAuth';
-import { getCharacter, deleteCharacter, publishCharacter } from '../services/api';
+import { getCharacter, deleteCharacter, publishCharacter, exportCocofolia } from '../services/api';
 import type { Character, SystemEnum } from '../services/api';
 import { CthulhuSheetView } from '../components/CthulhuSheetView';
 import type { CthulhuSheetData } from '../types/cthulhu';
@@ -37,6 +37,12 @@ export const CharacterDetail = () => {
   const [isOwner, setIsOwner] = useState(false);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
+  const [isCocofoliaModalOpen, setIsCocofoliaModalOpen] = useState(false);
+  const [cocofoliaSkillScope, setCocofoliaSkillScope] = useState<'changed' | 'all'>('changed');
+  const [cocofoliaDice, setCocofoliaDice] = useState<'CCB' | 'CC'>('CCB');
+  const [cocofoliaIncludeIcon, setCocofoliaIncludeIcon] = useState(true);
+  const [cocofoliaLoading, setCocofoliaLoading] = useState(false);
+  const [cocofoliaText, setCocofoliaText] = useState<string>('');
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -111,6 +117,38 @@ export const CharacterDetail = () => {
       const shareUrl = `${window.location.origin}/share/${character.share_token}`;
       navigator.clipboard.writeText(shareUrl);
       showSuccess('共有リンクをコピーしました');
+    }
+  };
+
+  const openCocofoliaModal = () => {
+    setCocofoliaSkillScope('changed');
+    setCocofoliaDice('CCB');
+    setCocofoliaIncludeIcon(true);
+    setCocofoliaText('');
+    setIsCocofoliaModalOpen(true);
+  };
+
+  const handleCocofoliaExport = async () => {
+    if (!id || !character) return;
+    setCocofoliaLoading(true);
+    try {
+      const token = await getAccessToken();
+      if (!token) return;
+      const res = await exportCocofolia(token, id, {
+        system: character.system,
+        skill_scope: cocofoliaSkillScope,
+        dice: cocofoliaDice,
+        include_icon: cocofoliaIncludeIcon,
+      });
+      setCocofoliaText(res.clipboardText);
+      await navigator.clipboard.writeText(res.clipboardText);
+      showSuccess('ココフォリア用データをコピーしました');
+    } catch (error) {
+      console.error('Failed to export cocofolia:', error);
+      const apiError = handleApiError(error);
+      showError(formatErrorMessage(apiError));
+    } finally {
+      setCocofoliaLoading(false);
     }
   };
 
@@ -190,6 +228,23 @@ export const CharacterDetail = () => {
               >
                 <IconText icon={<FiEdit />}>編集</IconText>
               </button>
+              {character.system === 'cthulhu' && (
+                <button
+                  onClick={openCocofoliaModal}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    backgroundColor: 'var(--color-secondary)',
+                    color: 'var(--color-text-inverse)',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                  }}
+                >
+                  <IconText icon={<FiShare2 />}>ココフォリア出力</IconText>
+                </button>
+              )}
               <button
                 onClick={handleTogglePublish}
                 style={{
@@ -1032,6 +1087,109 @@ export const CharacterDetail = () => {
             </section>
           )}
         </>
+      )}
+
+      {isCocofoliaModalOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.45)',
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem',
+          }}
+          onClick={() => setIsCocofoliaModalOpen(false)}
+        >
+          <div
+            className="card"
+            style={{
+              width: 'min(900px, 100%)',
+              maxHeight: 'min(85vh, 820px)',
+              overflow: 'auto',
+              padding: '1rem',
+              backgroundColor: 'var(--color-surface)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', marginBottom: '1rem' }}>
+              <div>
+                <h2 style={{ margin: 0 }}>ココフォリア出力</h2>
+                <div className="text-small text-muted">出力したJSONをコピーして、ココフォリアに貼り付けてください。</div>
+              </div>
+              <button
+                className="btn btn-outline-danger"
+                type="button"
+                onClick={() => setIsCocofoliaModalOpen(false)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
+              >
+                <FiX aria-hidden />
+                閉じる
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gap: '0.75rem', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', marginBottom: '1rem' }}>
+              <div>
+                <div className="text-small font-bold mb-xs">技能の出力範囲</div>
+                <select className="select w-full" value={cocofoliaSkillScope} onChange={(e) => setCocofoliaSkillScope(e.target.value as any)}>
+                  <option value="changed">変更された技能のみ</option>
+                  <option value="all">すべての技能</option>
+                </select>
+              </div>
+              <div>
+                <div className="text-small font-bold mb-xs">ダイスコマンド形式</div>
+                <select className="select w-full" value={cocofoliaDice} onChange={(e) => setCocofoliaDice(e.target.value as any)}>
+                  <option value="CCB">CCB</option>
+                  <option value="CC">CC</option>
+                </select>
+              </div>
+              <div>
+                <div className="text-small font-bold mb-xs">画像（iconUrl）</div>
+                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <input
+                    type="checkbox"
+                    checked={cocofoliaIncludeIcon}
+                    onChange={(e) => setCocofoliaIncludeIcon(e.target.checked)}
+                  />
+                  含める
+                </label>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+              <button className="btn btn-primary" type="button" onClick={handleCocofoliaExport} disabled={cocofoliaLoading}>
+                {cocofoliaLoading ? '生成中...' : '生成してコピー'}
+              </button>
+              <button
+                className="btn btn-secondary"
+                type="button"
+                onClick={async () => {
+                  if (!cocofoliaText) return;
+                  await navigator.clipboard.writeText(cocofoliaText);
+                  showSuccess('コピーしました');
+                }}
+                disabled={!cocofoliaText}
+              >
+                もう一度コピー
+              </button>
+            </div>
+
+            <div>
+              <div className="text-small text-muted mb-sm">プレビュー（コピー対象）</div>
+              <textarea
+                className="textarea"
+                readOnly
+                value={cocofoliaText}
+                placeholder="「生成してコピー」を押すと、ここにJSONが表示されます。"
+                style={{ minHeight: 220, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\", \"Courier New\", monospace' }}
+              />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
