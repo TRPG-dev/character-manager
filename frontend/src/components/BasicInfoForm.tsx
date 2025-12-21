@@ -6,7 +6,9 @@ import type { SystemEnum } from '../services/api';
 import { SW25_RACES, getAvailableBirthsByRaceFromMapping, getBaseAbilitiesByRaceBirth } from '../data/sw25';
 
 const SYSTEM_NAMES: Record<SystemEnum, string> = {
-  cthulhu: 'クトゥルフ神話TRPG',
+  cthulhu: 'クトゥルフ神話TRPG（旧）',
+  cthulhu6: 'クトゥルフ神話TRPG 第6版',
+  cthulhu7: 'クトゥルフ神話TRPG 第7版',
   shinobigami: 'シノビガミ',
   sw25: 'ソードワールド2.5',
   satasupe: 'サタスペ',
@@ -286,7 +288,7 @@ export const BasicInfoForm = ({
           キャラクターシート基本情報
         </h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
-          {system === 'cthulhu' && 'occupation' in data && (
+          {(system === 'cthulhu' || system === 'cthulhu6' || system === 'cthulhu7') && 'occupation' in data && (
             <>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>

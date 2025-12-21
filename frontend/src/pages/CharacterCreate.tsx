@@ -23,11 +23,15 @@ import { handleApiError, formatErrorMessage } from '../utils/errorHandler';
 import { IconText } from '../components/IconText';
 
 const SYSTEM_NAMES: Record<SystemEnum, string> = {
-  cthulhu: 'クトゥルフ神話TRPG',
+  cthulhu: 'クトゥルフ神話TRPG（旧）',
+  cthulhu6: 'クトゥルフ神話TRPG 第6版',
+  cthulhu7: 'クトゥルフ神話TRPG 第7版',
   shinobigami: 'シノビガミ',
   sw25: 'ソードワールド2.5',
   satasupe: 'サタスペ',
 };
+
+const CREATE_SYSTEMS: SystemEnum[] = ['cthulhu6', 'cthulhu7', 'shinobigami', 'sw25', 'satasupe'];
 
 export const CharacterCreate = () => {
   const { getAccessToken } = useAuth();
@@ -50,7 +54,7 @@ export const CharacterCreate = () => {
     setSelectedSystem(system);
     setStep('form');
     // システムに応じて初期シートデータを設定
-    if (system === 'cthulhu') {
+    if (system === 'cthulhu' || system === 'cthulhu6' || system === 'cthulhu7') {
       setSheetData(normalizeCthulhuSheetData({
         attributes: {
           STR: 0,
@@ -177,7 +181,7 @@ export const CharacterCreate = () => {
     if (!selectedSystem || !name.trim()) return;
 
     // クトゥルフの場合、ポイント上限チェック
-    if (selectedSystem === 'cthulhu' && sheetData && 'customSkills' in sheetData) {
+    if ((selectedSystem === 'cthulhu' || selectedSystem === 'cthulhu6' || selectedSystem === 'cthulhu7') && sheetData && 'customSkills' in sheetData) {
       const { calculateTotalJobPoints, calculateTotalInterestPoints } = await import('../data/cthulhuSkills');
       const { getJobPointsLimit, getInterestPointsLimit } = await import('../utils/cthulhu');
       
@@ -206,7 +210,7 @@ export const CharacterCreate = () => {
         system: selectedSystem,
         name: name.trim(),
         tags,
-        sheet_data: (selectedSystem === 'cthulhu' || selectedSystem === 'shinobigami' || selectedSystem === 'sw25') && sheetData ? sheetData : undefined,
+        sheet_data: (selectedSystem === 'cthulhu' || selectedSystem === 'cthulhu6' || selectedSystem === 'cthulhu7' || selectedSystem === 'shinobigami' || selectedSystem === 'sw25') && sheetData ? sheetData : undefined,
       });
       
       setCreatedCharacterId(character.id);
@@ -237,7 +241,7 @@ export const CharacterCreate = () => {
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }}>
         <h1 style={{ margin: 0 }}>キャラクター作成</h1>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1.5rem', marginTop: '2rem' }}>
-          {Object.entries(SYSTEM_NAMES).map(([value, label]) => (
+          {CREATE_SYSTEMS.map((value) => (
             <button
               key={value}
               onClick={() => handleSystemSelect(value as SystemEnum)}
@@ -259,7 +263,7 @@ export const CharacterCreate = () => {
                 e.currentTarget.style.backgroundColor = 'var(--color-surface)';
               }}
             >
-              {label}
+              {SYSTEM_NAMES[value]}
             </button>
           ))}
         </div>
@@ -286,7 +290,7 @@ export const CharacterCreate = () => {
       <h1 style={{ marginTop: 0 }}>キャラクター作成</h1>
       <form onSubmit={handleSubmit}>
         <CollapsibleSection title="基本情報" defaultOpen={true}>
-          {selectedSystem === 'cthulhu' && sheetData && (
+          {(selectedSystem === 'cthulhu' || selectedSystem === 'cthulhu6' || selectedSystem === 'cthulhu7') && sheetData && (
             <BasicInfoForm
               data={sheetData as CthulhuSheetData}
               onChange={(data) => setSheetData(data)}
@@ -349,11 +353,11 @@ export const CharacterCreate = () => {
           <CollapsibleSection title="ツール" defaultOpen={false}>
             <DiceRoller initialFormula="3d6" />
 
-            {selectedSystem === 'cthulhu' && (
+            {(selectedSystem === 'cthulhu' || selectedSystem === 'cthulhu6' || selectedSystem === 'cthulhu7') && (
               <div style={{ marginTop: '1rem' }}>
                 <AutoRollAttributes
                   characterId={createdCharacterId || undefined}
-                  system={selectedSystem}
+                  system={selectedSystem as any}
                   onApply={(attributes, derived) => {
                     if (sheetData && 'attributes' in sheetData) {
                       const cthulhuData = sheetData as CthulhuSheetData;
@@ -418,7 +422,7 @@ export const CharacterCreate = () => {
         )}
 
         <CollapsibleSection title="キャラクターシート" defaultOpen={true}>
-          {selectedSystem === 'cthulhu' && sheetData && (
+          {(selectedSystem === 'cthulhu' || selectedSystem === 'cthulhu6' || selectedSystem === 'cthulhu7') && sheetData && (
             <CthulhuSheetForm
               data={sheetData as CthulhuSheetData}
               onChange={(data) => setSheetData(data)}
@@ -487,7 +491,7 @@ export const CharacterCreate = () => {
                       return;
                     }
                     await updateCharacter(token, createdCharacterId, {
-                      sheet_data: (selectedSystem === 'cthulhu' || selectedSystem === 'shinobigami' || selectedSystem === 'sw25') && sheetData ? sheetData : undefined,
+                      sheet_data: (selectedSystem === 'cthulhu' || selectedSystem === 'cthulhu6' || selectedSystem === 'cthulhu7' || selectedSystem === 'shinobigami' || selectedSystem === 'sw25') && sheetData ? sheetData : undefined,
                     });
                     showSuccess('更新が完了しました');
                     navigate(`/characters/${createdCharacterId}`);

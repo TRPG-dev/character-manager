@@ -21,7 +21,9 @@ import { LoadingSpinner } from '../components/LoadingSpinner';
 import { IconText } from '../components/IconText';
 
 const SYSTEM_NAMES: Record<SystemEnum, string> = {
-  cthulhu: 'クトゥルフ神話TRPG',
+  cthulhu: 'クトゥルフ神話TRPG（旧）',
+  cthulhu6: 'クトゥルフ神話TRPG 第6版',
+  cthulhu7: 'クトゥルフ神話TRPG 第7版',
   shinobigami: 'シノビガミ',
   sw25: 'ソードワールド2.5',
   satasupe: 'サタスペ',
@@ -228,7 +230,7 @@ export const CharacterDetail = () => {
               >
                 <IconText icon={<FiEdit />}>編集</IconText>
               </button>
-              {character.system === 'cthulhu' && (
+              {(character.system === 'cthulhu' || character.system === 'cthulhu6' || character.system === 'cthulhu7') && (
                 <button
                   onClick={openCocofoliaModal}
                   style={{
@@ -325,7 +327,7 @@ export const CharacterDetail = () => {
       </section>
 
       {/* クトゥルフの場合のみ2カラムレイアウト */}
-      {character.system === 'cthulhu' ? (
+      {(character.system === 'cthulhu' || character.system === 'cthulhu6' || character.system === 'cthulhu7') ? (
         <>
           {/* 2カラムレイアウト（PC画面のみ） */}
           <div style={{

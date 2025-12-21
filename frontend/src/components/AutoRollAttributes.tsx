@@ -4,7 +4,7 @@ import { autoRollAttributes } from '../services/api';
 import { generateCthulhuAttributes } from '../utils/cthulhu';
 import type { CthulhuAttributes, CthulhuDerived } from '../types/cthulhu';
 
-type SystemEnum = 'cthulhu' | 'shinobigami' | 'sw25' | 'satasupe';
+type SystemEnum = 'cthulhu' | 'cthulhu6' | 'cthulhu7' | 'shinobigami' | 'sw25' | 'satasupe';
 
 interface AutoRollAttributesResponse {
   attributes: {
@@ -47,9 +47,11 @@ export const AutoRollAttributes = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const isCthulhuSystem = system === 'cthulhu' || system === 'cthulhu6' || system === 'cthulhu7';
+
   const handleRoll = async () => {
-    if (system !== 'cthulhu') {
-      setError('能力値自動生成は現在クトゥルフ神話TRPGのみ対応しています');
+    if (!isCthulhuSystem) {
+      setError('能力値自動生成は現在クトゥルフ神話TRPG（第6版/第7版）のみ対応しています');
       return;
     }
 
@@ -96,14 +98,14 @@ export const AutoRollAttributes = ({
         <button
           type="button"
           onClick={handleRoll}
-          disabled={loading || system !== 'cthulhu'}
+          disabled={loading || !isCthulhuSystem}
           style={{
             padding: '0.5rem 1rem',
-            backgroundColor: loading || system !== 'cthulhu' ? '#ccc' : '#28a745',
+            backgroundColor: loading || !isCthulhuSystem ? '#ccc' : '#28a745',
             color: '#fff',
             border: 'none',
             borderRadius: '4px',
-            cursor: loading || system !== 'cthulhu' ? 'not-allowed' : 'pointer',
+            cursor: loading || !isCthulhuSystem ? 'not-allowed' : 'pointer',
             fontSize: '0.875rem',
             whiteSpace: 'nowrap',
           }}
@@ -112,9 +114,9 @@ export const AutoRollAttributes = ({
         </button>
       </div>
 
-      {system !== 'cthulhu' && (
+      {!isCthulhuSystem && (
         <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.5rem' }}>
-          能力値自動生成は現在クトゥルフ神話TRPGのみ対応しています
+          能力値自動生成は現在クトゥルフ神話TRPG（第6版/第7版）のみ対応しています
         </div>
       )}
 

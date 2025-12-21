@@ -9,7 +9,7 @@ export interface User {
   display_name: string;
 }
 
-export type SystemEnum = 'cthulhu' | 'shinobigami' | 'sw25' | 'satasupe';
+export type SystemEnum = 'cthulhu' | 'cthulhu6' | 'cthulhu7' | 'shinobigami' | 'sw25' | 'satasupe';
 
 export type CharacterSort =
   | 'name_asc'

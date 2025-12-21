@@ -25,6 +25,8 @@ from app.services.gcs import maybe_sign_read_url
 
 router = APIRouter(prefix="/api/characters", tags=["characters"])
 
+_CTHULHU_SYSTEMS = {SystemEnum.cthulhu, SystemEnum.cthulhu6, SystemEnum.cthulhu7}
+
 def _to_character_response(c: Character) -> CharacterResponse:
     """Character → APIレスポンス（画像URLは署名付きに差し替え）"""
     return CharacterResponse.model_validate(
@@ -144,7 +146,7 @@ async def create_character(
     sheet_data = character_data.sheet_data if character_data.sheet_data else template
 
     # クトゥルフの場合、技能ポイント上限チェック
-    if character_data.system == SystemEnum.cthulhu:
+    if character_data.system in _CTHULHU_SYSTEMS:
         validate_cthulhu_skill_points(sheet_data)
 
     character = Character(
@@ -225,7 +227,7 @@ async def update_character(
         character.profile_image_url = character_data.profile_image_url
     if character_data.sheet_data is not None:
         # クトゥルフの場合、技能ポイント上限チェック
-        if character.system == SystemEnum.cthulhu:
+        if character.system in _CTHULHU_SYSTEMS:
             validate_cthulhu_skill_points(character_data.sheet_data)
         character.sheet_data = character_data.sheet_data
 
@@ -338,10 +340,10 @@ async def auto_roll_attributes(
         )
 
     # システムチェック（現在はクトゥルフのみ対応）
-    if request.system != SystemEnum.cthulhu:
+    if request.system not in _CTHULHU_SYSTEMS:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"能力値自動生成は現在 {SystemEnum.cthulhu.value} のみ対応しています",
+            detail=f"能力値自動生成は現在 {SystemEnum.cthulhu.value}/{SystemEnum.cthulhu6.value}/{SystemEnum.cthulhu7.value} のみ対応しています",
         )
 
     # キャラクターのシステムと一致するかチェック
