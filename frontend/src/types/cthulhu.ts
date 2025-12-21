@@ -26,6 +26,7 @@ export interface CthulhuDerived {
 
 export interface CthulhuSkill {
   name: string;
+  specialty?: string; // 技能の補足（例: 芸術(絵画)、他の言語(英語)）
   baseValue: number; // 初期値
   jobPoints?: number; // 職業P
   interestPoints?: number; // 興味P

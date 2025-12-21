@@ -45,6 +45,11 @@ export const CthulhuSheetView = ({ data, showOnlyAttributes, showOnlySkills, sho
     });
   };
 
+  const formatSkillName = (skill: CthulhuSkill): string => {
+    const suffix = (skill.specialty || '').trim();
+    return suffix ? `${skill.name}(${suffix})` : skill.name;
+  };
+
   const filteredSkills = filterUnchangedSkills(sheetData.skills);
   const filteredCombatSkills = sheetData.combatSkills 
     ? filterUnchangedSkills(sheetData.combatSkills)
@@ -178,7 +183,7 @@ export const CthulhuSheetView = ({ data, showOnlyAttributes, showOnlySkills, sho
                 {/* デフォルト技能（初期値と変わっているもののみ） */}
                 {filteredSkills.map((skill, index) => (
                   <div key={`default-${index}`}>
-                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>{skill.name}</div>
+                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>{formatSkillName(skill)}</div>
                     <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>
                       {skill.total ?? skill.baseValue ?? 0}
                     </div>
@@ -187,7 +192,7 @@ export const CthulhuSheetView = ({ data, showOnlyAttributes, showOnlySkills, sho
                 {/* 追加技能 */}
                 {(sheetData.customSkills || []).map((skill, index) => (
                   <div key={`custom-${index}`}>
-                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>{skill.name || '(無名)'}</div>
+                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>{skill.name ? formatSkillName(skill) : '(無名)'}</div>
                     <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>
                       {skill.total ?? skill.baseValue ?? 0}
                     </div>
@@ -207,7 +212,7 @@ export const CthulhuSheetView = ({ data, showOnlyAttributes, showOnlySkills, sho
               }}>
                 {filteredCombatSkills.map((skill, index) => (
                   <div key={`combat-${index}`}>
-                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>{skill.name}</div>
+                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>{formatSkillName(skill)}</div>
                     <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>
                       {skill.total ?? skill.baseValue ?? 0}
                     </div>
@@ -239,7 +244,7 @@ export const CthulhuSheetView = ({ data, showOnlyAttributes, showOnlySkills, sho
                 {/* デフォルト技能（初期値と変わっているもののみ） */}
                 {filteredSkills.map((skill, index) => (
                   <div key={`default-${index}`}>
-                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>{skill.name}</div>
+                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>{formatSkillName(skill)}</div>
                     <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>
                       {skill.total ?? skill.baseValue ?? 0}
                     </div>
@@ -248,7 +253,7 @@ export const CthulhuSheetView = ({ data, showOnlyAttributes, showOnlySkills, sho
                 {/* 追加技能 */}
                 {(sheetData.customSkills || []).map((skill, index) => (
                   <div key={`custom-${index}`}>
-                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>{skill.name || '(無名)'}</div>
+                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>{skill.name ? formatSkillName(skill) : '(無名)'}</div>
                     <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>
                       {skill.total ?? skill.baseValue ?? 0}
                     </div>
@@ -268,7 +273,7 @@ export const CthulhuSheetView = ({ data, showOnlyAttributes, showOnlySkills, sho
               }}>
                 {filteredCombatSkills.map((skill, index) => (
                   <div key={`combat-${index}`}>
-                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>{skill.name}</div>
+                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>{formatSkillName(skill)}</div>
                     <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>
                       {skill.total ?? skill.baseValue ?? 0}
                     </div>
@@ -755,7 +760,7 @@ export const CthulhuSheetView = ({ data, showOnlyAttributes, showOnlySkills, sho
                 {/* デフォルト技能（初期値と変わっているもののみ） */}
                 {filteredSkills.map((skill, index) => (
                   <div key={`default-${index}`}>
-                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>{skill.name}</div>
+                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>{formatSkillName(skill)}</div>
                     <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>
                       {skill.total ?? skill.baseValue ?? 0}
                     </div>
@@ -764,7 +769,7 @@ export const CthulhuSheetView = ({ data, showOnlyAttributes, showOnlySkills, sho
                 {/* 追加技能 */}
                 {(sheetData.customSkills || []).map((skill, index) => (
                   <div key={`custom-${index}`}>
-                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>{skill.name || '(無名)'}</div>
+                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>{skill.name ? formatSkillName(skill) : '(無名)'}</div>
                     <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>
                       {skill.total ?? skill.baseValue ?? 0}
                     </div>
@@ -784,7 +789,7 @@ export const CthulhuSheetView = ({ data, showOnlyAttributes, showOnlySkills, sho
               }}>
                 {filteredCombatSkills.map((skill, index) => (
                   <div key={`combat-${index}`}>
-                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>{skill.name}</div>
+                    <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>{formatSkillName(skill)}</div>
                     <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>
                       {skill.total ?? skill.baseValue ?? 0}
                     </div>

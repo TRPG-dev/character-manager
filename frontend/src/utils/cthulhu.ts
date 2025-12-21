@@ -164,6 +164,7 @@ export function normalizeSheetData(data: any): CthulhuSheetData {
       const isCustom = s.isCustom === true || !combatSkillNames.has(s.name);
       const skill: CthulhuSkill = {
         name: s.name,
+        specialty: s.specialty ?? '',
         baseValue: s.baseValue ?? s.base_value ?? 0,
         jobPoints: s.jobPoints ?? s.job_points ?? 0,
         interestPoints: s.interestPoints ?? s.interest_points ?? 0,
@@ -200,6 +201,7 @@ export function normalizeSheetData(data: any): CthulhuSheetData {
     customSkills = data.customSkills.map((s: any) => {
       const skill: CthulhuSkill = {
         name: s.name,
+        specialty: s.specialty ?? '',
         baseValue: s.baseValue ?? s.base_value ?? 0,
         jobPoints: s.jobPoints ?? s.job_points ?? 0,
         interestPoints: s.interestPoints ?? s.interest_points ?? 0,
@@ -227,6 +229,7 @@ export function normalizeSheetData(data: any): CthulhuSheetData {
         // 既存データから値を取得
         const skill: CthulhuSkill = {
           ...defaultSkill,
+          specialty: existing.specialty ?? '',
           baseValue, // 動的計算値を使用
           jobPoints: existing.jobPoints ?? existing.job_points ?? 0,
           interestPoints: existing.interestPoints ?? existing.interest_points ?? 0,
@@ -251,6 +254,7 @@ export function normalizeSheetData(data: any): CthulhuSheetData {
         .map((s: any) => {
           const skill: CthulhuSkill = {
             name: s.name,
+            specialty: s.specialty ?? '',
             baseValue: s.baseValue ?? s.base_value ?? s.value ?? 0,
             jobPoints: s.jobPoints ?? s.job_points ?? 0,
             interestPoints: s.interestPoints ?? s.interest_points ?? 0,

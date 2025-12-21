@@ -82,6 +82,19 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
     onChange(updated);
   };
 
+  const updateDefaultSkillSpecialty = (index: number, specialty: string) => {
+    const newSkills = [...sheetData.skills];
+    newSkills[index] = {
+      ...newSkills[index],
+      specialty,
+    };
+    newSkills[index].total = calculateSkillTotal(newSkills[index]);
+    const updated = { ...sheetData, skills: newSkills };
+    setIsInternalUpdate(true);
+    setSheetData(updated);
+    onChange(updated);
+  };
+
   const updateCustomSkill = (index: number, field: 'jobPoints' | 'interestPoints' | 'growth' | 'other', value: number) => {
     const newCustomSkills = [...(sheetData.customSkills || [])];
     newCustomSkills[index] = {
@@ -418,7 +431,26 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
               {/* デフォルト技能 */}
               {sheetData.skills.map((skill, index) => (
                 <tr key={`default-${index}`} style={{ borderBottom: '1px solid #dee2e6' }}>
-                  <td style={{ padding: '0.75rem', fontWeight: 'bold' }}>{skill.name}</td>
+                  <td style={{ padding: '0.75rem' }}>
+                    {(() => {
+                      const isSpecialtySkill = ['芸術', '製作', '操縦', '他の言語', '母国語'].includes(skill.name);
+                      const displayName = skill.specialty ? `${skill.name}(${skill.specialty})` : skill.name;
+                      return (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
+                          <span style={{ fontWeight: 'bold' }}>{displayName}</span>
+                          {isSpecialtySkill && (
+                            <input
+                              type="text"
+                              value={skill.specialty || ''}
+                              onChange={(e) => updateDefaultSkillSpecialty(index, e.target.value)}
+                              placeholder="(入力)"
+                              style={{ width: '160px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                            />
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </td>
                   <td style={{ padding: '0.75rem', textAlign: 'center' }}>{skill.baseValue}</td>
                   <td style={{ padding: '0.75rem', textAlign: 'center' }}>
                     <input
