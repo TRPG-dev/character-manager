@@ -345,14 +345,14 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
   };
 
   // 魔導書・呪文・アーティファクトの更新関数
-  const addMythosItem = (type: 'mythosBooks' | 'spells' | 'artifacts') => {
+  const addMythosItem = (type: 'mythosBooks' | 'spells' | 'artifacts' | 'encounteredEntities') => {
     const newItems = [...(sheetData[type] || []), { name: '', memo: '' }];
     const updated = { ...sheetData, [type]: newItems };
     setSheetData(updated);
     onChange(updated);
   };
 
-  const updateMythosItem = (type: 'mythosBooks' | 'spells' | 'artifacts', index: number, field: 'name' | 'memo', value: string) => {
+  const updateMythosItem = (type: 'mythosBooks' | 'spells' | 'artifacts' | 'encounteredEntities', index: number, field: 'name' | 'memo', value: string) => {
     const newItems = [...(sheetData[type] || [])];
     newItems[index] = { ...newItems[index], [field]: value };
     const updated = { ...sheetData, [type]: newItems };
@@ -360,7 +360,7 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
     onChange(updated);
   };
 
-  const removeMythosItem = (type: 'mythosBooks' | 'spells' | 'artifacts', index: number) => {
+  const removeMythosItem = (type: 'mythosBooks' | 'spells' | 'artifacts' | 'encounteredEntities', index: number) => {
     const newItems = (sheetData[type] || []).filter((_, i) => i !== index);
     const updated = { ...sheetData, [type]: newItems };
     setSheetData(updated);
@@ -943,7 +943,7 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
       {/* 魔導書・呪文・アーティファクトセクション */}
       < section >
         <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
-          魔導書・呪文・アーティファクト
+          魔導書・呪文・アーティファクト・遭遇した超自然の存在
         </h2>
 
         {/* 魔導書 */}
@@ -1135,6 +1135,74 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
                     placeholder="メモ"
                     value={item.memo}
                     onChange={(e) => updateMythosItem('artifacts', index, 'memo', e.target.value)}
+                    rows={2}
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontFamily: 'inherit',
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 遭遇した超自然の存在 */}
+        <div style={{ marginTop: '2rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h3 style={{ fontSize: '1.25rem', margin: 0 }}>遭遇した超自然の存在</h3>
+            <button
+              type="button"
+              onClick={() => addMythosItem('encounteredEntities')}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#28a745',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+              }}
+            >
+              + 遭遇した超自然の存在を追加
+            </button>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {(sheetData.encounteredEntities || []).map((item, index) => (
+              <div key={index} style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <h4 style={{ margin: 0, fontSize: '0.875rem' }}>#{index + 1}</h4>
+                  <button
+                    type="button"
+                    onClick={() => removeMythosItem('encounteredEntities', index)}
+                    style={{
+                      padding: '0.25rem 0.5rem',
+                      backgroundColor: '#dc3545',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                    }}
+                  >
+                    削除
+                  </button>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <input
+                    type="text"
+                    placeholder="名称"
+                    value={item.name}
+                    onChange={(e) => updateMythosItem('encounteredEntities', index, 'name', e.target.value)}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  />
+                  <textarea
+                    placeholder="メモ"
+                    value={item.memo}
+                    onChange={(e) => updateMythosItem('encounteredEntities', index, 'memo', e.target.value)}
                     rows={2}
                     style={{
                       width: '100%',

@@ -60,6 +60,7 @@ def generate_cthulhu_template() -> Dict[str, Any]:
         "mythosBooks": [],
         "spells": [],
         "artifacts": [],
+        "encounteredEntities": [],
     }
 
 

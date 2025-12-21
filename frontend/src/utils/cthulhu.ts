@@ -302,6 +302,7 @@ export function normalizeSheetData(data: any): CthulhuSheetData {
     mythosBooks: data.mythosBooks || [],
     spells: data.spells || [],
     artifacts: data.artifacts || [],
+    encounteredEntities: data.encounteredEntities || [],
   };
 }
 

@@ -93,5 +93,6 @@ export interface CthulhuSheetData {
   mythosBooks?: CthulhuMythosItem[]; // 魔導書
   spells?: CthulhuMythosItem[]; // 呪文
   artifacts?: CthulhuMythosItem[]; // アーティファクト
+  encounteredEntities?: CthulhuMythosItem[]; // 遭遇した超自然の存在
 }
 
