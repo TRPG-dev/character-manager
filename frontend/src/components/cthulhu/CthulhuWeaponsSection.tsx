@@ -57,6 +57,16 @@ export const CthulhuWeaponsSection = ({ weapons, onAdd, onUpdate, onRemove }: Ct
                             />
                         </div>
                         <div>
+                            <label className="block mb-sm font-bold">攻撃回数</label>
+                            <input
+                                type="number"
+                                min="0"
+                                value={weapon.attacks ?? 0}
+                                onChange={(e) => onUpdate(index, 'attacks', parseInt(e.target.value) || 0)}
+                                className="input"
+                            />
+                        </div>
+                        <div>
                             <label className="block mb-sm font-bold">装弾数</label>
                             <input
                                 type="text"
@@ -71,6 +81,16 @@ export const CthulhuWeaponsSection = ({ weapons, onAdd, onUpdate, onRemove }: Ct
                                 type="text"
                                 value={weapon.malfunction || ''}
                                 onChange={(e) => onUpdate(index, 'malfunction', e.target.value)}
+                                className="input"
+                            />
+                        </div>
+                        <div>
+                            <label className="block mb-sm font-bold">耐久力</label>
+                            <input
+                                type="number"
+                                min="0"
+                                value={weapon.durability ?? 0}
+                                onChange={(e) => onUpdate(index, 'durability', parseInt(e.target.value) || 0)}
                                 className="input"
                             />
                         </div>
