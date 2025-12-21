@@ -28,8 +28,16 @@ export const Layout = ({ children }: LayoutProps) => {
         alignItems: 'center',
         boxShadow: 'var(--shadow-sm)',
       }}>
-        <Link to="/dashboard" style={{ color: 'var(--color-text-inverse)', textDecoration: 'none' }}>
-          <h1 style={{ margin: 0 }}>きゃらまね</h1>
+        <Link
+          to="/dashboard"
+          aria-label="きゃらまね"
+          style={{ color: 'var(--color-text-inverse)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}
+        >
+          <img
+            src="/kyaramanelogo.png"
+            alt="きゃらまね"
+            style={{ height: 32, width: 'auto', display: 'block' }}
+          />
         </Link>
         <nav style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <Link to="/dashboard" style={{ color: 'var(--color-text-inverse)', textDecoration: 'none' }}>

@@ -64,8 +64,11 @@ export const Landing = () => {
         <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 0' }}>
           <Link to="/" style={{ color: 'var(--color-text)', textDecoration: 'none' }}>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontSize: '1.25rem', fontWeight: 800, letterSpacing: '0.02em' }}>きゃらまね</span>
-              <span className="text-xs text-muted">TRPGキャラクターシート管理</span>
+              <img
+                src="/kyaramanelogo.png"
+                alt="きゃらまね"
+                style={{ height: 32, width: 'auto', display: 'block' }}
+              />
             </div>
           </Link>
           <button className="btn btn-primary btn-lg" onClick={login} type="button">
@@ -86,6 +89,11 @@ export const Landing = () => {
               }}
             >
               <div>
+                <img
+                  src="/kyaramanelogo.png"
+                  alt="きゃらまね"
+                  style={{ height: 160, width: 'auto', display: 'block' }}
+                />
                 <div className="tag tag-secondary mb-sm" style={{ backgroundColor: 'var(--color-primary-light)', border: '1px solid var(--color-border-light)' }}>
                 作って、見返して、共有する
                 </div>

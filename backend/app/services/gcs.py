@@ -108,3 +108,4 @@ def maybe_sign_read_url(original_url: Optional[str]) -> Optional[str]:
         # 署名生成に失敗しても、元のURL（公開設定の環境では表示できる）にフォールバック
         return original_url
 
+

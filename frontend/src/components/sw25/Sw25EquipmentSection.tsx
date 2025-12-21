@@ -570,3 +570,4 @@ export const Sw25EquipmentSection = ({
     </>
   );
 };
+
