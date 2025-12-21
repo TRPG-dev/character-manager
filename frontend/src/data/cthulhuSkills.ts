@@ -55,7 +55,7 @@ const DEFAULT_CTHULHU_SKILLS_RAW: CthulhuSkill[] = [
   { name: '歴史', baseValue: 5, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 5, isCustom: false },
 ];
 
-// NOTE: 表示順はこの配列の記述順に従う（ソートしない）
+
 export const DEFAULT_CTHULHU_SKILLS: CthulhuSkill[] = DEFAULT_CTHULHU_SKILLS_RAW;
 
 // 格闘技能リスト（50音順）
