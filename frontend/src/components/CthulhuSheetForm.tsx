@@ -246,13 +246,13 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
   const addWeapon = () => {
     const newWeapons = [...(sheetData.weapons || []), {
       name: '',
-      value: 0,
+      value: '',
       damage: '',
       range: '',
-      attacks: 1,
+      attacks: '',
       ammo: 0,
       malfunction: 0,
-      durability: 0,
+      durability: '',
     }];
     const updated = { ...sheetData, weapons: newWeapons };
     setSheetData(updated);

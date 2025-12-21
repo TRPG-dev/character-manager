@@ -38,13 +38,13 @@ export interface CthulhuSkill {
 
 export interface CthulhuWeapon {
   name: string;
-  value: number;
+  value: string;
   damage: string;
   range: string;
-  attacks: number;
+  attacks: string;
   ammo: number;
   malfunction: number;
-  durability: number;
+  durability: string;
 }
 
 export interface CthulhuItem {

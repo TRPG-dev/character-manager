@@ -39,11 +39,9 @@ export const CthulhuWeaponsSection = ({ weapons, onAdd, onUpdate, onRemove }: Ct
                         <div style={{ flex: '1 1 110px', minWidth: 90 }}>
                             <label className="block mb-sm font-bold">技能値</label>
                             <input
-                                type="number"
-                                min="0"
-                                max="100"
-                                value={weapon.value || 0}
-                                onChange={(e) => onUpdate(index, 'value', parseInt(e.target.value) || 0)}
+                                type="text"
+                                value={weapon.value || ''}
+                                onChange={(e) => onUpdate(index, 'value', e.target.value)}
                                 className="input"
                                 style={{ width: '100%', padding: '0.4rem 0.5rem', fontSize: '0.875rem' }}
                             />
@@ -71,10 +69,9 @@ export const CthulhuWeaponsSection = ({ weapons, onAdd, onUpdate, onRemove }: Ct
                         <div style={{ flex: '1 1 90px', minWidth: 80 }}>
                             <label className="block mb-sm font-bold">攻撃回数</label>
                             <input
-                                type="number"
-                                min="0"
-                                value={weapon.attacks ?? 0}
-                                onChange={(e) => onUpdate(index, 'attacks', parseInt(e.target.value) || 0)}
+                                type="text"
+                                value={weapon.attacks ?? ''}
+                                onChange={(e) => onUpdate(index, 'attacks', e.target.value)}
                                 className="input"
                                 style={{ width: '100%', padding: '0.4rem 0.5rem', fontSize: '0.875rem' }}
                             />
@@ -102,10 +99,9 @@ export const CthulhuWeaponsSection = ({ weapons, onAdd, onUpdate, onRemove }: Ct
                         <div style={{ flex: '1 1 90px', minWidth: 80 }}>
                             <label className="block mb-sm font-bold">耐久力</label>
                             <input
-                                type="number"
-                                min="0"
-                                value={weapon.durability ?? 0}
-                                onChange={(e) => onUpdate(index, 'durability', parseInt(e.target.value) || 0)}
+                                type="text"
+                                value={weapon.durability ?? ''}
+                                onChange={(e) => onUpdate(index, 'durability', e.target.value)}
                                 className="input"
                                 style={{ width: '100%', padding: '0.4rem 0.5rem', fontSize: '0.875rem' }}
                             />

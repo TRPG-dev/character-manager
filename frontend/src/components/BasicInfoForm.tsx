@@ -361,7 +361,7 @@ export const BasicInfoForm = ({
                   style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
                 />
               </div>
-              <div style={{ gridColumn: '1 / -1' }}>
+              <div>
                 <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
                   学校・学位
                 </label>
@@ -372,7 +372,6 @@ export const BasicInfoForm = ({
                     const updated = { ...data, schoolDegree: e.target.value } as CthulhuSheetData;
                     onChange(updated);
                   }}
-                  placeholder="例: ○○大学 / △△学部"
                   style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
                 />
               </div>
