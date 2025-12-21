@@ -69,6 +69,8 @@ export interface CthulhuSheetData {
   age?: number; // 年齢
   gender?: string; // 性別
   birthplace?: string; // 出身地
+  school?: string; // 学校
+  degree?: string; // 学位
   
   attributes: CthulhuAttributes;
   derived: CthulhuDerived;

@@ -281,6 +281,8 @@ export function normalizeSheetData(data: any): CthulhuSheetData {
     age: data.age ?? undefined,
     gender: data.gender ?? '',
     birthplace: data.birthplace ?? '',
+    school: data.school ?? '',
+    degree: data.degree ?? '',
     attributes,
     derived: mergedDerived,
     skills: defaultSkills,
