@@ -106,6 +106,24 @@ def _skill_name(skill: Dict[str, Any]) -> str:
     return str(n) if n is not None else ""
 
 
+_SPECIALTY_SKILLS = {"芸術", "製作", "操縦", "他の言語", "母国語"}
+
+
+def _skill_display_name(skill: Dict[str, Any]) -> str:
+    name = _skill_name(skill)
+    if not name:
+        return ""
+    specialty = skill.get("specialty")
+    if specialty is None:
+        return name
+    s = str(specialty).strip()
+    if not s:
+        return name
+    if name in _SPECIALTY_SKILLS:
+        return f"{name}({s})"
+    return name
+
+
 def _skill_base(skill: Dict[str, Any]) -> int:
     return _to_int(skill.get("baseValue", skill.get("base_value", skill.get("value"))), 0)
 
@@ -166,9 +184,11 @@ class CthulhuExporter(Exporter):
         seen: set[str] = set()
         for s in _iter_skills(sheet_data):
             name = _skill_name(s)
-            if not name or name in seen:
+            disp = _skill_display_name(s)
+            key = disp or name
+            if not name or key in seen:
                 continue
-            seen.add(name)
+            seen.add(key)
 
             is_custom = _skill_is_custom(s)
             base = _skill_base(s)
@@ -183,7 +203,7 @@ class CthulhuExporter(Exporter):
             total = _compute_skill_total(s, base)
             if scope == "changed" and total == base:
                 continue
-            commands.append(f"{dice_prefix}<={total} 【{name}】")
+            commands.append(f"{dice_prefix}<={total} 【{key}】")
 
         # Attribute x5 rolls (placeholders -> cocofolia params)
         for key in ("STR", "CON", "POW", "DEX", "APP", "SIZ", "INT", "EDU"):
