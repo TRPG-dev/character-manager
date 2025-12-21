@@ -12,10 +12,13 @@ export const CthulhuDerivedStatsSection = ({ derived, onUpdate }: CthulhuDerived
     return (
         <div className="section">
             <h4 className="section-title">派生値</h4>
-            <div className="grid grid-auto-fit gap-md">
+            <div
+                className="grid grid-auto-fit gap-md"
+                style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}
+            >
                 <div>
                     <label className="block mb-sm font-bold">SAN値（現在/最大）</label>
-                    <div className="flex gap-sm items-center">
+                    <div className="flex gap-sm items-center" style={{ flexWrap: 'wrap' }}>
                         <input
                             type="number"
                             min="0"
@@ -39,7 +42,7 @@ export const CthulhuDerivedStatsSection = ({ derived, onUpdate }: CthulhuDerived
                 </div>
                 <div>
                     <label className="block mb-sm font-bold">HP（現在/最大）</label>
-                    <div className="flex gap-sm items-center">
+                    <div className="flex gap-sm items-center" style={{ flexWrap: 'wrap' }}>
                         <input
                             type="number"
                             min="0"
@@ -61,7 +64,7 @@ export const CthulhuDerivedStatsSection = ({ derived, onUpdate }: CthulhuDerived
                 </div>
                 <div>
                     <label className="block mb-sm font-bold">MP（現在/最大）</label>
-                    <div className="flex gap-sm items-center">
+                    <div className="flex gap-sm items-center" style={{ flexWrap: 'wrap' }}>
                         <input
                             type="number"
                             min="0"
