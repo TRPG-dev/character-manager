@@ -27,8 +27,7 @@ def generate_cthulhu_template() -> Dict[str, Any]:
         "age": None,
         "gender": "",
         "birthplace": "",
-        "school": "",
-        "degree": "",
+        "schoolDegree": "",
         "attributes": {
             "STR": 0,
             "CON": 0,

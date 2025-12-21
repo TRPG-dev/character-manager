@@ -361,31 +361,18 @@ export const BasicInfoForm = ({
                   style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
                 />
               </div>
-              <div>
+              <div style={{ gridColumn: '1 / -1' }}>
                 <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
-                  学校
+                  学校・学位
                 </label>
                 <input
                   type="text"
-                  value={(data as CthulhuSheetData).school || ''}
+                  value={(data as CthulhuSheetData).schoolDegree || ''}
                   onChange={(e) => {
-                    const updated = { ...data, school: e.target.value } as CthulhuSheetData;
+                    const updated = { ...data, schoolDegree: e.target.value } as CthulhuSheetData;
                     onChange(updated);
                   }}
-                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
-                  学位
-                </label>
-                <input
-                  type="text"
-                  value={(data as CthulhuSheetData).degree || ''}
-                  onChange={(e) => {
-                    const updated = { ...data, degree: e.target.value } as CthulhuSheetData;
-                    onChange(updated);
-                  }}
+                  placeholder="例: ○○大学 / △△学部"
                   style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
                 />
               </div>

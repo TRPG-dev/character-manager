@@ -17,17 +17,26 @@ export const CthulhuWeaponsSection = ({ weapons, onAdd, onUpdate, onRemove }: Ct
 
             {weapons.map((weapon, index) => (
                 <div key={index} className="card mb-md">
-                    <div className="grid grid-cols-2 gap-md mb-md">
-                        <div>
+                    <div
+                        className="mb-md"
+                        style={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: '0.75rem',
+                            alignItems: 'flex-end',
+                        }}
+                    >
+                        <div style={{ flex: '2 1 260px', minWidth: 220 }}>
                             <label className="block mb-sm font-bold">武器名</label>
                             <input
                                 type="text"
                                 value={weapon.name}
                                 onChange={(e) => onUpdate(index, 'name', e.target.value)}
                                 className="input"
+                                style={{ width: '100%' }}
                             />
                         </div>
-                        <div>
+                        <div style={{ flex: '1 1 110px', minWidth: 90 }}>
                             <label className="block mb-sm font-bold">技能値</label>
                             <input
                                 type="number"
@@ -36,27 +45,30 @@ export const CthulhuWeaponsSection = ({ weapons, onAdd, onUpdate, onRemove }: Ct
                                 value={weapon.value || 0}
                                 onChange={(e) => onUpdate(index, 'value', parseInt(e.target.value) || 0)}
                                 className="input"
+                                style={{ width: '100%', padding: '0.4rem 0.5rem', fontSize: '0.875rem' }}
                             />
                         </div>
-                        <div>
+                        <div style={{ flex: '1 1 150px', minWidth: 120 }}>
                             <label className="block mb-sm font-bold">ダメージ</label>
                             <input
                                 type="text"
                                 value={weapon.damage || ''}
                                 onChange={(e) => onUpdate(index, 'damage', e.target.value)}
                                 className="input"
+                                style={{ width: '100%', padding: '0.4rem 0.5rem', fontSize: '0.875rem' }}
                             />
                         </div>
-                        <div>
+                        <div style={{ flex: '1 1 120px', minWidth: 100 }}>
                             <label className="block mb-sm font-bold">射程</label>
                             <input
                                 type="text"
                                 value={weapon.range || ''}
                                 onChange={(e) => onUpdate(index, 'range', e.target.value)}
                                 className="input"
+                                style={{ width: '100%', padding: '0.4rem 0.5rem', fontSize: '0.875rem' }}
                             />
                         </div>
-                        <div>
+                        <div style={{ flex: '1 1 90px', minWidth: 80 }}>
                             <label className="block mb-sm font-bold">攻撃回数</label>
                             <input
                                 type="number"
@@ -64,27 +76,30 @@ export const CthulhuWeaponsSection = ({ weapons, onAdd, onUpdate, onRemove }: Ct
                                 value={weapon.attacks ?? 0}
                                 onChange={(e) => onUpdate(index, 'attacks', parseInt(e.target.value) || 0)}
                                 className="input"
+                                style={{ width: '100%', padding: '0.4rem 0.5rem', fontSize: '0.875rem' }}
                             />
                         </div>
-                        <div>
+                        <div style={{ flex: '1 1 90px', minWidth: 80 }}>
                             <label className="block mb-sm font-bold">装弾数</label>
                             <input
                                 type="text"
                                 value={weapon.ammo || ''}
                                 onChange={(e) => onUpdate(index, 'ammo', e.target.value)}
                                 className="input"
+                                style={{ width: '100%', padding: '0.4rem 0.5rem', fontSize: '0.875rem' }}
                             />
                         </div>
-                        <div>
+                        <div style={{ flex: '1 1 110px', minWidth: 90 }}>
                             <label className="block mb-sm font-bold">故障ナンバー</label>
                             <input
                                 type="text"
                                 value={weapon.malfunction || ''}
                                 onChange={(e) => onUpdate(index, 'malfunction', e.target.value)}
                                 className="input"
+                                style={{ width: '100%', padding: '0.4rem 0.5rem', fontSize: '0.875rem' }}
                             />
                         </div>
-                        <div>
+                        <div style={{ flex: '1 1 90px', minWidth: 80 }}>
                             <label className="block mb-sm font-bold">耐久力</label>
                             <input
                                 type="number"
@@ -92,6 +107,7 @@ export const CthulhuWeaponsSection = ({ weapons, onAdd, onUpdate, onRemove }: Ct
                                 value={weapon.durability ?? 0}
                                 onChange={(e) => onUpdate(index, 'durability', parseInt(e.target.value) || 0)}
                                 className="input"
+                                style={{ width: '100%', padding: '0.4rem 0.5rem', fontSize: '0.875rem' }}
                             />
                         </div>
                     </div>
