@@ -7,9 +7,11 @@ Workflow: `docker-build-push.yml`
 ### Trigger
 
 **Automatic:**
+- Push to `master` branch - Builds and pushes both services with commit SHA (first 6 chars) as tag
+- Push to `dev/**` branches - Builds and pushes both services with commit SHA (first 6 chars) as tag
 - Push tags with the following patterns:
-  - `frontend-*` - Builds and pushes frontend Docker image
-  - `backend-*` - Builds and pushes backend Docker image
+  - `frontend-*` - Builds and pushes frontend Docker image (only on master or dev/* branches)
+  - `backend-*` - Builds and pushes backend Docker image (only on master or dev/* branches)
 
 **Manual:**
 - Workflow dispatch with tag name input
@@ -76,14 +78,30 @@ gcloud artifacts repositories create character-manager \
 
 ### Usage
 
+#### Automatic: Push to master or dev/* branches
+
+```bash
+# Merge to master - builds both services with commit SHA tag (uses prod environment)
+git checkout master
+git merge feature-branch
+git push origin master
+
+# Merge to dev branch - builds both services with commit SHA tag (uses dev environment)
+git checkout dev/staging
+git merge feature-branch
+git push origin dev/staging
+```
+
 #### Automatic: Create and push tags
 
 ```bash
-# Frontend release
+# Frontend release on master (uses prod environment)
+git checkout master
 git tag frontend-v1.0.0
 git push origin frontend-v1.0.0
 
-# Backend release
+# Backend release on dev branch (uses dev environment)
+git checkout dev/staging
 git tag backend-v1.0.0
 git push origin backend-v1.0.0
 ```
@@ -135,21 +153,43 @@ asia-northeast1-docker.pkg.dev/YOUR_PROJECT_ID/character-manager/backend:latest
   - `backend-2024.12.08` → version: `2024.12.08`
   - `frontend-1.2.3-rc1` → version: `1.2.3-rc1`
 
-### Workflow Steps
+### Workflow Jobs and Steps
 
-1. Checkout code
-2. Determine tag name (from push event or manual input)
-3. Determine which service to build based on tag prefix
-4. Authenticate to GCP using service account key
-5. Configure Docker to use Artifact Registry
-6. Extract version from tag name
-7. Build Docker image with version and latest tags
-8. Push both tags to Artifact Registry
-9. Output image details in workflow summary
+#### Job: `determine-environment`
+Determines whether to use `prod` or `dev` environment based on branch/tag.
+
+| Step ID | Step Name | Description |
+|---------|-----------|-------------|
+| - | Checkout code | Checks out repository with full history for branch detection |
+| `set-env` | Determine environment | Sets environment to `prod` for master branch/tags, `dev` for dev/* branches |
+
+#### Job: `build-and-push`
+Builds and pushes Docker images to GCP Artifact Registry.
+
+| Step ID | Step Name | Description |
+|---------|-----------|-------------|
+| - | Checkout code | Checks out repository code at the triggered ref |
+| - | Validate branch for tag events | Verifies tags are only created on master or dev/* branches |
+| `determine-tag` | Determine tag name | Sets image tag: manual input, tag name, or first 6 chars of commit SHA |
+| `determine-service` | Determine service to build | Identifies service from tag prefix (frontend-/backend-) or sets to build both for branch pushes |
+| - | Authenticate to Google Cloud | Authenticates using GCP service account credentials |
+| - | Set up Cloud SDK | Installs and configures gcloud CLI |
+| - | Configure Docker for Artifact Registry | Configures Docker to authenticate with GCP Artifact Registry |
+| `extract-version` | Extract version from tag | Extracts version from tag name (removes prefix) or uses commit SHA |
+| - | Build and push Docker image (single service) | Builds and pushes single service image with version and latest tags (tag events only) |
+| - | Build and push Docker images (both services) | Builds and pushes both frontend and backend images (branch push events only) |
+| - | Output image details | Writes published image information to workflow summary |
+
+### Environment Selection
+
+- **prod environment**: Used for master branch pushes and tags created on master branch
+- **dev environment**: Used for dev/* branch pushes and tags created on dev/* branches
 
 ### Notes
 
+- Branch pushes build both frontend and backend services with commit SHA (first 6 chars) as image tag
+- Tag pushes build single service (determined by tag prefix) with tag version as image tag
+- Tags can only be created on master or dev/* branches (validation enforced)
 - Manual execution uses the current branch code (typically `main`)
 - Tag name validation ensures it starts with `frontend-` or `backend-`
-- Both automatic and manual triggers produce identical results
 - Manual execution does not create a git tag
