@@ -106,7 +106,20 @@ def _skill_name(skill: Dict[str, Any]) -> str:
     return str(n) if n is not None else ""
 
 
-_SPECIALTY_SKILLS = {"芸術", "製作", "操縦", "他の言語", "母国語"}
+_SPECIALTY_SKILLS = {
+    # 6版
+    "芸術",
+    "製作",
+    "操縦",
+    "他の言語",
+    "母国語",
+    # 7版（入力型/選択型）
+    "科学",
+    "芸術/製作",
+    "サバイバル",
+    "近接戦闘",
+    "射撃",
+}
 
 
 def _skill_display_name(skill: Dict[str, Any]) -> str:
