@@ -346,6 +346,24 @@ export function normalizeSheetData(data: any, system: CthulhuSystem = 'cthulhu6'
     });
   }
 
+  const normalizedWeapons = Array.isArray(data.weapons) ? data.weapons : [];
+  const weapons =
+    normalizedWeapons.length > 0
+      ? normalizedWeapons
+      : system === 'cthulhu7'
+        ? [
+            {
+              name: '素手',
+              value: '',
+              damage: '1D3+DB',
+              range: 'ー',
+              attacks: '1',
+              ammo: 0,
+              malfunction: 0,
+            },
+          ]
+        : [];
+
   return {
     playerName: data.playerName ?? '',
     occupation: data.occupation ?? '',
@@ -360,7 +378,7 @@ export function normalizeSheetData(data: any, system: CthulhuSystem = 'cthulhu6'
     skills: defaultSkills,
     combatSkills,
     customSkills,
-    weapons: data.weapons || [],
+    weapons,
     items: data.items || [],
     cash: data.cash ?? '',
     assets: data.assets ?? '',

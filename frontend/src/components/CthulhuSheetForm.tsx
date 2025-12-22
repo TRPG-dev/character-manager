@@ -299,16 +299,27 @@ export const CthulhuSheetForm = ({ data, onChange, system }: CthulhuSheetFormPro
   };
 
   const addWeapon = () => {
-    const newWeapons = [...(sheetData.weapons || []), {
-      name: '',
-      value: '',
-      damage: '',
-      range: '',
-      attacks: '',
-      ammo: 0,
-      malfunction: 0,
-      durability: '',
-    }];
+    const newWeapon = system === 'cthulhu7'
+      ? {
+          name: '',
+          value: '',
+          damage: '',
+          range: '',
+          attacks: '',
+          ammo: 0,
+          malfunction: 0,
+        }
+      : {
+          name: '',
+          value: '',
+          damage: '',
+          range: '',
+          attacks: '',
+          ammo: 0,
+          malfunction: 0,
+          durability: '',
+        };
+    const newWeapons = [...(sheetData.weapons || []), newWeapon as any];
     const updated = { ...sheetData, weapons: newWeapons };
     setSheetData(updated);
     onChange(updated);
@@ -850,11 +861,12 @@ export const CthulhuSheetForm = ({ data, onChange, system }: CthulhuSheetFormPro
       </section >
 
       {/* 武器セクション */}
-      < CthulhuWeaponsSection
+      <CthulhuWeaponsSection
         weapons={sheetData.weapons || []}
         onAdd={addWeapon}
         onUpdate={updateWeapon}
         onRemove={removeWeapon}
+        system={system}
       />
 
       {/* 所持品セクション */}

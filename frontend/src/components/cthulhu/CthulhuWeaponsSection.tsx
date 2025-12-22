@@ -1,16 +1,18 @@
 import type { CthulhuWeapon } from '../../types/cthulhu';
+import type { CthulhuSystem } from '../../utils/cthulhu';
 
 interface CthulhuWeaponsSectionProps {
     weapons: CthulhuWeapon[];
     onAdd: () => void;
     onUpdate: (index: number, field: keyof CthulhuWeapon, value: string | number) => void;
     onRemove: (index: number) => void;
+    system: CthulhuSystem;
 }
 
 /**
  * クトゥルフ武器管理セクション
  */
-export const CthulhuWeaponsSection = ({ weapons, onAdd, onUpdate, onRemove }: CthulhuWeaponsSectionProps) => {
+export const CthulhuWeaponsSection = ({ weapons, onAdd, onUpdate, onRemove, system }: CthulhuWeaponsSectionProps) => {
     return (
         <div className="section">
             <h4 className="section-title">武器</h4>
@@ -96,16 +98,18 @@ export const CthulhuWeaponsSection = ({ weapons, onAdd, onUpdate, onRemove }: Ct
                                 style={{ width: '100%', padding: '0.4rem 0.5rem', fontSize: '0.875rem' }}
                             />
                         </div>
-                        <div style={{ flex: '1 1 90px', minWidth: 80 }}>
-                            <label className="block mb-sm font-bold">耐久力</label>
-                            <input
-                                type="text"
-                                value={weapon.durability ?? ''}
-                                onChange={(e) => onUpdate(index, 'durability', e.target.value)}
-                                className="input"
-                                style={{ width: '100%', padding: '0.4rem 0.5rem', fontSize: '0.875rem' }}
-                            />
-                        </div>
+                        {system !== 'cthulhu7' && (
+                            <div style={{ flex: '1 1 90px', minWidth: 80 }}>
+                                <label className="block mb-sm font-bold">耐久力</label>
+                                <input
+                                    type="text"
+                                    value={weapon.durability ?? ''}
+                                    onChange={(e) => onUpdate(index, 'durability', e.target.value)}
+                                    className="input"
+                                    style={{ width: '100%', padding: '0.4rem 0.5rem', fontSize: '0.875rem' }}
+                                />
+                            </div>
+                        )}
                     </div>
                     <button
                         type="button"
