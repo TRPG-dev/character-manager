@@ -490,7 +490,7 @@ export const CharacterDetail = () => {
                             <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.birthplace}</div>
                           </div>
                         )}
-                        {sheetData.schoolDegree && (
+                        {character.system !== 'cthulhu7' && sheetData.schoolDegree && (
                           <div style={{ gridColumn: '1 / -1' }}>
                             <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>学校・学位</div>
                             <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.schoolDegree}</div>
