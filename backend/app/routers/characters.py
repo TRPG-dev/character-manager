@@ -353,8 +353,8 @@ async def auto_roll_attributes(
             detail=f"キャラクターのシステム ({character.system.value}) とリクエストのシステム ({request.system.value}) が一致しません",
         )
 
-    # 能力値を生成
-    result = generate_cthulhu_attributes()
+    # 能力値を生成（systemに応じて分岐）
+    result = generate_cthulhu_attributes(request.system)
 
     return AutoRollAttributesResponse(
         attributes=result["attributes"],

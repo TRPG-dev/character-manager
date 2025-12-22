@@ -65,6 +65,7 @@ export const CharacterCreate = () => {
           INT: 0,
           EDU: 0,
           SIZ: 0,
+          LUK: 0,
         },
         derived: {
           SAN_current: 0,
@@ -76,7 +77,7 @@ export const CharacterCreate = () => {
         },
         skills: [],
         backstory: '',
-      }));
+      }, system));
     } else if (system === 'shinobigami') {
       setSheetData(normalizeShinobigamiSheetData({
         attributes: {
@@ -426,6 +427,7 @@ export const CharacterCreate = () => {
             <CthulhuSheetForm
               data={sheetData as CthulhuSheetData}
               onChange={(data) => setSheetData(data)}
+              system={selectedSystem}
             />
           )}
           {selectedSystem === 'shinobigami' && sheetData && (
