@@ -1,5 +1,5 @@
 // クトゥルフ神話TRPG用のユーティリティ関数
-import type { CthulhuAttributes, CthulhuDerived, CthulhuSheetData, CthulhuSkill } from '../types/cthulhu';
+import type { Cthulhu7BackstoryKey, CthulhuAttributes, CthulhuDerived, CthulhuSheetData, CthulhuSkill } from '../types/cthulhu';
 import { DEFAULT_CTHULHU_SKILLS, DEFAULT_CTHULHU7_SKILLS, COMBAT_SKILLS, COMBAT_SKILLS_CTHULHU7, CTHULHU7_MELEE_OPTIONS, CTHULHU7_RANGED_OPTIONS, calculateSkillTotal } from '../data/cthulhuSkills';
 
 export type CthulhuSystem = 'cthulhu' | 'cthulhu6' | 'cthulhu7';
@@ -364,6 +364,38 @@ export function normalizeSheetData(data: any, system: CthulhuSystem = 'cthulhu6'
           ]
         : [];
 
+  const backstory7DefaultKeys: Cthulhu7BackstoryKey[] = [
+    'appearance',
+    'traits',
+    'beliefs',
+    'injuries',
+    'importantPeople',
+    'phobiasManias',
+    'meaningfulPlaces',
+    'treasuredPossessions',
+  ];
+
+  const backstory7: CthulhuSheetData['backstory7'] =
+    system === 'cthulhu7'
+      ? backstory7DefaultKeys.reduce((acc, k) => {
+          const existing = data.backstory7?.[k];
+          acc[k] = {
+            memo: existing?.memo ?? '',
+            isKey: existing?.isKey ?? false,
+          };
+          return acc;
+        }, {} as any)
+      : undefined;
+
+  const normalizeKeyFlagArray = (items: any): any[] => {
+    if (!Array.isArray(items)) return [];
+    return items.map((it: any) => ({
+      name: it?.name ?? '',
+      memo: it?.memo ?? '',
+      isKey: it?.isKey ?? false,
+    }));
+  };
+
   return {
     playerName: data.playerName ?? '',
     occupation: data.occupation ?? '',
@@ -384,11 +416,12 @@ export function normalizeSheetData(data: any, system: CthulhuSystem = 'cthulhu6'
     assets: data.assets ?? '',
     backstory: data.backstory || '',
     notes: data.notes || '',
+    backstory7,
     scenarios: data.scenarios || [],
     mythosBooks: data.mythosBooks || [],
     spells: data.spells || [],
-    artifacts: data.artifacts || [],
-    encounteredEntities: data.encounteredEntities || [],
+    artifacts: normalizeKeyFlagArray(data.artifacts),
+    encounteredEntities: normalizeKeyFlagArray(data.encounteredEntities),
   };
 }
 

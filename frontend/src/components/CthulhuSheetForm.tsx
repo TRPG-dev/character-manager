@@ -15,6 +15,7 @@ interface CthulhuSheetFormProps {
 export const CthulhuSheetForm = ({ data, onChange, system }: CthulhuSheetFormProps) => {
   const [sheetData, setSheetData] = useState<CthulhuSheetData>(normalizeSheetData(data, system));
   const [isInternalUpdate, setIsInternalUpdate] = useState(false);
+  const isCthulhu7 = system === 'cthulhu7';
 
   useEffect(() => {
     // 内部更新の場合はスキップ（無限ループ防止）
@@ -374,6 +375,36 @@ export const CthulhuSheetForm = ({ data, onChange, system }: CthulhuSheetFormPro
     onChange(updated);
   };
 
+  const updateBackstory7Memo = (key: keyof NonNullable<CthulhuSheetData['backstory7']>, memo: string) => {
+    const updated: CthulhuSheetData = {
+      ...sheetData,
+      backstory7: {
+        ...(sheetData.backstory7 || {}),
+        [key]: {
+          memo,
+          isKey: sheetData.backstory7?.[key]?.isKey ?? false,
+        },
+      },
+    };
+    setSheetData(updated);
+    onChange(updated);
+  };
+
+  const toggleBackstory7Key = (key: keyof NonNullable<CthulhuSheetData['backstory7']>, isKey: boolean) => {
+    const updated: CthulhuSheetData = {
+      ...sheetData,
+      backstory7: {
+        ...(sheetData.backstory7 || {}),
+        [key]: {
+          memo: sheetData.backstory7?.[key]?.memo ?? '',
+          isKey,
+        },
+      },
+    };
+    setSheetData(updated);
+    onChange(updated);
+  };
+
   // 財産の更新関数
   const updateCash = (value: string) => {
     const updated = { ...sheetData, cash: value };
@@ -412,7 +443,7 @@ export const CthulhuSheetForm = ({ data, onChange, system }: CthulhuSheetFormPro
 
   // 魔導書・呪文・アーティファクトの更新関数
   const addMythosItem = (type: 'mythosBooks' | 'spells' | 'artifacts' | 'encounteredEntities') => {
-    const newItems = [...(sheetData[type] || []), { name: '', memo: '' }];
+    const newItems = [...(sheetData[type] || []), { name: '', memo: '', isKey: false }];
     const updated = { ...sheetData, [type]: newItems };
     setSheetData(updated);
     onChange(updated);
@@ -421,6 +452,14 @@ export const CthulhuSheetForm = ({ data, onChange, system }: CthulhuSheetFormPro
   const updateMythosItem = (type: 'mythosBooks' | 'spells' | 'artifacts' | 'encounteredEntities', index: number, field: 'name' | 'memo', value: string) => {
     const newItems = [...(sheetData[type] || [])];
     newItems[index] = { ...newItems[index], [field]: value };
+    const updated = { ...sheetData, [type]: newItems };
+    setSheetData(updated);
+    onChange(updated);
+  };
+
+  const toggleMythosItemKey = (type: 'mythosBooks' | 'spells' | 'artifacts' | 'encounteredEntities', index: number, isKey: boolean) => {
+    const newItems = [...(sheetData[type] || [])];
+    newItems[index] = { ...newItems[index], isKey };
     const updated = { ...sheetData, [type]: newItems };
     setSheetData(updated);
     onChange(updated);
@@ -1058,7 +1097,180 @@ export const CthulhuSheetForm = ({ data, onChange, system }: CthulhuSheetFormPro
         </div>
       </section >
 
-      {/* 魔導書・呪文・アーティファクトセクション */}
+      {/* 第7版: バックストーリーセクション */}
+      {isCthulhu7 && (
+        <section>
+          <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
+            バックストーリー
+          </h2>
+
+          {(() => {
+            const fields: Array<{ key: keyof NonNullable<CthulhuSheetData['backstory7']>; label: string }> = [
+              { key: 'appearance', label: '容姿の描写' },
+              { key: 'traits', label: '特徴' },
+              { key: 'beliefs', label: 'イデオロギー/信念' },
+              { key: 'injuries', label: '負傷、傷跡' },
+              { key: 'importantPeople', label: '重要な人々' },
+              { key: 'phobiasManias', label: '恐怖症、マニア' },
+              { key: 'meaningfulPlaces', label: '意味のある場所' },
+              { key: 'treasuredPossessions', label: '秘蔵の品' },
+            ];
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {fields.map(({ key, label }) => {
+                  const entry = sheetData.backstory7?.[key] || { memo: '', isKey: false };
+                  const labelWithKey = entry.isKey ? `${label}🗝` : label;
+                  return (
+                    <div key={String(key)} style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', marginBottom: '0.5rem' }}>
+                        <label style={{ fontWeight: 'bold' }}>
+                          <input
+                            type="checkbox"
+                            checked={!!entry.isKey}
+                            onChange={(e) => toggleBackstory7Key(key, e.target.checked)}
+                            style={{ marginRight: '0.5rem' }}
+                          />
+                          {labelWithKey}
+                        </label>
+                      </div>
+                      <textarea
+                        value={entry.memo}
+                        onChange={(e) => updateBackstory7Memo(key, e.target.value)}
+                        rows={3}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          fontSize: '1rem',
+                          border: '1px solid #ddd',
+                          borderRadius: '4px',
+                          fontFamily: 'inherit',
+                        }}
+                        placeholder={`${label}のメモ`}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+
+          {/* 魔導書・呪文・アーティファクト・遭遇した超自然の存在（追加式 + キー・コネクション） */}
+          <div style={{ marginTop: '2rem' }}>
+            <h3 style={{ marginBottom: '1rem', fontSize: '1.25rem' }}>魔導書・呪文・アーティファクト・遭遇した超自然の存在</h3>
+
+            {(['mythosBooks', 'spells', 'artifacts', 'encounteredEntities'] as const).map((type) => {
+              const titleMap: Record<typeof type, string> = {
+                mythosBooks: '魔導書',
+                spells: '呪文',
+                artifacts: 'アーティファクト',
+                encounteredEntities: '遭遇した超自然の存在',
+              };
+              const items = (sheetData[type] || []) as any[];
+              return (
+                <div key={type} style={{ marginBottom: '2rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                    <h4 style={{ margin: 0, fontSize: '1.125rem' }}>{titleMap[type]}</h4>
+                    <button
+                      type="button"
+                      onClick={() => addMythosItem(type)}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        backgroundColor: '#28a745',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem',
+                      }}
+                    >
+                      + 追加
+                    </button>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {items.map((item, index) => (
+                      <div key={index} style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', marginBottom: '0.5rem' }}>
+                          <label style={{ fontWeight: 'bold' }}>
+                            <input
+                              type="checkbox"
+                              checked={!!item.isKey}
+                              onChange={(e) => toggleMythosItemKey(type, index, e.target.checked)}
+                              style={{ marginRight: '0.5rem' }}
+                            />
+                            {item.isKey ? `キー・コネクション🗝` : 'キー・コネクション'}
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => removeMythosItem(type, index)}
+                            style={{
+                              padding: '0.25rem 0.5rem',
+                              backgroundColor: '#dc3545',
+                              color: '#fff',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '0.875rem',
+                            }}
+                          >
+                            削除
+                          </button>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                          <input
+                            type="text"
+                            placeholder="名称"
+                            value={item.name}
+                            onChange={(e) => updateMythosItem(type, index, 'name', e.target.value)}
+                            style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                          />
+                          <textarea
+                            placeholder="メモ"
+                            value={item.memo}
+                            onChange={(e) => updateMythosItem(type, index, 'memo', e.target.value)}
+                            rows={2}
+                            style={{
+                              width: '100%',
+                              padding: '0.5rem',
+                              border: '1px solid #ddd',
+                              borderRadius: '4px',
+                              fontFamily: 'inherit',
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                    {items.length === 0 && (
+                      <div style={{ color: '#6c757d', fontStyle: 'italic' }}>未登録です。</div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* その他のメモ（背景欄は7版では削除） */}
+          <div>
+            <h3 style={{ marginBottom: '0.5rem', fontSize: '1.125rem' }}>その他のメモ</h3>
+            <textarea
+              value={sheetData.notes || ''}
+              onChange={(e) => updateNotes(e.target.value)}
+              rows={4}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                fontSize: '1rem',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                fontFamily: 'inherit',
+              }}
+              placeholder="その他のメモを記入してください"
+            />
+          </div>
+        </section>
+      )}
+
+      {/* 第6版: 魔導書・呪文・アーティファクトセクション */}
+      {!isCthulhu7 && (
       < section >
         <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
           魔導書・呪文・アーティファクト・遭遇した超自然の存在
@@ -1336,9 +1548,10 @@ export const CthulhuSheetForm = ({ data, onChange, system }: CthulhuSheetFormPro
           </div>
         </div>
       </section >
+      )}
 
       {/* 背景・その他セクション */}
-      < section >
+      {!isCthulhu7 && < section >
         <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
           背景・その他
         </h2>
@@ -1380,7 +1593,7 @@ export const CthulhuSheetForm = ({ data, onChange, system }: CthulhuSheetFormPro
             placeholder="その他のメモを記入してください"
           />
         </div>
-      </section >
+      </section >}
     </div >
   );
 };
