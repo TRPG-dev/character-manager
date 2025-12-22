@@ -9,6 +9,8 @@ export interface CthulhuAttributes {
   INT: number;
   EDU: number;
   SIZ: number;
+  // 第7版のみ
+  LUK?: number;
 }
 
 export interface CthulhuDerived {
@@ -18,10 +20,13 @@ export interface CthulhuDerived {
   HP_max: number;
   MP_current: number;
   MP_max: number;
-  IDEA?: number; // INT×5
-  KNOW?: number; // EDU×5
-  LUCK?: number; // POW×5
+  IDEA?: number; // 第6版: INT×5 / 第7版: INT×1
+  KNOW?: number; // 第6版: EDU×5 / 第7版: EDU×1
+  LUCK?: number; // 第6版: POW×5 / 第7版: LUK×1（修正可能）
   DB?: string; // ダメージボーナス
+  // 第7版のみ
+  BUILD?: number;
+  MOV?: number;
 }
 
 export interface CthulhuSkill {
@@ -44,7 +49,7 @@ export interface CthulhuWeapon {
   attacks: string;
   ammo: number;
   malfunction: number;
-  durability: string;
+  durability?: string; // 第6版（7版は欄を非表示）
 }
 
 export interface CthulhuItem {

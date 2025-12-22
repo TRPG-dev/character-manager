@@ -76,7 +76,7 @@ export const CharacterEdit = () => {
           setSheetData(JSON.stringify(char.sheet_data, null, 2));
           // システムに応じてシートデータを正規化
           if (char.system === 'cthulhu' || char.system === 'cthulhu6' || char.system === 'cthulhu7') {
-            setCthulhuSheetData(normalizeCthulhuSheetData(char.sheet_data));
+            setCthulhuSheetData(normalizeCthulhuSheetData(char.sheet_data, char.system));
             setShinobigamiSheetData(null);
             setSw25SheetData(null);
             setGenericSheetData(null);
@@ -722,6 +722,7 @@ export const CharacterEdit = () => {
             <CthulhuSheetForm
               data={cthulhuSheetData}
               onChange={(data) => setCthulhuSheetData(data)}
+              system={character.system}
             />
           ) : character.system === 'shinobigami' && shinobigamiSheetData ? (
             <ShinobigamiSheetForm

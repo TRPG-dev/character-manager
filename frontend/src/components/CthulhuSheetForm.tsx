@@ -1,20 +1,19 @@
 import { useState, useEffect } from 'react';
 import type { CthulhuSheetData, CthulhuSkill, CthulhuWeapon, CthulhuItem } from '../types/cthulhu';
-import { calculateDerivedValues, normalizeSheetData, getJobPointsLimit, getInterestPointsLimit } from '../utils/cthulhu';
+import { calculateDerivedValues, normalizeSheetData, getJobPointsLimit, getInterestPointsLimit, type CthulhuSystem } from '../utils/cthulhu';
 import { calculateSkillTotal, calculateTotalJobPoints, calculateTotalInterestPoints } from '../data/cthulhuSkills';
-import {
-  CthulhuAttributesSection,
-  CthulhuDerivedStatsSection,
-  CthulhuWeaponsSection,
-} from './cthulhu';
+import { CthulhuAttributesSection } from './cthulhu/CthulhuAttributesSection';
+import { CthulhuDerivedStatsSection } from './cthulhu/CthulhuDerivedStatsSection';
+import { CthulhuWeaponsSection } from './cthulhu/CthulhuWeaponsSection';
 
 interface CthulhuSheetFormProps {
   data: CthulhuSheetData;
   onChange: (data: CthulhuSheetData) => void;
+  system: CthulhuSystem;
 }
 
-export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
-  const [sheetData, setSheetData] = useState<CthulhuSheetData>(normalizeSheetData(data));
+export const CthulhuSheetForm = ({ data, onChange, system }: CthulhuSheetFormProps) => {
+  const [sheetData, setSheetData] = useState<CthulhuSheetData>(normalizeSheetData(data, system));
   const [isInternalUpdate, setIsInternalUpdate] = useState(false);
 
   useEffect(() => {
@@ -23,25 +22,28 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
       setIsInternalUpdate(false);
       return;
     }
-    const normalized = normalizeSheetData(data);
+    const normalized = normalizeSheetData(data, system);
     setSheetData(normalized);
-  }, [data, isInternalUpdate]);
+  }, [data, isInternalUpdate, system]);
 
   const updateAttributes = (key: keyof typeof sheetData.attributes, value: number) => {
     const newAttributes = { ...sheetData.attributes, [key]: value };
-    const newDerived = calculateDerivedValues(newAttributes);
+    const newDerived = calculateDerivedValues(newAttributes, system);
     // current値は既存の値を保持
     const updatedDerived = {
       ...newDerived,
       SAN_current: sheetData.derived.SAN_current,
       HP_current: sheetData.derived.HP_current,
       MP_current: sheetData.derived.MP_current,
+      // 7版: 編集可能項目は既存値を保持
+      LUCK: sheetData.derived.LUCK ?? newDerived.LUCK,
+      MOV: sheetData.derived.MOV ?? newDerived.MOV,
     };
 
     // 動的計算が必要な技能の初期値を更新
     const updatedSkills = sheetData.skills.map(skill => {
       if (skill.name === '母国語') {
-        const baseValue = newAttributes.EDU * 5; // EDU×5
+        const baseValue = system === 'cthulhu7' ? newAttributes.EDU : newAttributes.EDU * 5;
         return { ...skill, baseValue, total: calculateSkillTotal({ ...skill, baseValue }) };
       }
       return skill;
@@ -50,7 +52,7 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
     // 格闘技能の動的計算
     const updatedCombatSkills = (sheetData.combatSkills || []).map(skill => {
       if (skill.name === '回避') {
-        const baseValue = newAttributes.DEX; // DEX×1
+        const baseValue = system === 'cthulhu7' ? Math.floor(newAttributes.DEX / 2) : newAttributes.DEX;
         return { ...skill, baseValue, total: calculateSkillTotal({ ...skill, baseValue }) };
       }
       return skill;
@@ -373,12 +375,14 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
       <CthulhuAttributesSection
         attributes={sheetData.attributes}
         onUpdate={updateAttributes}
+        system={system}
       />
 
       {/* 派生値セクション */}
       <CthulhuDerivedStatsSection
         derived={sheetData.derived}
         onUpdate={updateDerived}
+        system={system}
       />
 
       {/* 技能セクション */}

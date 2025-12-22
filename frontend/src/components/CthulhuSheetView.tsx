@@ -1,18 +1,19 @@
 import { useState, useEffect } from 'react';
 import type { CthulhuSheetData, CthulhuSkill } from '../types/cthulhu';
-import { normalizeSheetData } from '../utils/cthulhu';
+import { normalizeSheetData, type CthulhuSystem } from '../utils/cthulhu';
 import { CollapsibleSection } from './CollapsibleSection';
 
 interface CthulhuSheetViewProps {
   data: CthulhuSheetData;
+  system?: CthulhuSystem;
   showOnlyAttributes?: boolean;
   showOnlySkills?: boolean;
   showOnlySkillsAndItems?: boolean;
   showOnlyOther?: boolean;
 }
 
-export const CthulhuSheetView = ({ data, showOnlyAttributes, showOnlySkills, showOnlySkillsAndItems, showOnlyOther }: CthulhuSheetViewProps) => {
-  const sheetData = normalizeSheetData(data);
+export const CthulhuSheetView = ({ data, system = 'cthulhu6', showOnlyAttributes, showOnlySkills, showOnlySkillsAndItems, showOnlyOther }: CthulhuSheetViewProps) => {
+  const sheetData = normalizeSheetData(data, system);
   const [isDesktop, setIsDesktop] = useState(false);
 
   useEffect(() => {
@@ -34,6 +35,7 @@ export const CthulhuSheetView = ({ data, showOnlyAttributes, showOnlySkills, sho
     INT: 'INT (知性)',
     EDU: 'EDU (教育)',
     SIZ: 'SIZ (体格)',
+    LUK: 'LUK (幸運)',
   };
 
   // 初期値と変わっていない技能をフィルタリング

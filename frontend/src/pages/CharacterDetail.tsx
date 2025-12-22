@@ -505,6 +505,7 @@ export const CharacterDetail = () => {
               {/* 能力値・派生値セクション（CthulhuSheetViewから取得） */}
               <CthulhuSheetView 
                 data={normalizeCthulhuSheetData(character.sheet_data) as CthulhuSheetData}
+                system={character.system}
                 showOnlyAttributes={true}
               />
             </div>
@@ -517,6 +518,7 @@ export const CharacterDetail = () => {
             }}>
               <CthulhuSheetView 
                 data={normalizeCthulhuSheetData(character.sheet_data) as CthulhuSheetData}
+                system={character.system}
                 showOnlySkillsAndItems={true}
               />
             </div>
@@ -525,6 +527,7 @@ export const CharacterDetail = () => {
           {/* 2カラムレイアウトの下: その他 */}
           <CthulhuSheetView 
             data={normalizeCthulhuSheetData(character.sheet_data) as CthulhuSheetData}
+            system={character.system}
             showOnlyOther={true}
           />
         </>

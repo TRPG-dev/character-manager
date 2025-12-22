@@ -2,6 +2,8 @@
 import type { CthulhuAttributes, CthulhuDerived, CthulhuSheetData, CthulhuSkill } from '../types/cthulhu';
 import { DEFAULT_CTHULHU_SKILLS, COMBAT_SKILLS, calculateSkillTotal } from '../data/cthulhuSkills';
 
+export type CthulhuSystem = 'cthulhu' | 'cthulhu6' | 'cthulhu7';
+
 /**
  * サイコロを振る（フロントエンド用）
  */
@@ -16,106 +18,110 @@ function rollDice(count: number, sides: number, modifier: number = 0): number {
 /**
  * クトゥルフ神話TRPGの能力値を自動生成（フロントエンド用）
  */
-export function generateCthulhuAttributes(): { attributes: CthulhuAttributes; derived: CthulhuDerived } {
-  // 基本能力値（3d6）
+export function generateCthulhuAttributes(system: CthulhuSystem = 'cthulhu6'): { attributes: CthulhuAttributes; derived: CthulhuDerived } {
+  if (system === 'cthulhu7') {
+    // 7版: 3d6*5（STR/CON/POW/DEX/APP） (2d6+6)*5（SIZ/INT/EDU） + LUK=3d6*5
+    const STR = rollDice(3, 6) * 5;
+    const CON = rollDice(3, 6) * 5;
+    const POW = rollDice(3, 6) * 5;
+    const DEX = rollDice(3, 6) * 5;
+    const APP = rollDice(3, 6) * 5;
+    const SIZ = rollDice(2, 6, 6) * 5;
+    const INT = rollDice(2, 6, 6) * 5;
+    const EDU = rollDice(2, 6, 6) * 5;
+    const LUK = rollDice(3, 6) * 5;
+
+    const attributes: CthulhuAttributes = { STR, CON, POW, DEX, APP, INT, EDU, SIZ, LUK };
+    const derived = calculateDerivedValues(attributes, system);
+    return { attributes, derived };
+  }
+
+  // 6版（旧/第6版）
   const STR = rollDice(3, 6);
   const CON = rollDice(3, 6);
   const POW = rollDice(3, 6);
   const DEX = rollDice(3, 6);
   const APP = rollDice(3, 6);
-  
-  // SIZ, INT (2d6+6)
   const SIZ = rollDice(2, 6, 6);
   const INT = rollDice(2, 6, 6);
-  
-  // EDU (3d6+3)
   const EDU = rollDice(3, 6, 3);
-  
-  const attributes: CthulhuAttributes = {
-    STR,
-    CON,
-    POW,
-    DEX,
-    APP,
-    INT,
-    EDU,
-    SIZ,
-  };
-  
-  // 派生値を計算
-  const derived = calculateDerivedValues(attributes);
-  
+
+  const attributes: CthulhuAttributes = { STR, CON, POW, DEX, APP, INT, EDU, SIZ };
+  const derived = calculateDerivedValues(attributes, system);
   return { attributes, derived };
 }
 
 /**
  * 能力値から派生値を計算
  */
-export function calculateDerivedValues(attributes: CthulhuAttributes): CthulhuDerived {
-  const { CON, SIZ, POW, INT, EDU, STR } = attributes;
+function calcDbBuild7e(strSizSum: number): { DB: string; BUILD: number } {
+  if (strSizSum >= 2 && strSizSum <= 64) return { DB: '-2', BUILD: -2 };
+  if (strSizSum >= 65 && strSizSum <= 84) return { DB: '-1', BUILD: -1 };
+  if (strSizSum >= 85 && strSizSum <= 124) return { DB: '0', BUILD: 0 };
+  if (strSizSum >= 125 && strSizSum <= 164) return { DB: '+1D4', BUILD: 1 };
+  if (strSizSum >= 165 && strSizSum <= 204) return { DB: '+1D6', BUILD: 2 };
+  if (strSizSum >= 205 && strSizSum <= 284) return { DB: '+2D6', BUILD: 3 };
+  if (strSizSum >= 285 && strSizSum <= 364) return { DB: '+3D6', BUILD: 4 };
+  if (strSizSum >= 365 && strSizSum <= 444) return { DB: '+4D6', BUILD: 5 };
+  if (strSizSum >= 445 && strSizSum <= 524) return { DB: '+5D6', BUILD: 6 };
+  return { DB: '0', BUILD: 0 };
+}
 
-  // SAN
-  const SAN_max = POW * 5;
-  const SAN_current = SAN_max; // 初期値は最大値と同じ
+function calcMov7e(dex: number, str: number, siz: number): number {
+  if (dex < siz && str < siz) return 7;
+  if (dex > siz && str > siz) return 9;
+  return 8;
+}
 
-  // HP (最大) = (CON+SIZ)/2
-  const HP_max = Math.floor((CON + SIZ) / 2);
-  const HP_current = HP_max; // 初期値は最大値と同じ
+export function calculateDerivedValues(attributes: CthulhuAttributes, system: CthulhuSystem = 'cthulhu6'): CthulhuDerived {
+  const { CON, SIZ, POW, INT, EDU, STR, DEX } = attributes;
 
-  // MP
-  const MP_max = POW; // POW×1
-  const MP_current = MP_max; // 初期値は最大値と同じ
-
-  // アイデア (INT×5)
-  const IDEA = INT * 5;
-
-  // 知識 (EDU×5)
-  const KNOW = EDU * 5;
-
-  // 幸運 (POW×5)
-  const LUCK = POW * 5;
-
-  // ダメージボーナス (STR+SIZの値で計算)
-  const strSizSum = STR + SIZ;
-  let DB = '+0';
-  if (strSizSum >= 2 && strSizSum <= 12) {
-    DB = '-1D6';
-  } else if (strSizSum >= 13 && strSizSum <= 16) {
-    DB = '-1D4';
-  } else if (strSizSum >= 17 && strSizSum <= 24) {
-    DB = '+0';
-  } else if (strSizSum >= 25 && strSizSum <= 32) {
-    DB = '+1D4';
-  } else if (strSizSum >= 33 && strSizSum <= 40) {
-    DB = '+1D6';
-  } else if (strSizSum >= 41 && strSizSum <= 56) {
-    DB = '+2D6';
-  } else if (strSizSum >= 57 && strSizSum <= 72) {
-    DB = '+3D6';
-  } else if (strSizSum >= 73 && strSizSum <= 88) {
-    DB = '+4D6';
-  } else if (strSizSum >= 89) {
-    DB = '+5D6';
+  if (system === 'cthulhu7') {
+    const SAN_max = POW;
+    const SAN_current = SAN_max;
+    const HP_max = Math.floor((CON + SIZ) / 10);
+    const HP_current = HP_max;
+    const MP_max = Math.floor(POW / 5);
+    const MP_current = MP_max;
+    const IDEA = INT;
+    const KNOW = EDU;
+    const LUCK = attributes.LUK ?? 0;
+    const strSizSum = STR + SIZ;
+    const { DB, BUILD } = calcDbBuild7e(strSizSum);
+    const MOV = calcMov7e(DEX, STR, SIZ);
+    return { SAN_current, SAN_max, HP_current, HP_max, MP_current, MP_max, IDEA, KNOW, LUCK, DB, BUILD, MOV };
   }
 
-  return {
-    SAN_current,
-    SAN_max,
-    HP_current,
-    HP_max,
-    MP_current,
-    MP_max,
-    IDEA,
-    KNOW,
-    LUCK,
-    DB,
-  };
+  // 6版（旧/第6版）
+  const SAN_max = POW * 5;
+  const SAN_current = SAN_max;
+  const HP_max = Math.floor((CON + SIZ) / 2);
+  const HP_current = HP_max;
+  const MP_max = POW;
+  const MP_current = MP_max;
+  const IDEA = INT * 5;
+  const KNOW = EDU * 5;
+  const LUCK = POW * 5;
+
+  const strSizSum = STR + SIZ;
+  let DB = '+0';
+  if (strSizSum >= 2 && strSizSum <= 12) DB = '-1D6';
+  else if (strSizSum >= 13 && strSizSum <= 16) DB = '-1D4';
+  else if (strSizSum >= 17 && strSizSum <= 24) DB = '+0';
+  else if (strSizSum >= 25 && strSizSum <= 32) DB = '+1D4';
+  else if (strSizSum >= 33 && strSizSum <= 40) DB = '+1D6';
+  else if (strSizSum >= 41 && strSizSum <= 56) DB = '+2D6';
+  else if (strSizSum >= 57 && strSizSum <= 72) DB = '+3D6';
+  else if (strSizSum >= 73 && strSizSum <= 88) DB = '+4D6';
+  else if (strSizSum >= 89) DB = '+5D6';
+
+  return { SAN_current, SAN_max, HP_current, HP_max, MP_current, MP_max, IDEA, KNOW, LUCK, DB };
 }
 
 /**
  * シートデータを正規化（不足しているフィールドを追加）
  */
-export function normalizeSheetData(data: any): CthulhuSheetData {
+export function normalizeSheetData(data: any, system: CthulhuSystem = 'cthulhu6'): CthulhuSheetData {
   const defaultAttributes = {
     STR: 0,
     CON: 0,
@@ -125,10 +131,11 @@ export function normalizeSheetData(data: any): CthulhuSheetData {
     INT: 0,
     EDU: 0,
     SIZ: 0,
+    LUK: 0,
   };
 
   const attributes = { ...defaultAttributes, ...(data.attributes || {}) };
-  const derived = calculateDerivedValues(attributes);
+  const derived = calculateDerivedValues(attributes, system);
   
   // 既存の派生値があればマージ（current値は保持）
   const mergedDerived = {
@@ -138,6 +145,9 @@ export function normalizeSheetData(data: any): CthulhuSheetData {
     SAN_current: data.derived?.SAN_current ?? derived.SAN_current,
     HP_current: data.derived?.HP_current ?? derived.HP_current,
     MP_current: data.derived?.MP_current ?? derived.MP_current,
+    // 第7版: 編集可能項目は既存値を優先（なければ計算値）
+    LUCK: data.derived?.LUCK ?? derived.LUCK,
+    MOV: data.derived?.MOV ?? derived.MOV,
   };
 
   // 技能データの正規化
@@ -148,10 +158,10 @@ export function normalizeSheetData(data: any): CthulhuSheetData {
   // 動的に計算される技能の初期値を設定
   const getDynamicBaseValue = (skillName: string): number => {
     if (skillName === '回避') {
-      return attributes.DEX; // DEX×1
+      return system === 'cthulhu7' ? Math.floor(attributes.DEX / 2) : attributes.DEX; // 7版: DEX÷2 / 6版: DEX×1
     }
     if (skillName === '母国語') {
-      return attributes.EDU * 5; // EDU×5
+      return system === 'cthulhu7' ? attributes.EDU : attributes.EDU * 5; // 7版: EDU×1 / 6版: EDU×5
     }
     return 0;
   };
