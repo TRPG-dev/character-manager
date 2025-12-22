@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { CthulhuSheetData, CthulhuSkill, CthulhuWeapon, CthulhuItem } from '../types/cthulhu';
 import { calculateDerivedValues, normalizeSheetData, getCthulhuJobPointsLimit, getCthulhuInterestPointsLimit, CTHULHU7_JOB_POINTS_RULE_LABEL, type Cthulhu7JobPointsRule, type CthulhuSystem } from '../utils/cthulhu';
-import { calculateSkillTotal, calculateTotalJobPoints, calculateTotalInterestPoints } from '../data/cthulhuSkills';
+import { CTHULHU7_MELEE_OPTIONS, CTHULHU7_RANGED_OPTIONS, calculateSkillTotal, calculateTotalJobPoints, calculateTotalInterestPoints } from '../data/cthulhuSkills';
 import { CthulhuAttributesSection } from './cthulhu/CthulhuAttributesSection';
 import { CthulhuDerivedStatsSection } from './cthulhu/CthulhuDerivedStatsSection';
 import { CthulhuWeaponsSection } from './cthulhu/CthulhuWeaponsSection';
@@ -198,6 +198,32 @@ export const CthulhuSheetForm = ({ data, onChange, system }: CthulhuSheetFormPro
   };
 
   // 格闘技能関連の関数
+  const updateCombatSkillSpecialty = (index: number, specialty: string) => {
+    const newCombatSkills = [...(sheetData.combatSkills || [])];
+    const currentSkill = newCombatSkills[index];
+    const name = currentSkill.name;
+
+    let baseValue = currentSkill.baseValue || 0;
+    if (system === 'cthulhu7' && name === '近接戦闘') {
+      baseValue = CTHULHU7_MELEE_OPTIONS.find(o => o.value === specialty)?.baseValue ?? CTHULHU7_MELEE_OPTIONS[0].baseValue;
+    }
+    if (system === 'cthulhu7' && name === '射撃') {
+      baseValue = CTHULHU7_RANGED_OPTIONS.find(o => o.value === specialty)?.baseValue ?? CTHULHU7_RANGED_OPTIONS[0].baseValue;
+    }
+
+    newCombatSkills[index] = {
+      ...currentSkill,
+      specialty,
+      baseValue,
+      isCustom: currentSkill.isCustom === true,
+    };
+    newCombatSkills[index].total = calculateSkillTotal(newCombatSkills[index]);
+    const updated = { ...sheetData, combatSkills: newCombatSkills };
+    setIsInternalUpdate(true);
+    setSheetData(updated);
+    onChange(updated);
+  };
+
   const updateCombatSkill = (index: number, field: 'jobPoints' | 'interestPoints' | 'growth' | 'other', value: number) => {
     const newCombatSkills = [...(sheetData.combatSkills || [])];
     const currentSkill = newCombatSkills[index];
@@ -494,7 +520,9 @@ export const CthulhuSheetForm = ({ data, onChange, system }: CthulhuSheetFormPro
                 <tr key={`default-${index}`} style={{ borderBottom: '1px solid #dee2e6' }}>
                   <td style={{ padding: '0.75rem' }}>
                     {(() => {
-                      const isSpecialtySkill = ['芸術', '製作', '操縦', '他の言語', '母国語'].includes(skill.name);
+                      const isSpecialtySkill = system === 'cthulhu7'
+                        ? ['科学', '芸術/製作', 'サバイバル', '操縦', '他の言語', '母国語'].includes(skill.name)
+                        : ['芸術', '製作', '操縦', '他の言語', '母国語'].includes(skill.name);
                       const displayName = skill.specialty ? `${skill.name}(${skill.specialty})` : skill.name;
                       return (
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
@@ -694,7 +722,24 @@ export const CthulhuSheetForm = ({ data, onChange, system }: CthulhuSheetFormPro
                           style={{ width: '100%', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px' }}
                         />
                       ) : (
-                        <span style={{ fontWeight: 'bold' }}>{skill.name}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
+                          <span style={{ fontWeight: 'bold' }}>
+                            {skill.specialty ? `${skill.name}(${skill.specialty})` : skill.name}
+                          </span>
+                          {system === 'cthulhu7' && (skill.name === '近接戦闘' || skill.name === '射撃') && (
+                            <select
+                              value={(skill.specialty || '').trim() || (skill.name === '近接戦闘' ? CTHULHU7_MELEE_OPTIONS[0].value : CTHULHU7_RANGED_OPTIONS[0].value)}
+                              onChange={(e) => updateCombatSkillSpecialty(index, e.target.value)}
+                              style={{ width: '180px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                            >
+                              {(skill.name === '近接戦闘' ? CTHULHU7_MELEE_OPTIONS : CTHULHU7_RANGED_OPTIONS).map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                  {opt.value}
+                                </option>
+                              ))}
+                            </select>
+                          )}
+                        </div>
                       )}
                     </td>
                     <td style={{ padding: '0.75rem', textAlign: 'center' }}>

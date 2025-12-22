@@ -1,6 +1,6 @@
 // クトゥルフ神話TRPG用のユーティリティ関数
 import type { CthulhuAttributes, CthulhuDerived, CthulhuSheetData, CthulhuSkill } from '../types/cthulhu';
-import { DEFAULT_CTHULHU_SKILLS, COMBAT_SKILLS, calculateSkillTotal } from '../data/cthulhuSkills';
+import { DEFAULT_CTHULHU_SKILLS, DEFAULT_CTHULHU7_SKILLS, COMBAT_SKILLS, COMBAT_SKILLS_CTHULHU7, CTHULHU7_MELEE_OPTIONS, CTHULHU7_RANGED_OPTIONS, calculateSkillTotal } from '../data/cthulhuSkills';
 
 export type CthulhuSystem = 'cthulhu' | 'cthulhu6' | 'cthulhu7';
 export type Cthulhu7JobPointsRule =
@@ -177,6 +177,22 @@ export function normalizeSheetData(data: any, system: CthulhuSystem = 'cthulhu6'
   let combatSkills: CthulhuSkill[] = [];
   let customSkills: CthulhuSkill[] = [];
 
+  const DEFAULT_SKILLS_SOURCE = system === 'cthulhu7' ? DEFAULT_CTHULHU7_SKILLS : DEFAULT_CTHULHU_SKILLS;
+  const COMBAT_SKILLS_SOURCE = system === 'cthulhu7' ? COMBAT_SKILLS_CTHULHU7 : COMBAT_SKILLS;
+
+  const skillKey = (s: Pick<CthulhuSkill, 'name' | 'specialty'>) => `${s.name}::${(s.specialty || '').trim()}`;
+
+  const combatBaseFromSpecialty7e = (name: string, specialty?: string): number => {
+    const sp = (specialty || '').trim();
+    if (name === '近接戦闘') {
+      return CTHULHU7_MELEE_OPTIONS.find(o => o.value === sp)?.baseValue ?? CTHULHU7_MELEE_OPTIONS[0].baseValue;
+    }
+    if (name === '射撃') {
+      return CTHULHU7_RANGED_OPTIONS.find(o => o.value === sp)?.baseValue ?? CTHULHU7_RANGED_OPTIONS[0].baseValue;
+    }
+    return 0;
+  };
+
   // 動的に計算される技能の初期値を設定
   const getDynamicBaseValue = (skillName: string): number => {
     if (skillName === '回避') {
@@ -188,13 +204,21 @@ export function normalizeSheetData(data: any, system: CthulhuSystem = 'cthulhu6'
     return 0;
   };
 
+  const getCombatDynamicBaseValue = (skill: Pick<CthulhuSkill, 'name' | 'specialty'>): number => {
+    if (skill.name === '回避') {
+      return getDynamicBaseValue('回避');
+    }
+    if (system === 'cthulhu7' && (skill.name === '近接戦闘' || skill.name === '射撃')) {
+      return combatBaseFromSpecialty7e(skill.name, skill.specialty);
+    }
+    return 0;
+  };
+
   // combatSkillsが既に存在する場合はそれを使用
   if (data.combatSkills && Array.isArray(data.combatSkills)) {
-    const combatSkillNames = new Set(COMBAT_SKILLS.map(s => s.name));
+    const combatSkillKeys = new Set(COMBAT_SKILLS_SOURCE.map(s => (system === 'cthulhu7' ? skillKey(s) : s.name)));
     combatSkills = data.combatSkills.map((s: any) => {
-      // isCustomフラグを保持、またはデフォルトリストに含まれていない場合はカスタム技能
-      const isCustom = s.isCustom === true || !combatSkillNames.has(s.name);
-      const skill: CthulhuSkill = {
+      const parsed: CthulhuSkill = {
         name: s.name,
         specialty: s.specialty ?? '',
         baseValue: s.baseValue ?? s.base_value ?? 0,
@@ -202,11 +226,18 @@ export function normalizeSheetData(data: any, system: CthulhuSystem = 'cthulhu6'
         interestPoints: s.interestPoints ?? s.interest_points ?? 0,
         growth: s.growth ?? 0,
         other: s.other ?? 0,
-        isCustom: isCustom,
+        isCustom: false,
+      };
+      // isCustomフラグを保持、またはデフォルトリストに含まれていない場合はカスタム技能
+      const keyOrName = system === 'cthulhu7' ? skillKey(parsed) : parsed.name;
+      const isCustom = s.isCustom === true || !combatSkillKeys.has(keyOrName);
+      const skill: CthulhuSkill = {
+        ...parsed,
+        isCustom,
       };
       // 動的計算が必要な技能の初期値を更新（カスタム技能でない場合のみ）
       if (!isCustom) {
-        const dynamicBaseValue = getDynamicBaseValue(skill.name);
+        const dynamicBaseValue = getCombatDynamicBaseValue(skill);
         if (dynamicBaseValue > 0) {
           skill.baseValue = dynamicBaseValue;
         }
@@ -216,9 +247,9 @@ export function normalizeSheetData(data: any, system: CthulhuSystem = 'cthulhu6'
     });
   } else {
     // 新規作成時はデフォルトの格闘技能を設定
-    combatSkills = COMBAT_SKILLS.map(skill => {
-      const dynamicBaseValue = getDynamicBaseValue(skill.name);
-      const baseValue = dynamicBaseValue > 0 ? dynamicBaseValue : skill.baseValue;
+    combatSkills = COMBAT_SKILLS_SOURCE.map(skill => {
+      const dynamicBaseValue = getCombatDynamicBaseValue(skill);
+      const baseValue = dynamicBaseValue > 0 ? dynamicBaseValue : (skill.baseValue || 0);
       return {
         ...skill,
         baseValue,
@@ -248,15 +279,17 @@ export function normalizeSheetData(data: any, system: CthulhuSystem = 'cthulhu6'
 
   if (data.skills && Array.isArray(data.skills)) {
     // 既存データからデフォルト技能と追加技能を分離
-    const combatSkillNames = new Set(COMBAT_SKILLS.map(s => s.name));
+    const combatSkillNames = new Set(COMBAT_SKILLS_SOURCE.map(s => s.name));
     
     // デフォルト技能をマージ（格闘技能を除外）
-    defaultSkills = DEFAULT_CTHULHU_SKILLS.map(defaultSkill => {
+    defaultSkills = DEFAULT_SKILLS_SOURCE.map(defaultSkill => {
       // 動的計算が必要な技能の初期値を更新
       const dynamicBaseValue = getDynamicBaseValue(defaultSkill.name);
       const baseValue = dynamicBaseValue > 0 ? dynamicBaseValue : defaultSkill.baseValue;
       
-      const existing = data.skills.find((s: any) => s.name === defaultSkill.name);
+      const existing = system === 'cthulhu7'
+        ? data.skills.find((s: any) => (s.name === defaultSkill.name) && ((s.specialty ?? '').trim() === ((defaultSkill.specialty ?? '').trim())))
+        : data.skills.find((s: any) => s.name === defaultSkill.name);
       if (existing) {
         // 既存データから値を取得
         const skill: CthulhuSkill = {
@@ -279,7 +312,9 @@ export function normalizeSheetData(data: any, system: CthulhuSystem = 'cthulhu6'
     if (!data.customSkills || !Array.isArray(data.customSkills)) {
       customSkills = data.skills
         .filter((s: any) => {
-          const isDefault = DEFAULT_CTHULHU_SKILLS.some(ds => ds.name === s.name);
+          const isDefault = system === 'cthulhu7'
+            ? DEFAULT_SKILLS_SOURCE.some(ds => (ds.name === s.name) && (((ds.specialty ?? '').trim()) === ((s.specialty ?? '').trim())))
+            : DEFAULT_SKILLS_SOURCE.some(ds => ds.name === s.name);
           const isCombat = combatSkillNames.has(s.name);
           return !isDefault && !isCombat;
         })
@@ -300,7 +335,7 @@ export function normalizeSheetData(data: any, system: CthulhuSystem = 'cthulhu6'
     }
   } else {
     // 新規作成時はデフォルト技能のみ
-    defaultSkills = DEFAULT_CTHULHU_SKILLS.map(skill => {
+    defaultSkills = DEFAULT_SKILLS_SOURCE.map(skill => {
       const dynamicBaseValue = getDynamicBaseValue(skill.name);
       const baseValue = dynamicBaseValue > 0 ? dynamicBaseValue : skill.baseValue;
       return {
