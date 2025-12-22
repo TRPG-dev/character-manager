@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { CthulhuSheetData, CthulhuSkill, CthulhuWeapon, CthulhuItem } from '../types/cthulhu';
-import { calculateDerivedValues, normalizeSheetData, getJobPointsLimit, getInterestPointsLimit, type CthulhuSystem } from '../utils/cthulhu';
+import { calculateDerivedValues, normalizeSheetData, getCthulhuJobPointsLimit, getCthulhuInterestPointsLimit, CTHULHU7_JOB_POINTS_RULE_LABEL, type Cthulhu7JobPointsRule, type CthulhuSystem } from '../utils/cthulhu';
 import { calculateSkillTotal, calculateTotalJobPoints, calculateTotalInterestPoints } from '../data/cthulhuSkills';
 import { CthulhuAttributesSection } from './cthulhu/CthulhuAttributesSection';
 import { CthulhuDerivedStatsSection } from './cthulhu/CthulhuDerivedStatsSection';
@@ -165,10 +165,37 @@ export const CthulhuSheetForm = ({ data, onChange, system }: CthulhuSheetFormPro
   const allSkills = [...sheetData.skills, ...(sheetData.combatSkills || []), ...(sheetData.customSkills || [])];
   const totalJobPoints = calculateTotalJobPoints(allSkills);
   const totalInterestPoints = calculateTotalInterestPoints(allSkills);
-  const jobPointsLimit = getJobPointsLimit(sheetData.attributes.EDU);
-  const interestPointsLimit = getInterestPointsLimit(sheetData.attributes.INT);
-  const isJobPointsOverLimit = totalJobPoints > jobPointsLimit;
-  const isInterestPointsOverLimit = totalInterestPoints > interestPointsLimit;
+  const jobLimit = getCthulhuJobPointsLimit({
+    system,
+    attributes: sheetData.attributes,
+    jobPointsRule: sheetData.jobPointsRule,
+    jobPointsManualLimit: sheetData.jobPointsManualLimit,
+  });
+  const interestLimit = getCthulhuInterestPointsLimit(system, sheetData.attributes.INT);
+  const isJobPointsOverLimit = totalJobPoints > jobLimit.limit;
+  const isInterestPointsOverLimit = totalInterestPoints > interestLimit.limit;
+
+  const updateJobPointsRule = (rule: Cthulhu7JobPointsRule) => {
+    const updated: CthulhuSheetData = {
+      ...sheetData,
+      jobPointsRule: rule,
+      jobPointsManualLimit: rule === 'manual' ? (sheetData.jobPointsManualLimit ?? 0) : undefined,
+    };
+    setIsInternalUpdate(true);
+    setSheetData(updated);
+    onChange(updated);
+  };
+
+  const updateJobPointsManualLimit = (value: number) => {
+    const updated: CthulhuSheetData = {
+      ...sheetData,
+      jobPointsRule: 'manual',
+      jobPointsManualLimit: Math.max(0, value),
+    };
+    setIsInternalUpdate(true);
+    setSheetData(updated);
+    onChange(updated);
+  };
 
   // 格闘技能関連の関数
   const updateCombatSkill = (index: number, field: 'jobPoints' | 'interestPoints' | 'growth' | 'other', value: number) => {
@@ -395,17 +422,47 @@ export const CthulhuSheetForm = ({ data, onChange, system }: CthulhuSheetFormPro
 
         {/* ポイント管理表示 */}
         <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '4px', border: '1px solid #dee2e6' }}>
+          {system === 'cthulhu7' && (
+            <div style={{ marginBottom: '1rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
+              <div>
+                <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>職業P上限方式</div>
+                <select
+                  value={(sheetData.jobPointsRule as any) || 'EDU*4'}
+                  onChange={(e) => updateJobPointsRule(e.target.value as Cthulhu7JobPointsRule)}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                >
+                  {(Object.keys(CTHULHU7_JOB_POINTS_RULE_LABEL) as Array<Cthulhu7JobPointsRule>).map((k) => (
+                    <option key={k} value={k}>
+                      {CTHULHU7_JOB_POINTS_RULE_LABEL[k]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {(sheetData.jobPointsRule === 'manual' || (sheetData.jobPointsRule ?? '') === 'manual') && (
+                <div>
+                  <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>職業P上限（手動入力）</div>
+                  <input
+                    type="number"
+                    min="0"
+                    value={sheetData.jobPointsManualLimit ?? 0}
+                    onChange={(e) => updateJobPointsManualLimit(parseInt(e.target.value) || 0)}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  />
+                </div>
+              )}
+            </div>
+          )}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
             <div>
               <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>職業P使用量</div>
               <div style={{ fontSize: '1.125rem', fontWeight: 'bold', color: isJobPointsOverLimit ? '#dc3545' : '#212529' }}>
-                {totalJobPoints} / {jobPointsLimit} (EDU × 20)
+                {totalJobPoints} / {jobLimit.limit} ({jobLimit.label})
               </div>
             </div>
             <div>
               <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>興味P使用量</div>
               <div style={{ fontSize: '1.125rem', fontWeight: 'bold', color: isInterestPointsOverLimit ? '#dc3545' : '#212529' }}>
-                {totalInterestPoints} / {interestPointsLimit} (INT × 10)
+                {totalInterestPoints} / {interestLimit.limit} ({interestLimit.label})
               </div>
             </div>
           </div>

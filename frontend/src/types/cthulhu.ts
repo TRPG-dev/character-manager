@@ -76,6 +76,12 @@ export interface CthulhuSheetData {
   gender?: string; // 性別
   birthplace?: string; // 出身地
   schoolDegree?: string; // 学校・学位（第6版）
+
+  // 第7版: 技能ポイント上限の方式/手動上限
+  // - jobPointsRule: 上限計算方式（手動入力を含む）
+  // - jobPointsManualLimit: 手動入力時の上限値
+  jobPointsRule?: string;
+  jobPointsManualLimit?: number;
   
   attributes: CthulhuAttributes;
   derived: CthulhuDerived;

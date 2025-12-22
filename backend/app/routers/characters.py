@@ -147,7 +147,7 @@ async def create_character(
 
     # クトゥルフの場合、技能ポイント上限チェック
     if character_data.system in _CTHULHU_SYSTEMS:
-        validate_cthulhu_skill_points(sheet_data)
+        validate_cthulhu_skill_points(sheet_data, character_data.system)
 
     character = Character(
         id=uuid.uuid4(),
@@ -228,7 +228,7 @@ async def update_character(
     if character_data.sheet_data is not None:
         # クトゥルフの場合、技能ポイント上限チェック
         if character.system in _CTHULHU_SYSTEMS:
-            validate_cthulhu_skill_points(character_data.sheet_data)
+            validate_cthulhu_skill_points(character_data.sheet_data, character.system)
         character.sheet_data = character_data.sheet_data
 
     db.commit()

@@ -3,6 +3,28 @@ import type { CthulhuAttributes, CthulhuDerived, CthulhuSheetData, CthulhuSkill 
 import { DEFAULT_CTHULHU_SKILLS, COMBAT_SKILLS, calculateSkillTotal } from '../data/cthulhuSkills';
 
 export type CthulhuSystem = 'cthulhu' | 'cthulhu6' | 'cthulhu7';
+export type Cthulhu7JobPointsRule =
+  | 'EDU*4'
+  | 'EDU*2+STR*2'
+  | 'EDU*2+CON*2'
+  | 'EDU*2+POW*2'
+  | 'EDU*2+DEX*2'
+  | 'EDU*2+APP*2'
+  | 'EDU*2+SIZ*2'
+  | 'EDU*2+INT*2'
+  | 'manual';
+
+export const CTHULHU7_JOB_POINTS_RULE_LABEL: Record<Cthulhu7JobPointsRule, string> = {
+  'EDU*4': 'EDU*4',
+  'EDU*2+STR*2': 'EDU*2+STR*2',
+  'EDU*2+CON*2': 'EDU*2+CON*2',
+  'EDU*2+POW*2': 'EDU*2+POW*2',
+  'EDU*2+DEX*2': 'EDU*2+DEX*2',
+  'EDU*2+APP*2': 'EDU*2+APP*2',
+  'EDU*2+SIZ*2': 'EDU*2+SIZ*2',
+  'EDU*2+INT*2': 'EDU*2+INT*2',
+  manual: '手動入力',
+};
 
 /**
  * サイコロを振る（フロントエンド用）
@@ -296,6 +318,8 @@ export function normalizeSheetData(data: any, system: CthulhuSystem = 'cthulhu6'
     gender: data.gender ?? '',
     birthplace: data.birthplace ?? '',
     schoolDegree: data.schoolDegree ?? '',
+    jobPointsRule: data.jobPointsRule ?? (system === 'cthulhu7' ? 'EDU*4' : undefined),
+    jobPointsManualLimit: data.jobPointsManualLimit ?? undefined,
     attributes,
     derived: mergedDerived,
     skills: defaultSkills,
@@ -327,5 +351,72 @@ export function getJobPointsLimit(edu: number): number {
  */
 export function getInterestPointsLimit(int: number): number {
   return int * 10;
+}
+
+function toSafeInt(v: unknown, fallback: number = 0): number {
+  const n = typeof v === 'number' ? v : typeof v === 'string' ? Number(v) : NaN;
+  return Number.isFinite(n) ? Math.trunc(n) : fallback;
+}
+
+export function getCthulhuJobPointsLimit(params: {
+  system: CthulhuSystem;
+  attributes: CthulhuAttributes;
+  jobPointsRule?: unknown;
+  jobPointsManualLimit?: unknown;
+}): { limit: number; label: string; rule?: Cthulhu7JobPointsRule } {
+  const { system, attributes } = params;
+
+  if (system !== 'cthulhu7') {
+    const edu = toSafeInt(attributes.EDU, 0);
+    return { limit: edu * 20, label: 'EDU × 20' };
+  }
+
+  const edu = toSafeInt(attributes.EDU, 0);
+  const str = toSafeInt(attributes.STR, 0);
+  const con = toSafeInt(attributes.CON, 0);
+  const pow = toSafeInt(attributes.POW, 0);
+  const dex = toSafeInt(attributes.DEX, 0);
+  const app = toSafeInt(attributes.APP, 0);
+  const siz = toSafeInt(attributes.SIZ, 0);
+  const int_ = toSafeInt(attributes.INT, 0);
+
+  const rawRule = String(params.jobPointsRule ?? 'EDU*4');
+  const rule: Cthulhu7JobPointsRule = ([
+    'EDU*4',
+    'EDU*2+STR*2',
+    'EDU*2+CON*2',
+    'EDU*2+POW*2',
+    'EDU*2+DEX*2',
+    'EDU*2+APP*2',
+    'EDU*2+SIZ*2',
+    'EDU*2+INT*2',
+    'manual',
+  ] as const).includes(rawRule as any)
+    ? (rawRule as Cthulhu7JobPointsRule)
+    : 'EDU*4';
+
+  if (rule === 'manual') {
+    const manual = Math.max(0, toSafeInt(params.jobPointsManualLimit, 0));
+    return { limit: manual, label: '手動入力', rule };
+  }
+
+  let limit = edu * 4;
+  if (rule === 'EDU*2+STR*2') limit = edu * 2 + str * 2;
+  if (rule === 'EDU*2+CON*2') limit = edu * 2 + con * 2;
+  if (rule === 'EDU*2+POW*2') limit = edu * 2 + pow * 2;
+  if (rule === 'EDU*2+DEX*2') limit = edu * 2 + dex * 2;
+  if (rule === 'EDU*2+APP*2') limit = edu * 2 + app * 2;
+  if (rule === 'EDU*2+SIZ*2') limit = edu * 2 + siz * 2;
+  if (rule === 'EDU*2+INT*2') limit = edu * 2 + int_ * 2;
+
+  return { limit, label: CTHULHU7_JOB_POINTS_RULE_LABEL[rule], rule };
+}
+
+export function getCthulhuInterestPointsLimit(system: CthulhuSystem, intValue: number): { limit: number; label: string } {
+  const int_ = toSafeInt(intValue, 0);
+  if (system === 'cthulhu7') {
+    return { limit: int_ * 2, label: 'INT × 2' };
+  }
+  return { limit: int_ * 10, label: 'INT × 10' };
 }
 
