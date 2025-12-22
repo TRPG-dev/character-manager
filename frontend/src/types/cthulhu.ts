@@ -66,7 +66,25 @@ export interface CthulhuScenario {
 export interface CthulhuMythosItem {
   name: string;
   memo: string;
+  // 第7版: キー・コネクション
+  isKey?: boolean;
 }
+
+// 第7版: バックストーリー項目（メモのみ）
+export type Cthulhu7BackstoryKey =
+  | 'appearance' // 容姿の描写
+  | 'traits' // 特徴
+  | 'beliefs' // イデオロギー/信念
+  | 'injuries' // 負傷、傷跡
+  | 'importantPeople' // 重要な人々
+  | 'phobiasManias' // 恐怖症、マニア
+  | 'meaningfulPlaces' // 意味のある場所
+  | 'treasuredPossessions'; // 秘蔵の品
+
+export type Cthulhu7BackstoryEntry = {
+  memo: string;
+  isKey?: boolean;
+};
 
 export interface CthulhuSheetData {
   // 基本情報
@@ -97,6 +115,9 @@ export interface CthulhuSheetData {
   
   backstory: string;
   notes?: string;
+
+  // 第7版: バックストーリー（項目化 + キー・コネクション）
+  backstory7?: Partial<Record<Cthulhu7BackstoryKey, Cthulhu7BackstoryEntry>>;
   
   // その他
   scenarios?: CthulhuScenario[]; // 通過したシナリオ
