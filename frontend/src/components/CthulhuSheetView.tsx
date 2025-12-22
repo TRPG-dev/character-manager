@@ -331,10 +331,12 @@ export const CthulhuSheetView = ({ data, system = 'cthulhu6', showOnlyAttributes
                         <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>故障</div>
                         <div style={{ fontWeight: 'bold' }}>{weapon.malfunction}</div>
                       </div>
-                      <div>
-                        <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>耐久力</div>
-                        <div style={{ fontWeight: 'bold' }}>{weapon.durability}</div>
-                      </div>
+                      {system !== 'cthulhu7' && (
+                        <div>
+                          <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>耐久力</div>
+                          <div style={{ fontWeight: 'bold' }}>{weapon.durability}</div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -890,10 +892,12 @@ export const CthulhuSheetView = ({ data, system = 'cthulhu6', showOnlyAttributes
                       <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>故障</div>
                       <div style={{ fontWeight: 'bold' }}>{weapon.malfunction}</div>
                     </div>
-                    <div>
-                      <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>耐久力</div>
-                      <div style={{ fontWeight: 'bold' }}>{weapon.durability}</div>
-                    </div>
+                    {system !== 'cthulhu7' && (
+                      <div>
+                        <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>耐久力</div>
+                        <div style={{ fontWeight: 'bold' }}>{weapon.durability}</div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
