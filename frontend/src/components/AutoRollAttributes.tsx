@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../auth/useAuth';
 import { autoRollAttributes } from '../services/api';
-import { generateCthulhuAttributes } from '../utils/cthulhu';
+import { generateCthulhuAttributes, type CthulhuSystem } from '../utils/cthulhu';
 import type { CthulhuAttributes, CthulhuDerived } from '../types/cthulhu';
 
 type SystemEnum = 'cthulhu' | 'cthulhu6' | 'cthulhu7' | 'shinobigami' | 'sw25' | 'satasupe';
@@ -16,6 +16,7 @@ interface AutoRollAttributesResponse {
     INT: number;
     EDU: number;
     SIZ: number;
+    LUK?: number;
   };
   derived: {
     SAN_current: number;
@@ -28,6 +29,8 @@ interface AutoRollAttributesResponse {
     KNOW?: number;
     LUCK?: number;
     DB?: string;
+    BUILD?: number;
+    MOV?: number;
   };
 }
 
@@ -73,7 +76,7 @@ export const AutoRollAttributes = ({
         setResult(rollResult);
       } else {
         // characterIdが存在しない場合はフロントエンドで生成
-        const generated = generateCthulhuAttributes();
+        const generated = generateCthulhuAttributes(system as CthulhuSystem);
         setResult(generated);
       }
     } catch (err: any) {

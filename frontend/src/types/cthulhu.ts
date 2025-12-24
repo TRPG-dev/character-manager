@@ -9,6 +9,8 @@ export interface CthulhuAttributes {
   INT: number;
   EDU: number;
   SIZ: number;
+  // 第7版のみ
+  LUK?: number;
 }
 
 export interface CthulhuDerived {
@@ -18,10 +20,13 @@ export interface CthulhuDerived {
   HP_max: number;
   MP_current: number;
   MP_max: number;
-  IDEA?: number; // INT×5
-  KNOW?: number; // EDU×5
-  LUCK?: number; // POW×5
+  IDEA?: number; // 第6版: INT×5 / 第7版: INT×1
+  KNOW?: number; // 第6版: EDU×5 / 第7版: EDU×1
+  LUCK?: number; // 第6版: POW×5 / 第7版: LUK×1（修正可能）
   DB?: string; // ダメージボーナス
+  // 第7版のみ
+  BUILD?: number;
+  MOV?: number;
 }
 
 export interface CthulhuSkill {
@@ -44,7 +49,7 @@ export interface CthulhuWeapon {
   attacks: string;
   ammo: number;
   malfunction: number;
-  durability: string;
+  durability?: string; // 第6版（7版は欄を非表示）
 }
 
 export interface CthulhuItem {
@@ -61,7 +66,25 @@ export interface CthulhuScenario {
 export interface CthulhuMythosItem {
   name: string;
   memo: string;
+  // 第7版: キー・コネクション
+  isKey?: boolean;
 }
+
+// 第7版: バックストーリー項目（メモのみ）
+export type Cthulhu7BackstoryKey =
+  | 'appearance' // 容姿の描写
+  | 'traits' // 特徴
+  | 'beliefs' // イデオロギー/信念
+  | 'injuries' // 負傷、傷跡
+  | 'importantPeople' // 重要な人々
+  | 'phobiasManias' // 恐怖症、マニア
+  | 'meaningfulPlaces' // 意味のある場所
+  | 'treasuredPossessions'; // 秘蔵の品
+
+export type Cthulhu7BackstoryEntry = {
+  memo: string;
+  isKey?: boolean;
+};
 
 export interface CthulhuSheetData {
   // 基本情報
@@ -71,6 +94,12 @@ export interface CthulhuSheetData {
   gender?: string; // 性別
   birthplace?: string; // 出身地
   schoolDegree?: string; // 学校・学位（第6版）
+
+  // 第7版: 技能ポイント上限の方式/手動上限
+  // - jobPointsRule: 上限計算方式（手動入力を含む）
+  // - jobPointsManualLimit: 手動入力時の上限値
+  jobPointsRule?: string;
+  jobPointsManualLimit?: number;
   
   attributes: CthulhuAttributes;
   derived: CthulhuDerived;
@@ -86,6 +115,9 @@ export interface CthulhuSheetData {
   
   backstory: string;
   notes?: string;
+
+  // 第7版: バックストーリー（項目化 + キー・コネクション）
+  backstory7?: Partial<Record<Cthulhu7BackstoryKey, Cthulhu7BackstoryEntry>>;
   
   // その他
   scenarios?: CthulhuScenario[]; // 通過したシナリオ
@@ -93,5 +125,11 @@ export interface CthulhuSheetData {
   spells?: CthulhuMythosItem[]; // 呪文
   artifacts?: CthulhuMythosItem[]; // アーティファクト
   encounteredEntities?: CthulhuMythosItem[]; // 遭遇した超自然の存在
+  
+  // 第7版: 魔導書・呪文・アーティファクト・遭遇した超自然の存在のキー・コネクション（カテゴリ全体）
+  mythosBooksIsKey?: boolean;
+  spellsIsKey?: boolean;
+  artifactsIsKey?: boolean;
+  encounteredEntitiesIsKey?: boolean;
 }
 

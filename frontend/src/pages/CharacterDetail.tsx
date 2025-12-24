@@ -490,7 +490,7 @@ export const CharacterDetail = () => {
                             <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.birthplace}</div>
                           </div>
                         )}
-                        {sheetData.schoolDegree && (
+                        {character.system !== 'cthulhu7' && sheetData.schoolDegree && (
                           <div style={{ gridColumn: '1 / -1' }}>
                             <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>学校・学位</div>
                             <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.schoolDegree}</div>
@@ -505,6 +505,7 @@ export const CharacterDetail = () => {
               {/* 能力値・派生値セクション（CthulhuSheetViewから取得） */}
               <CthulhuSheetView 
                 data={normalizeCthulhuSheetData(character.sheet_data) as CthulhuSheetData}
+                system={character.system}
                 showOnlyAttributes={true}
               />
             </div>
@@ -517,6 +518,7 @@ export const CharacterDetail = () => {
             }}>
               <CthulhuSheetView 
                 data={normalizeCthulhuSheetData(character.sheet_data) as CthulhuSheetData}
+                system={character.system}
                 showOnlySkillsAndItems={true}
               />
             </div>
@@ -525,6 +527,7 @@ export const CharacterDetail = () => {
           {/* 2カラムレイアウトの下: その他 */}
           <CthulhuSheetView 
             data={normalizeCthulhuSheetData(character.sheet_data) as CthulhuSheetData}
+            system={character.system}
             showOnlyOther={true}
           />
         </>

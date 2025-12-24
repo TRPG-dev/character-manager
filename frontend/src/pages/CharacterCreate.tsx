@@ -65,6 +65,7 @@ export const CharacterCreate = () => {
           INT: 0,
           EDU: 0,
           SIZ: 0,
+          LUK: 0,
         },
         derived: {
           SAN_current: 0,
@@ -76,7 +77,7 @@ export const CharacterCreate = () => {
         },
         skills: [],
         backstory: '',
-      }));
+      }, system));
     } else if (system === 'shinobigami') {
       setSheetData(normalizeShinobigamiSheetData({
         attributes: {
@@ -183,17 +184,22 @@ export const CharacterCreate = () => {
     // クトゥルフの場合、ポイント上限チェック
     if ((selectedSystem === 'cthulhu' || selectedSystem === 'cthulhu6' || selectedSystem === 'cthulhu7') && sheetData && 'customSkills' in sheetData) {
       const { calculateTotalJobPoints, calculateTotalInterestPoints } = await import('../data/cthulhuSkills');
-      const { getJobPointsLimit, getInterestPointsLimit } = await import('../utils/cthulhu');
+      const { getCthulhuJobPointsLimit, getCthulhuInterestPointsLimit } = await import('../utils/cthulhu');
       
       const cthulhuData = sheetData as CthulhuSheetData;
       const allSkills = [...cthulhuData.skills, ...(cthulhuData.combatSkills || []), ...(cthulhuData.customSkills || [])];
       const totalJobPoints = calculateTotalJobPoints(allSkills);
       const totalInterestPoints = calculateTotalInterestPoints(allSkills);
-      const jobPointsLimit = getJobPointsLimit(cthulhuData.attributes.EDU);
-      const interestPointsLimit = getInterestPointsLimit(cthulhuData.attributes.INT);
+      const job = getCthulhuJobPointsLimit({
+        system: selectedSystem as any,
+        attributes: cthulhuData.attributes,
+        jobPointsRule: cthulhuData.jobPointsRule,
+        jobPointsManualLimit: cthulhuData.jobPointsManualLimit,
+      });
+      const interest = getCthulhuInterestPointsLimit(selectedSystem as any, cthulhuData.attributes.INT);
 
-      if (totalJobPoints > jobPointsLimit || totalInterestPoints > interestPointsLimit) {
-        showWarning(`ポイントの上限を超えています。\n職業P: ${totalJobPoints}/${jobPointsLimit}\n興味P: ${totalInterestPoints}/${interestPointsLimit}`);
+      if (totalJobPoints > job.limit || totalInterestPoints > interest.limit) {
+        showWarning(`ポイントの上限を超えています。\n職業P: ${totalJobPoints}/${job.limit} (${job.label})\n興味P: ${totalInterestPoints}/${interest.limit} (${interest.label})`);
         return;
       }
     }
@@ -426,6 +432,7 @@ export const CharacterCreate = () => {
             <CthulhuSheetForm
               data={sheetData as CthulhuSheetData}
               onChange={(data) => setSheetData(data)}
+              system={selectedSystem}
             />
           )}
           {selectedSystem === 'shinobigami' && sheetData && (

@@ -1,21 +1,21 @@
 import { useState, useEffect } from 'react';
 import type { CthulhuSheetData, CthulhuSkill, CthulhuWeapon, CthulhuItem } from '../types/cthulhu';
-import { calculateDerivedValues, normalizeSheetData, getJobPointsLimit, getInterestPointsLimit } from '../utils/cthulhu';
-import { calculateSkillTotal, calculateTotalJobPoints, calculateTotalInterestPoints } from '../data/cthulhuSkills';
-import {
-  CthulhuAttributesSection,
-  CthulhuDerivedStatsSection,
-  CthulhuWeaponsSection,
-} from './cthulhu';
+import { calculateDerivedValues, normalizeSheetData, getCthulhuJobPointsLimit, getCthulhuInterestPointsLimit, CTHULHU7_JOB_POINTS_RULE_LABEL, type Cthulhu7JobPointsRule, type CthulhuSystem } from '../utils/cthulhu';
+import { CTHULHU7_MELEE_OPTIONS, CTHULHU7_RANGED_OPTIONS, calculateSkillTotal, calculateTotalJobPoints, calculateTotalInterestPoints } from '../data/cthulhuSkills';
+import { CthulhuAttributesSection } from './cthulhu/CthulhuAttributesSection';
+import { CthulhuDerivedStatsSection } from './cthulhu/CthulhuDerivedStatsSection';
+import { CthulhuWeaponsSection } from './cthulhu/CthulhuWeaponsSection';
 
 interface CthulhuSheetFormProps {
   data: CthulhuSheetData;
   onChange: (data: CthulhuSheetData) => void;
+  system: CthulhuSystem;
 }
 
-export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
-  const [sheetData, setSheetData] = useState<CthulhuSheetData>(normalizeSheetData(data));
+export const CthulhuSheetForm = ({ data, onChange, system }: CthulhuSheetFormProps) => {
+  const [sheetData, setSheetData] = useState<CthulhuSheetData>(normalizeSheetData(data, system));
   const [isInternalUpdate, setIsInternalUpdate] = useState(false);
+  const isCthulhu7 = system === 'cthulhu7';
 
   useEffect(() => {
     // 内部更新の場合はスキップ（無限ループ防止）
@@ -23,25 +23,28 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
       setIsInternalUpdate(false);
       return;
     }
-    const normalized = normalizeSheetData(data);
+    const normalized = normalizeSheetData(data, system);
     setSheetData(normalized);
-  }, [data, isInternalUpdate]);
+  }, [data, isInternalUpdate, system]);
 
   const updateAttributes = (key: keyof typeof sheetData.attributes, value: number) => {
     const newAttributes = { ...sheetData.attributes, [key]: value };
-    const newDerived = calculateDerivedValues(newAttributes);
+    const newDerived = calculateDerivedValues(newAttributes, system);
     // current値は既存の値を保持
     const updatedDerived = {
       ...newDerived,
       SAN_current: sheetData.derived.SAN_current,
       HP_current: sheetData.derived.HP_current,
       MP_current: sheetData.derived.MP_current,
+      // 7版: 編集可能項目は既存値を保持
+      LUCK: sheetData.derived.LUCK ?? newDerived.LUCK,
+      MOV: sheetData.derived.MOV ?? newDerived.MOV,
     };
 
     // 動的計算が必要な技能の初期値を更新
     const updatedSkills = sheetData.skills.map(skill => {
       if (skill.name === '母国語') {
-        const baseValue = newAttributes.EDU * 5; // EDU×5
+        const baseValue = system === 'cthulhu7' ? newAttributes.EDU : newAttributes.EDU * 5;
         return { ...skill, baseValue, total: calculateSkillTotal({ ...skill, baseValue }) };
       }
       return skill;
@@ -50,7 +53,7 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
     // 格闘技能の動的計算
     const updatedCombatSkills = (sheetData.combatSkills || []).map(skill => {
       if (skill.name === '回避') {
-        const baseValue = newAttributes.DEX; // DEX×1
+        const baseValue = system === 'cthulhu7' ? Math.floor(newAttributes.DEX / 2) : newAttributes.DEX;
         return { ...skill, baseValue, total: calculateSkillTotal({ ...skill, baseValue }) };
       }
       return skill;
@@ -163,12 +166,65 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
   const allSkills = [...sheetData.skills, ...(sheetData.combatSkills || []), ...(sheetData.customSkills || [])];
   const totalJobPoints = calculateTotalJobPoints(allSkills);
   const totalInterestPoints = calculateTotalInterestPoints(allSkills);
-  const jobPointsLimit = getJobPointsLimit(sheetData.attributes.EDU);
-  const interestPointsLimit = getInterestPointsLimit(sheetData.attributes.INT);
-  const isJobPointsOverLimit = totalJobPoints > jobPointsLimit;
-  const isInterestPointsOverLimit = totalInterestPoints > interestPointsLimit;
+  const jobLimit = getCthulhuJobPointsLimit({
+    system,
+    attributes: sheetData.attributes,
+    jobPointsRule: sheetData.jobPointsRule,
+    jobPointsManualLimit: sheetData.jobPointsManualLimit,
+  });
+  const interestLimit = getCthulhuInterestPointsLimit(system, sheetData.attributes.INT);
+  const isJobPointsOverLimit = totalJobPoints > jobLimit.limit;
+  const isInterestPointsOverLimit = totalInterestPoints > interestLimit.limit;
+
+  const updateJobPointsRule = (rule: Cthulhu7JobPointsRule) => {
+    const updated: CthulhuSheetData = {
+      ...sheetData,
+      jobPointsRule: rule,
+      jobPointsManualLimit: rule === 'manual' ? (sheetData.jobPointsManualLimit ?? 0) : undefined,
+    };
+    setIsInternalUpdate(true);
+    setSheetData(updated);
+    onChange(updated);
+  };
+
+  const updateJobPointsManualLimit = (value: number) => {
+    const updated: CthulhuSheetData = {
+      ...sheetData,
+      jobPointsRule: 'manual',
+      jobPointsManualLimit: Math.max(0, value),
+    };
+    setIsInternalUpdate(true);
+    setSheetData(updated);
+    onChange(updated);
+  };
 
   // 格闘技能関連の関数
+  const updateCombatSkillSpecialty = (index: number, specialty: string) => {
+    const newCombatSkills = [...(sheetData.combatSkills || [])];
+    const currentSkill = newCombatSkills[index];
+    const name = currentSkill.name;
+
+    let baseValue = currentSkill.baseValue || 0;
+    if (system === 'cthulhu7' && name === '近接戦闘') {
+      baseValue = CTHULHU7_MELEE_OPTIONS.find(o => o.value === specialty)?.baseValue ?? CTHULHU7_MELEE_OPTIONS[0].baseValue;
+    }
+    if (system === 'cthulhu7' && name === '射撃') {
+      baseValue = CTHULHU7_RANGED_OPTIONS.find(o => o.value === specialty)?.baseValue ?? CTHULHU7_RANGED_OPTIONS[0].baseValue;
+    }
+
+    newCombatSkills[index] = {
+      ...currentSkill,
+      specialty,
+      baseValue,
+      isCustom: currentSkill.isCustom === true,
+    };
+    newCombatSkills[index].total = calculateSkillTotal(newCombatSkills[index]);
+    const updated = { ...sheetData, combatSkills: newCombatSkills };
+    setIsInternalUpdate(true);
+    setSheetData(updated);
+    onChange(updated);
+  };
+
   const updateCombatSkill = (index: number, field: 'jobPoints' | 'interestPoints' | 'growth' | 'other', value: number) => {
     const newCombatSkills = [...(sheetData.combatSkills || [])];
     const currentSkill = newCombatSkills[index];
@@ -244,16 +300,27 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
   };
 
   const addWeapon = () => {
-    const newWeapons = [...(sheetData.weapons || []), {
-      name: '',
-      value: '',
-      damage: '',
-      range: '',
-      attacks: '',
-      ammo: 0,
-      malfunction: 0,
-      durability: '',
-    }];
+    const newWeapon = system === 'cthulhu7'
+      ? {
+          name: '',
+          value: '',
+          damage: '',
+          range: '',
+          attacks: '',
+          ammo: 0,
+          malfunction: 0,
+        }
+      : {
+          name: '',
+          value: '',
+          damage: '',
+          range: '',
+          attacks: '',
+          ammo: 0,
+          malfunction: 0,
+          durability: '',
+        };
+    const newWeapons = [...(sheetData.weapons || []), newWeapon as any];
     const updated = { ...sheetData, weapons: newWeapons };
     setSheetData(updated);
     onChange(updated);
@@ -304,6 +371,36 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
 
   const updateNotes = (value: string) => {
     const updated = { ...sheetData, notes: value };
+    setSheetData(updated);
+    onChange(updated);
+  };
+
+  const updateBackstory7Memo = (key: keyof NonNullable<CthulhuSheetData['backstory7']>, memo: string) => {
+    const updated: CthulhuSheetData = {
+      ...sheetData,
+      backstory7: {
+        ...(sheetData.backstory7 || {}),
+        [key]: {
+          memo,
+          isKey: sheetData.backstory7?.[key]?.isKey ?? false,
+        },
+      },
+    };
+    setSheetData(updated);
+    onChange(updated);
+  };
+
+  const toggleBackstory7Key = (key: keyof NonNullable<CthulhuSheetData['backstory7']>, isKey: boolean) => {
+    const updated: CthulhuSheetData = {
+      ...sheetData,
+      backstory7: {
+        ...(sheetData.backstory7 || {}),
+        [key]: {
+          memo: sheetData.backstory7?.[key]?.memo ?? '',
+          isKey,
+        },
+      },
+    };
     setSheetData(updated);
     onChange(updated);
   };
@@ -360,6 +457,18 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
     onChange(updated);
   };
 
+  const toggleMythosCategoryKey = (type: 'mythosBooks' | 'spells' | 'artifacts' | 'encounteredEntities', isKey: boolean) => {
+    const keyMap: Record<typeof type, keyof CthulhuSheetData> = {
+      mythosBooks: 'mythosBooksIsKey',
+      spells: 'spellsIsKey',
+      artifacts: 'artifactsIsKey',
+      encounteredEntities: 'encounteredEntitiesIsKey',
+    };
+    const updated = { ...sheetData, [keyMap[type]]: isKey };
+    setSheetData(updated);
+    onChange(updated);
+  };
+
   const removeMythosItem = (type: 'mythosBooks' | 'spells' | 'artifacts' | 'encounteredEntities', index: number) => {
     const newItems = (sheetData[type] || []).filter((_, i) => i !== index);
     const updated = { ...sheetData, [type]: newItems };
@@ -373,12 +482,14 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
       <CthulhuAttributesSection
         attributes={sheetData.attributes}
         onUpdate={updateAttributes}
+        system={system}
       />
 
       {/* 派生値セクション */}
       <CthulhuDerivedStatsSection
         derived={sheetData.derived}
         onUpdate={updateDerived}
+        system={system}
       />
 
       {/* 技能セクション */}
@@ -391,17 +502,47 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
 
         {/* ポイント管理表示 */}
         <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '4px', border: '1px solid #dee2e6' }}>
+          {system === 'cthulhu7' && (
+            <div style={{ marginBottom: '1rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
+              <div>
+                <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>職業P上限方式</div>
+                <select
+                  value={(sheetData.jobPointsRule as any) || 'EDU*4'}
+                  onChange={(e) => updateJobPointsRule(e.target.value as Cthulhu7JobPointsRule)}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                >
+                  {(Object.keys(CTHULHU7_JOB_POINTS_RULE_LABEL) as Array<Cthulhu7JobPointsRule>).map((k) => (
+                    <option key={k} value={k}>
+                      {CTHULHU7_JOB_POINTS_RULE_LABEL[k]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {(sheetData.jobPointsRule === 'manual' || (sheetData.jobPointsRule ?? '') === 'manual') && (
+                <div>
+                  <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>職業P上限（手動入力）</div>
+                  <input
+                    type="number"
+                    min="0"
+                    value={sheetData.jobPointsManualLimit ?? 0}
+                    onChange={(e) => updateJobPointsManualLimit(parseInt(e.target.value) || 0)}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  />
+                </div>
+              )}
+            </div>
+          )}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
             <div>
               <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>職業P使用量</div>
               <div style={{ fontSize: '1.125rem', fontWeight: 'bold', color: isJobPointsOverLimit ? '#dc3545' : '#212529' }}>
-                {totalJobPoints} / {jobPointsLimit} (EDU × 20)
+                {totalJobPoints} / {jobLimit.limit} ({jobLimit.label})
               </div>
             </div>
             <div>
               <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>興味P使用量</div>
               <div style={{ fontSize: '1.125rem', fontWeight: 'bold', color: isInterestPointsOverLimit ? '#dc3545' : '#212529' }}>
-                {totalInterestPoints} / {interestPointsLimit} (INT × 10)
+                {totalInterestPoints} / {interestLimit.limit} ({interestLimit.label})
               </div>
             </div>
           </div>
@@ -433,7 +574,9 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
                 <tr key={`default-${index}`} style={{ borderBottom: '1px solid #dee2e6' }}>
                   <td style={{ padding: '0.75rem' }}>
                     {(() => {
-                      const isSpecialtySkill = ['芸術', '製作', '操縦', '他の言語', '母国語'].includes(skill.name);
+                      const isSpecialtySkill = system === 'cthulhu7'
+                        ? ['科学', '芸術/製作', 'サバイバル', '操縦', '他の言語', '母国語'].includes(skill.name)
+                        : ['芸術', '製作', '操縦', '他の言語', '母国語'].includes(skill.name);
                       const displayName = skill.specialty ? `${skill.name}(${skill.specialty})` : skill.name;
                       return (
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
@@ -633,7 +776,24 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
                           style={{ width: '100%', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px' }}
                         />
                       ) : (
-                        <span style={{ fontWeight: 'bold' }}>{skill.name}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
+                          <span style={{ fontWeight: 'bold' }}>
+                            {skill.specialty ? `${skill.name}(${skill.specialty})` : skill.name}
+                          </span>
+                          {system === 'cthulhu7' && (skill.name === '近接戦闘' || skill.name === '射撃') && (
+                            <select
+                              value={(skill.specialty || '').trim() || (skill.name === '近接戦闘' ? CTHULHU7_MELEE_OPTIONS[0].value : CTHULHU7_RANGED_OPTIONS[0].value)}
+                              onChange={(e) => updateCombatSkillSpecialty(index, e.target.value)}
+                              style={{ width: '180px', padding: '0.25rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                            >
+                              {(skill.name === '近接戦闘' ? CTHULHU7_MELEE_OPTIONS : CTHULHU7_RANGED_OPTIONS).map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                  {opt.value}
+                                </option>
+                              ))}
+                            </select>
+                          )}
+                        </div>
                       )}
                     </td>
                     <td style={{ padding: '0.75rem', textAlign: 'center' }}>
@@ -744,11 +904,12 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
       </section >
 
       {/* 武器セクション */}
-      < CthulhuWeaponsSection
+      <CthulhuWeaponsSection
         weapons={sheetData.weapons || []}
         onAdd={addWeapon}
         onUpdate={updateWeapon}
         onRemove={removeWeapon}
+        system={system}
       />
 
       {/* 所持品セクション */}
@@ -940,7 +1101,185 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
         </div>
       </section >
 
-      {/* 魔導書・呪文・アーティファクトセクション */}
+      {/* 第7版: バックストーリーセクション */}
+      {isCthulhu7 && (
+        <section>
+          <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
+            バックストーリー
+          </h2>
+
+          {(() => {
+            const fields: Array<{ key: keyof NonNullable<CthulhuSheetData['backstory7']>; label: string }> = [
+              { key: 'appearance', label: '容姿の描写' },
+              { key: 'traits', label: '特徴' },
+              { key: 'beliefs', label: 'イデオロギー/信念' },
+              { key: 'injuries', label: '負傷、傷跡' },
+              { key: 'importantPeople', label: '重要な人々' },
+              { key: 'phobiasManias', label: '恐怖症、マニア' },
+              { key: 'meaningfulPlaces', label: '意味のある場所' },
+              { key: 'treasuredPossessions', label: '秘蔵の品' },
+            ];
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {fields.map(({ key, label }) => {
+                  const entry = sheetData.backstory7?.[key] || { memo: '', isKey: false };
+                  const labelWithKey = entry.isKey ? `${label}🗝` : label;
+                  return (
+                    <div key={String(key)} style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', marginBottom: '0.5rem' }}>
+                        <label style={{ fontWeight: 'bold' }}>
+                          <input
+                            type="checkbox"
+                            checked={!!entry.isKey}
+                            onChange={(e) => toggleBackstory7Key(key, e.target.checked)}
+                            style={{ marginRight: '0.5rem' }}
+                          />
+                          {labelWithKey}
+                        </label>
+                      </div>
+                      <textarea
+                        value={entry.memo}
+                        onChange={(e) => updateBackstory7Memo(key, e.target.value)}
+                        rows={3}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          fontSize: '1rem',
+                          border: '1px solid #ddd',
+                          borderRadius: '4px',
+                          fontFamily: 'inherit',
+                        }}
+                        placeholder={`${label}のメモ`}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+
+          {/* 魔導書・呪文・アーティファクト・遭遇した超自然の存在（追加式 + キー・コネクション） */}
+          <div style={{ marginTop: '1rem' }}>
+            {(['mythosBooks', 'spells', 'artifacts', 'encounteredEntities'] as const).map((type) => {
+              const titleMap: Record<typeof type, string> = {
+                mythosBooks: '魔導書',
+                spells: '呪文',
+                artifacts: 'アーティファクト',
+                encounteredEntities: '遭遇した超自然の存在',
+              };
+              const keyMap: Record<typeof type, keyof CthulhuSheetData> = {
+                mythosBooks: 'mythosBooksIsKey',
+                spells: 'spellsIsKey',
+                artifacts: 'artifactsIsKey',
+                encounteredEntities: 'encounteredEntitiesIsKey',
+              };
+              const items = (sheetData[type] || []) as any[];
+              const isKey = !!(sheetData[keyMap[type]] as boolean | undefined);
+              const labelWithKey = isKey ? `${titleMap[type]}🗝` : titleMap[type];
+              return (
+                <div key={type} style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem', marginBottom: '1.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold', fontSize: '1.125rem', margin: 0 }}>
+                      <input
+                        type="checkbox"
+                        checked={isKey}
+                        onChange={(e) => toggleMythosCategoryKey(type, e.target.checked)}
+                        style={{ margin: 0 }}
+                      />
+                      {labelWithKey}
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => addMythosItem(type)}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        backgroundColor: '#28a745',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem',
+                      }}
+                    >
+                      + 追加
+                    </button>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {items.map((item, index) => (
+                      <div key={index} style={{ border: '1px solid #e0e0e0', borderRadius: '4px', padding: '0.75rem', backgroundColor: '#f9f9f9' }}>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.5rem' }}>
+                          <button
+                            type="button"
+                            onClick={() => removeMythosItem(type, index)}
+                            style={{
+                              padding: '0.25rem 0.5rem',
+                              backgroundColor: '#dc3545',
+                              color: '#fff',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '0.875rem',
+                            }}
+                          >
+                            削除
+                          </button>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                          <input
+                            type="text"
+                            placeholder="名称"
+                            value={item.name}
+                            onChange={(e) => updateMythosItem(type, index, 'name', e.target.value)}
+                            style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                          />
+                          <textarea
+                            placeholder="メモ"
+                            value={item.memo}
+                            onChange={(e) => updateMythosItem(type, index, 'memo', e.target.value)}
+                            rows={2}
+                            style={{
+                              width: '100%',
+                              padding: '0.5rem',
+                              border: '1px solid #ddd',
+                              borderRadius: '4px',
+                              fontFamily: 'inherit',
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                    {items.length === 0 && (
+                      <div style={{ color: '#6c757d', fontStyle: 'italic' }}>未登録です。</div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* その他のメモ（背景欄は7版では削除） */}
+          <div>
+            <h3 style={{ marginBottom: '0.5rem', fontSize: '1.125rem' }}>その他のメモ</h3>
+            <textarea
+              value={sheetData.notes || ''}
+              onChange={(e) => updateNotes(e.target.value)}
+              rows={4}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                fontSize: '1rem',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                fontFamily: 'inherit',
+              }}
+              placeholder="その他のメモを記入してください"
+            />
+          </div>
+        </section>
+      )}
+
+      {/* 第6版: 魔導書・呪文・アーティファクトセクション */}
+      {!isCthulhu7 && (
       < section >
         <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
           魔導書・呪文・アーティファクト・遭遇した超自然の存在
@@ -1218,9 +1557,10 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
           </div>
         </div>
       </section >
+      )}
 
       {/* 背景・その他セクション */}
-      < section >
+      {!isCthulhu7 && < section >
         <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
           背景・その他
         </h2>
@@ -1262,7 +1602,7 @@ export const CthulhuSheetForm = ({ data, onChange }: CthulhuSheetFormProps) => {
             placeholder="その他のメモを記入してください"
           />
         </div>
-      </section >
+      </section >}
     </div >
   );
 };

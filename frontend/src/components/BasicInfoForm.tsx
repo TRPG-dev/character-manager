@@ -361,20 +361,22 @@ export const BasicInfoForm = ({
                   style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
                 />
               </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
-                  学校・学位
-                </label>
-                <input
-                  type="text"
-                  value={(data as CthulhuSheetData).schoolDegree || ''}
-                  onChange={(e) => {
-                    const updated = { ...data, schoolDegree: e.target.value } as CthulhuSheetData;
-                    onChange(updated);
-                  }}
-                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                />
-              </div>
+              {system !== 'cthulhu7' && (
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
+                    学校・学位
+                  </label>
+                  <input
+                    type="text"
+                    value={(data as CthulhuSheetData).schoolDegree || ''}
+                    onChange={(e) => {
+                      const updated = { ...data, schoolDegree: e.target.value } as CthulhuSheetData;
+                      onChange(updated);
+                    }}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  />
+                </div>
+              )}
             </>
           )}
           {system === 'shinobigami' && 'characterName' in data && (

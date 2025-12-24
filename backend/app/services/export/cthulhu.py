@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from app.models import Character
+from app.models import Character, SystemEnum
 
 from .base import ExportOptions, Exporter
 
@@ -21,7 +21,58 @@ def _get_attr(sheet_data: Dict[str, Any], key: str) -> int:
     return _to_int(attrs.get(key), 0)
 
 
-def _calc_derived(attributes: Dict[str, int]) -> Dict[str, Any]:
+def _calc_db_6e(str_siz_sum: int) -> str:
+    # damage bonus (same thresholds as frontend)
+    if 2 <= str_siz_sum <= 12:
+        return "-1D6"
+    if 13 <= str_siz_sum <= 16:
+        return "-1D4"
+    if 17 <= str_siz_sum <= 24:
+        return "+0"
+    if 25 <= str_siz_sum <= 32:
+        return "+1D4"
+    if 33 <= str_siz_sum <= 40:
+        return "+1D6"
+    if 41 <= str_siz_sum <= 56:
+        return "+2D6"
+    if 57 <= str_siz_sum <= 72:
+        return "+3D6"
+    if 73 <= str_siz_sum <= 88:
+        return "+4D6"
+    return "+5D6" if str_siz_sum >= 89 else "+0"
+
+
+def _calc_db_build_7e(str_siz_sum: int) -> tuple[str, int]:
+    if 2 <= str_siz_sum <= 64:
+        return ("-2", -2)
+    if 65 <= str_siz_sum <= 84:
+        return ("-1", -1)
+    if 85 <= str_siz_sum <= 124:
+        return ("0", 0)
+    if 125 <= str_siz_sum <= 164:
+        return ("+1D4", 1)
+    if 165 <= str_siz_sum <= 204:
+        return ("+1D6", 2)
+    if 205 <= str_siz_sum <= 284:
+        return ("+2D6", 3)
+    if 285 <= str_siz_sum <= 364:
+        return ("+3D6", 4)
+    if 365 <= str_siz_sum <= 444:
+        return ("+4D6", 5)
+    if 445 <= str_siz_sum <= 524:
+        return ("+5D6", 6)
+    return ("0", 0)
+
+
+def _calc_mov_7e(dex: int, str_: int, siz: int) -> int:
+    if dex < siz and str_ < siz:
+        return 7
+    if dex > siz and str_ > siz:
+        return 9
+    return 8
+
+
+def _calc_derived(attributes: Dict[str, int], system: SystemEnum) -> Dict[str, Any]:
     con = attributes["CON"]
     siz = attributes["SIZ"]
     pow_ = attributes["POW"]
@@ -29,35 +80,40 @@ def _calc_derived(attributes: Dict[str, int]) -> Dict[str, Any]:
     edu = attributes["EDU"]
     str_ = attributes["STR"]
 
+    if system == SystemEnum.cthulhu7:
+        # 7e
+        luk = attributes.get("LUK", 0)
+        san_max = pow_
+        hp_max = (con + siz) // 10
+        mp_max = pow_ // 5
+        idea = int_
+        know = edu
+        luck = luk
+        db, build = _calc_db_build_7e(str_ + siz)
+        mov = _calc_mov_7e(attributes.get("DEX", 0), str_, siz)
+        return {
+            "SAN_max": san_max,
+            "SAN_current": san_max,
+            "HP_max": hp_max,
+            "HP_current": hp_max,
+            "MP_max": mp_max,
+            "MP_current": mp_max,
+            "IDEA": idea,
+            "KNOW": know,
+            "LUCK": luck,
+            "DB": db,
+            "BUILD": build,
+            "MOV": mov,
+        }
+
+    # 6e
     san_max = pow_ * 5
     hp_max = (con + siz) // 2
     mp_max = pow_
-
     idea = int_ * 5
     know = edu * 5
     luck = pow_ * 5
-
-    # damage bonus (same thresholds as frontend)
-    s = str_ + siz
-    if 2 <= s <= 12:
-        db = "-1D6"
-    elif 13 <= s <= 16:
-        db = "-1D4"
-    elif 17 <= s <= 24:
-        db = "+0"
-    elif 25 <= s <= 32:
-        db = "+1D4"
-    elif 33 <= s <= 40:
-        db = "+1D6"
-    elif 41 <= s <= 56:
-        db = "+2D6"
-    elif 57 <= s <= 72:
-        db = "+3D6"
-    elif 73 <= s <= 88:
-        db = "+4D6"
-    else:
-        db = "+5D6" if s >= 89 else "+0"
-
+    db = _calc_db_6e(str_ + siz)
     return {
         "SAN_max": san_max,
         "SAN_current": san_max,
@@ -106,7 +162,20 @@ def _skill_name(skill: Dict[str, Any]) -> str:
     return str(n) if n is not None else ""
 
 
-_SPECIALTY_SKILLS = {"芸術", "製作", "操縦", "他の言語", "母国語"}
+_SPECIALTY_SKILLS = {
+    # 6版
+    "芸術",
+    "製作",
+    "操縦",
+    "他の言語",
+    "母国語",
+    # 7版（入力型/選択型）
+    "科学",
+    "芸術/製作",
+    "サバイバル",
+    "近接戦闘",
+    "射撃",
+}
 
 
 def _skill_display_name(skill: Dict[str, Any]) -> str:
@@ -150,6 +219,7 @@ class CthulhuExporter(Exporter):
         share_url: str | None,
         icon_url: str | None,
     ) -> Dict[str, Any]:
+        system = options.system
         # normalize attributes
         attributes = {
             "STR": _get_attr(sheet_data, "STR"),
@@ -160,9 +230,11 @@ class CthulhuExporter(Exporter):
             "SIZ": _get_attr(sheet_data, "SIZ"),
             "INT": _get_attr(sheet_data, "INT"),
             "EDU": _get_attr(sheet_data, "EDU"),
+            # 7e only (safe default 0)
+            "LUK": _get_attr(sheet_data, "LUK"),
         }
 
-        derived_calc = _calc_derived(attributes)
+        derived_calc = _calc_derived(attributes, system)
         derived = _normalize_derived(sheet_data, derived_calc)
 
         dice_prefix = "CCB" if options.dice.upper() == "CCB" else "CC"
@@ -172,9 +244,14 @@ class CthulhuExporter(Exporter):
         commands.append("1d100<={SAN} 【正気度ロール】")
 
         # Derived “common” rolls (numbers)
-        idea = _to_int(derived.get("IDEA"), attributes["INT"] * 5)
-        luck = _to_int(derived.get("LUCK"), attributes["POW"] * 5)
-        know = _to_int(derived.get("KNOW"), attributes["EDU"] * 5)
+        if system == SystemEnum.cthulhu7:
+            idea = _to_int(derived.get("IDEA"), attributes["INT"])
+            luck = _to_int(derived.get("LUCK"), attributes["LUK"])
+            know = _to_int(derived.get("KNOW"), attributes["EDU"])
+        else:
+            idea = _to_int(derived.get("IDEA"), attributes["INT"] * 5)
+            luck = _to_int(derived.get("LUCK"), attributes["POW"] * 5)
+            know = _to_int(derived.get("KNOW"), attributes["EDU"] * 5)
         commands.append(f"{dice_prefix}<={idea} 【アイデア】")
         commands.append(f"{dice_prefix}<={luck} 【幸運】")
         commands.append(f"{dice_prefix}<={know} 【知識】")
@@ -196,18 +273,22 @@ class CthulhuExporter(Exporter):
             # dynamic bases (same as frontend rule)
             if not is_custom:
                 if name == "回避":
-                    base = attributes["DEX"]
+                    base = attributes["DEX"] // 2 if system == SystemEnum.cthulhu7 else attributes["DEX"]
                 elif name == "母国語":
-                    base = attributes["EDU"] * 5
+                    base = attributes["EDU"] if system == SystemEnum.cthulhu7 else attributes["EDU"] * 5
 
             total = _compute_skill_total(s, base)
             if scope == "changed" and total == base:
                 continue
             commands.append(f"{dice_prefix}<={total} 【{key}】")
 
-        # Attribute x5 rolls (placeholders -> cocofolia params)
-        for key in ("STR", "CON", "POW", "DEX", "APP", "SIZ", "INT", "EDU"):
-            commands.append(f"{dice_prefix}<={{{key}}}*5 【{key} × 5】")
+        # Attribute rolls
+        if system == SystemEnum.cthulhu7:
+            for key in ("STR", "CON", "POW", "DEX", "APP", "SIZ", "INT", "EDU", "LUK"):
+                commands.append(f"{dice_prefix}<={{{key}}} 【{key}】")
+        else:
+            for key in ("STR", "CON", "POW", "DEX", "APP", "SIZ", "INT", "EDU"):
+                commands.append(f"{dice_prefix}<={{{key}}}*5 【{key} × 5】")
 
         # Weapons damage (optional; best-effort)
         weapons = sheet_data.get("weapons")
@@ -229,7 +310,7 @@ class CthulhuExporter(Exporter):
                 {"label": "MP", "value": _to_int(derived.get("MP_current"), 0), "max": _to_int(derived.get("MP_max"), 0)},
                 {"label": "SAN", "value": _to_int(derived.get("SAN_current"), 0), "max": _to_int(derived.get("SAN_max"), 0)},
             ],
-            "params": [{"label": k, "value": str(v)} for k, v in attributes.items()],
+            "params": [{"label": k, "value": str(v)} for k, v in attributes.items() if not (system != SystemEnum.cthulhu7 and k == "LUK")],
             "commands": "\n".join(commands) + "\n",
             "owner": None,
         }

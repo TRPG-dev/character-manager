@@ -1,18 +1,19 @@
 import { useState, useEffect } from 'react';
 import type { CthulhuSheetData, CthulhuSkill } from '../types/cthulhu';
-import { normalizeSheetData } from '../utils/cthulhu';
+import { normalizeSheetData, type CthulhuSystem } from '../utils/cthulhu';
 import { CollapsibleSection } from './CollapsibleSection';
 
 interface CthulhuSheetViewProps {
   data: CthulhuSheetData;
+  system?: CthulhuSystem;
   showOnlyAttributes?: boolean;
   showOnlySkills?: boolean;
   showOnlySkillsAndItems?: boolean;
   showOnlyOther?: boolean;
 }
 
-export const CthulhuSheetView = ({ data, showOnlyAttributes, showOnlySkills, showOnlySkillsAndItems, showOnlyOther }: CthulhuSheetViewProps) => {
-  const sheetData = normalizeSheetData(data);
+export const CthulhuSheetView = ({ data, system = 'cthulhu6', showOnlyAttributes, showOnlySkills, showOnlySkillsAndItems, showOnlyOther }: CthulhuSheetViewProps) => {
+  const sheetData = normalizeSheetData(data, system);
   const [isDesktop, setIsDesktop] = useState(false);
 
   useEffect(() => {
@@ -34,6 +35,7 @@ export const CthulhuSheetView = ({ data, showOnlyAttributes, showOnlySkills, sho
     INT: 'INT (知性)',
     EDU: 'EDU (教育)',
     SIZ: 'SIZ (体格)',
+    LUK: 'LUK (幸運)',
   };
 
   // 初期値と変わっていない技能をフィルタリング
@@ -329,10 +331,12 @@ export const CthulhuSheetView = ({ data, showOnlyAttributes, showOnlySkills, sho
                         <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>故障</div>
                         <div style={{ fontWeight: 'bold' }}>{weapon.malfunction}</div>
                       </div>
-                      <div>
-                        <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>耐久力</div>
-                        <div style={{ fontWeight: 'bold' }}>{weapon.durability}</div>
-                      </div>
+                      {system !== 'cthulhu7' && (
+                        <div>
+                          <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>耐久力</div>
+                          <div style={{ fontWeight: 'bold' }}>{weapon.durability}</div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -461,204 +465,295 @@ export const CthulhuSheetView = ({ data, showOnlyAttributes, showOnlySkills, sho
           </CollapsibleSection>
         )}
 
-        {/* 魔導書・呪文・アーティファクト・遭遇した超自然の存在セクション */}
-        {((sheetData.mythosBooks && sheetData.mythosBooks.length > 0) ||
-          (sheetData.spells && sheetData.spells.length > 0) ||
-          (sheetData.artifacts && sheetData.artifacts.length > 0) ||
-          (sheetData.encounteredEntities && sheetData.encounteredEntities.length > 0)) && (
-          <CollapsibleSection title="魔導書・呪文・アーティファクト・遭遇した超自然の存在" defaultOpen={false}>
-            {/* 魔導書 */}
-            {(sheetData.mythosBooks && sheetData.mythosBooks.length > 0) && (
-              <div style={{ marginBottom: '2rem' }}>
-                <h3 style={{ marginBottom: '1rem', fontSize: '1.25rem' }}>魔導書</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
-                  {sheetData.mythosBooks.map((item, index) => (
-                    <div
-                      key={index}
-                      style={{
-                        border: '1px solid #ddd',
-                        borderRadius: '4px',
-                        padding: '1rem',
-                        backgroundColor: '#f8f9fa',
-                      }}
-                    >
-                      <h4 style={{ marginTop: 0, marginBottom: '0.5rem', fontSize: '1rem' }}>
-                        {item.name || '(無名の魔導書)'}
-                      </h4>
-                      {item.memo && (
-                        <div
-                          style={{
-                            padding: '0.75rem',
-                            backgroundColor: '#fff',
-                            borderRadius: '4px',
-                            whiteSpace: 'pre-wrap',
-                            lineHeight: '1.6',
-                            fontSize: '0.875rem',
-                          }}
-                        >
-                          {item.memo}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+        {/* 第7版: バックストーリー（項目化 + キー・コネクション） */}
+        {system === 'cthulhu7' && (
+          <CollapsibleSection title="バックストーリー" defaultOpen={false}>
+            {(() => {
+              const fields: Array<{ key: string; label: string }> = [
+                { key: 'appearance', label: '容姿の描写' },
+                { key: 'traits', label: '特徴' },
+                { key: 'beliefs', label: 'イデオロギー/信念' },
+                { key: 'injuries', label: '負傷、傷跡' },
+                { key: 'importantPeople', label: '重要な人々' },
+                { key: 'phobiasManias', label: '恐怖症、マニア' },
+                { key: 'meaningfulPlaces', label: '意味のある場所' },
+                { key: 'treasuredPossessions', label: '秘蔵の品' },
+              ];
+              const entries = fields
+                .map((f) => ({
+                  ...f,
+                  memo: (sheetData.backstory7 as any)?.[f.key]?.memo || '',
+                  isKey: !!(sheetData.backstory7 as any)?.[f.key]?.isKey,
+                }))
+                .filter((f) => f.memo || f.isKey);
 
-            {/* 呪文 */}
-            {(sheetData.spells && sheetData.spells.length > 0) && (
-              <div style={{ marginBottom: '2rem' }}>
-                <h3 style={{ marginBottom: '1rem', fontSize: '1.25rem' }}>呪文</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
-                  {sheetData.spells.map((item, index) => (
-                    <div
-                      key={index}
-                      style={{
-                        border: '1px solid #ddd',
-                        borderRadius: '4px',
-                        padding: '1rem',
-                        backgroundColor: '#f8f9fa',
-                      }}
-                    >
-                      <h4 style={{ marginTop: 0, marginBottom: '0.5rem', fontSize: '1rem' }}>
-                        {item.name || '(無名の呪文)'}
-                      </h4>
-                      {item.memo && (
-                        <div
-                          style={{
-                            padding: '0.75rem',
-                            backgroundColor: '#fff',
-                            borderRadius: '4px',
-                            whiteSpace: 'pre-wrap',
-                            lineHeight: '1.6',
-                            fontSize: '0.875rem',
-                          }}
-                        >
-                          {item.memo}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+              const mythosSections = [
+                { title: '魔導書', items: sheetData.mythosBooks || [] },
+                { title: '呪文', items: sheetData.spells || [] },
+                { title: 'アーティファクト', items: sheetData.artifacts || [] },
+                { title: '遭遇した超自然の存在', items: sheetData.encounteredEntities || [] },
+              ].filter((s) => (s.items || []).length > 0);
 
-            {/* アーティファクト */}
-            {(sheetData.artifacts && sheetData.artifacts.length > 0) && (
-              <div>
-                <h3 style={{ marginBottom: '1rem', fontSize: '1.25rem' }}>アーティファクト</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
-                  {sheetData.artifacts.map((item, index) => (
-                    <div
-                      key={index}
-                      style={{
-                        border: '1px solid #ddd',
-                        borderRadius: '4px',
-                        padding: '1rem',
-                        backgroundColor: '#f8f9fa',
-                      }}
-                    >
-                      <h4 style={{ marginTop: 0, marginBottom: '0.5rem', fontSize: '1rem' }}>
-                        {item.name || '(無名のアーティファクト)'}
-                      </h4>
-                      {item.memo && (
-                        <div
-                          style={{
-                            padding: '0.75rem',
-                            backgroundColor: '#fff',
-                            borderRadius: '4px',
-                            whiteSpace: 'pre-wrap',
-                            lineHeight: '1.6',
-                            fontSize: '0.875rem',
-                          }}
-                        >
-                          {item.memo}
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {entries.length > 0 && (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+                      {entries.map((e) => (
+                        <div key={e.key} style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem', backgroundColor: '#f8f9fa' }}>
+                          <h3 style={{ marginTop: 0, marginBottom: '0.5rem', fontSize: '1.125rem' }}>
+                            {e.isKey ? `${e.label}🗝` : e.label}
+                          </h3>
+                          {e.memo && (
+                            <div style={{ padding: '0.75rem', backgroundColor: '#fff', borderRadius: '4px', whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
+                              {e.memo}
+                            </div>
+                          )}
                         </div>
-                      )}
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
+                  )}
 
-            {/* 遭遇した超自然の存在 */}
-            {(sheetData.encounteredEntities && sheetData.encounteredEntities.length > 0) && (
-              <div style={{ marginTop: '2rem' }}>
-                <h3 style={{ marginBottom: '1rem', fontSize: '1.25rem' }}>遭遇した超自然の存在</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
-                  {sheetData.encounteredEntities.map((item, index) => (
-                    <div
-                      key={index}
-                      style={{
-                        border: '1px solid #ddd',
-                        borderRadius: '4px',
-                        padding: '1rem',
-                        backgroundColor: '#f8f9fa',
-                      }}
-                    >
-                      <h4 style={{ marginTop: 0, marginBottom: '0.5rem', fontSize: '1rem' }}>
-                        {item.name || '(無名の存在)'}
-                      </h4>
-                      {item.memo && (
-                        <div
-                          style={{
-                            padding: '0.75rem',
-                            backgroundColor: '#fff',
-                            borderRadius: '4px',
-                            whiteSpace: 'pre-wrap',
-                            lineHeight: '1.6',
-                            fontSize: '0.875rem',
-                          }}
-                        >
-                          {item.memo}
+                  {mythosSections.length > 0 && (
+                    <div>
+                      {mythosSections.map((sec) => (
+                        <div key={sec.title} style={{ marginTop: '1rem' }}>
+                          <h3 style={{ marginBottom: '0.5rem', fontSize: '1.125rem' }}>{sec.title}</h3>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+                            {sec.items.map((it: any, idx: number) => (
+                              <div key={idx} style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem', backgroundColor: '#f8f9fa' }}>
+                                <h4 style={{ marginTop: 0, marginBottom: '0.5rem', fontSize: '1rem' }}>
+                                  {(it?.name || '(無名)') + (it?.isKey ? '🗝' : '')}
+                                </h4>
+                                {it?.memo && (
+                                  <div style={{ padding: '0.75rem', backgroundColor: '#fff', borderRadius: '4px', whiteSpace: 'pre-wrap', lineHeight: '1.6', fontSize: '0.875rem' }}>
+                                    {it.memo}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      )}
+                      ))}
                     </div>
-                  ))}
+                  )}
+
+                  {sheetData.notes && (
+                    <div style={{ marginTop: '0.5rem' }}>
+                      <h3 style={{ marginBottom: '0.5rem', fontSize: '1.125rem' }}>その他のメモ</h3>
+                      <div style={{ padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '4px', border: '1px solid #dee2e6', whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
+                        {sheetData.notes}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
+              );
+            })()}
           </CollapsibleSection>
         )}
 
-        {/* 背景・その他セクション */}
-        {(sheetData.backstory || sheetData.notes) && (
-          <CollapsibleSection title="背景・その他" defaultOpen={false}>
-            {sheetData.backstory && (
-              <div style={{ marginBottom: '1rem' }}>
-                <h3 style={{ marginBottom: '0.5rem', fontSize: '1.125rem' }}>背景</h3>
-                <div
-                  style={{
-                    padding: '1rem',
-                    backgroundColor: '#f8f9fa',
-                    borderRadius: '4px',
-                    border: '1px solid #dee2e6',
-                    whiteSpace: 'pre-wrap',
-                    lineHeight: '1.6',
-                  }}
-                >
-                  {sheetData.backstory}
-                </div>
-              </div>
+        {/* 第6版: 既存セクション */}
+        {system !== 'cthulhu7' && (
+          <>
+            {/* 魔導書・呪文・アーティファクト・遭遇した超自然の存在セクション */}
+            {((sheetData.mythosBooks && sheetData.mythosBooks.length > 0) ||
+              (sheetData.spells && sheetData.spells.length > 0) ||
+              (sheetData.artifacts && sheetData.artifacts.length > 0) ||
+              (sheetData.encounteredEntities && sheetData.encounteredEntities.length > 0)) && (
+              <CollapsibleSection title="魔導書・呪文・アーティファクト・遭遇した超自然の存在" defaultOpen={false}>
+                {/* 魔導書 */}
+                {(sheetData.mythosBooks && sheetData.mythosBooks.length > 0) && (
+                  <div style={{ marginBottom: '2rem' }}>
+                    <h3 style={{ marginBottom: '1rem', fontSize: '1.25rem' }}>魔導書</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+                      {sheetData.mythosBooks.map((item, index) => (
+                        <div
+                          key={index}
+                          style={{
+                            border: '1px solid #ddd',
+                            borderRadius: '4px',
+                            padding: '1rem',
+                            backgroundColor: '#f8f9fa',
+                          }}
+                        >
+                          <h4 style={{ marginTop: 0, marginBottom: '0.5rem', fontSize: '1rem' }}>
+                            {item.name || '(無名の魔導書)'}
+                          </h4>
+                          {item.memo && (
+                            <div
+                              style={{
+                                padding: '0.75rem',
+                                backgroundColor: '#fff',
+                                borderRadius: '4px',
+                                whiteSpace: 'pre-wrap',
+                                lineHeight: '1.6',
+                                fontSize: '0.875rem',
+                              }}
+                            >
+                              {item.memo}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 呪文 */}
+                {(sheetData.spells && sheetData.spells.length > 0) && (
+                  <div style={{ marginBottom: '2rem' }}>
+                    <h3 style={{ marginBottom: '1rem', fontSize: '1.25rem' }}>呪文</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+                      {sheetData.spells.map((item, index) => (
+                        <div
+                          key={index}
+                          style={{
+                            border: '1px solid #ddd',
+                            borderRadius: '4px',
+                            padding: '1rem',
+                            backgroundColor: '#f8f9fa',
+                          }}
+                        >
+                          <h4 style={{ marginTop: 0, marginBottom: '0.5rem', fontSize: '1rem' }}>
+                            {item.name || '(無名の呪文)'}
+                          </h4>
+                          {item.memo && (
+                            <div
+                              style={{
+                                padding: '0.75rem',
+                                backgroundColor: '#fff',
+                                borderRadius: '4px',
+                                whiteSpace: 'pre-wrap',
+                                lineHeight: '1.6',
+                                fontSize: '0.875rem',
+                              }}
+                            >
+                              {item.memo}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* アーティファクト */}
+                {(sheetData.artifacts && sheetData.artifacts.length > 0) && (
+                  <div>
+                    <h3 style={{ marginBottom: '1rem', fontSize: '1.25rem' }}>アーティファクト</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+                      {sheetData.artifacts.map((item, index) => (
+                        <div
+                          key={index}
+                          style={{
+                            border: '1px solid #ddd',
+                            borderRadius: '4px',
+                            padding: '1rem',
+                            backgroundColor: '#f8f9fa',
+                          }}
+                        >
+                          <h4 style={{ marginTop: 0, marginBottom: '0.5rem', fontSize: '1rem' }}>
+                            {item.name || '(無名のアーティファクト)'}
+                          </h4>
+                          {item.memo && (
+                            <div
+                              style={{
+                                padding: '0.75rem',
+                                backgroundColor: '#fff',
+                                borderRadius: '4px',
+                                whiteSpace: 'pre-wrap',
+                                lineHeight: '1.6',
+                                fontSize: '0.875rem',
+                              }}
+                            >
+                              {item.memo}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 遭遇した超自然の存在 */}
+                {(sheetData.encounteredEntities && sheetData.encounteredEntities.length > 0) && (
+                  <div style={{ marginTop: '2rem' }}>
+                    <h3 style={{ marginBottom: '1rem', fontSize: '1.25rem' }}>遭遇した超自然の存在</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+                      {sheetData.encounteredEntities.map((item, index) => (
+                        <div
+                          key={index}
+                          style={{
+                            border: '1px solid #ddd',
+                            borderRadius: '4px',
+                            padding: '1rem',
+                            backgroundColor: '#f8f9fa',
+                          }}
+                        >
+                          <h4 style={{ marginTop: 0, marginBottom: '0.5rem', fontSize: '1rem' }}>
+                            {item.name || '(無名の存在)'}
+                          </h4>
+                          {item.memo && (
+                            <div
+                              style={{
+                                padding: '0.75rem',
+                                backgroundColor: '#fff',
+                                borderRadius: '4px',
+                                whiteSpace: 'pre-wrap',
+                                lineHeight: '1.6',
+                                fontSize: '0.875rem',
+                              }}
+                            >
+                              {item.memo}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CollapsibleSection>
             )}
-            {sheetData.notes && (
-              <div>
-                <h3 style={{ marginBottom: '0.5rem', fontSize: '1.125rem' }}>その他のメモ</h3>
-                <div
-                  style={{
-                    padding: '1rem',
-                    backgroundColor: '#f8f9fa',
-                    borderRadius: '4px',
-                    border: '1px solid #dee2e6',
-                    whiteSpace: 'pre-wrap',
-                    lineHeight: '1.6',
-                  }}
-                >
-                  {sheetData.notes}
-                </div>
-              </div>
+
+            {/* 背景・その他セクション */}
+            {(sheetData.backstory || sheetData.notes) && (
+              <CollapsibleSection title="背景・その他" defaultOpen={false}>
+                {sheetData.backstory && (
+                  <div style={{ marginBottom: '1rem' }}>
+                    <h3 style={{ marginBottom: '0.5rem', fontSize: '1.125rem' }}>背景</h3>
+                    <div
+                      style={{
+                        padding: '1rem',
+                        backgroundColor: '#f8f9fa',
+                        borderRadius: '4px',
+                        border: '1px solid #dee2e6',
+                        whiteSpace: 'pre-wrap',
+                        lineHeight: '1.6',
+                      }}
+                    >
+                      {sheetData.backstory}
+                    </div>
+                  </div>
+                )}
+                {sheetData.notes && (
+                  <div>
+                    <h3 style={{ marginBottom: '0.5rem', fontSize: '1.125rem' }}>その他のメモ</h3>
+                    <div
+                      style={{
+                        padding: '1rem',
+                        backgroundColor: '#f8f9fa',
+                        borderRadius: '4px',
+                        border: '1px solid #dee2e6',
+                        whiteSpace: 'pre-wrap',
+                        lineHeight: '1.6',
+                      }}
+                    >
+                      {sheetData.notes}
+                    </div>
+                  </div>
+                )}
+              </CollapsibleSection>
             )}
-          </CollapsibleSection>
+          </>
         )}
       </div>
     );
@@ -888,10 +983,12 @@ export const CthulhuSheetView = ({ data, showOnlyAttributes, showOnlySkills, sho
                       <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>故障</div>
                       <div style={{ fontWeight: 'bold' }}>{weapon.malfunction}</div>
                     </div>
-                    <div>
-                      <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>耐久力</div>
-                      <div style={{ fontWeight: 'bold' }}>{weapon.durability}</div>
-                    </div>
+                    {system !== 'cthulhu7' && (
+                      <div>
+                        <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>耐久力</div>
+                        <div style={{ fontWeight: 'bold' }}>{weapon.durability}</div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -1013,8 +1110,94 @@ export const CthulhuSheetView = ({ data, showOnlyAttributes, showOnlySkills, sho
           </CollapsibleSection>
         )}
 
+        {/* 第7版: バックストーリー（項目化 + キー・コネクション） */}
+        {system === 'cthulhu7' && (
+          <CollapsibleSection title="バックストーリー" defaultOpen={false}>
+            {(() => {
+              const fields: Array<{ key: string; label: string }> = [
+                { key: 'appearance', label: '容姿の描写' },
+                { key: 'traits', label: '特徴' },
+                { key: 'beliefs', label: 'イデオロギー/信念' },
+                { key: 'injuries', label: '負傷、傷跡' },
+                { key: 'importantPeople', label: '重要な人々' },
+                { key: 'phobiasManias', label: '恐怖症、マニア' },
+                { key: 'meaningfulPlaces', label: '意味のある場所' },
+                { key: 'treasuredPossessions', label: '秘蔵の品' },
+              ];
+              const entries = fields
+                .map((f) => ({
+                  ...f,
+                  memo: (sheetData.backstory7 as any)?.[f.key]?.memo || '',
+                  isKey: !!(sheetData.backstory7 as any)?.[f.key]?.isKey,
+                }))
+                .filter((f) => f.memo || f.isKey);
+
+              const mythosSections = [
+                { title: '魔導書', items: sheetData.mythosBooks || [] },
+                { title: '呪文', items: sheetData.spells || [] },
+                { title: 'アーティファクト', items: sheetData.artifacts || [] },
+                { title: '遭遇した超自然の存在', items: sheetData.encounteredEntities || [] },
+              ].filter((s) => (s.items || []).length > 0);
+
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {entries.length > 0 && (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+                      {entries.map((e) => (
+                        <div key={e.key} style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem', backgroundColor: '#f8f9fa' }}>
+                          <h3 style={{ marginTop: 0, marginBottom: '0.5rem', fontSize: '1.125rem' }}>
+                            {e.isKey ? `${e.label}🗝` : e.label}
+                          </h3>
+                          {e.memo && (
+                            <div style={{ padding: '0.75rem', backgroundColor: '#fff', borderRadius: '4px', whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
+                              {e.memo}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {mythosSections.length > 0 && (
+                    <div>
+                      {mythosSections.map((sec) => (
+                        <div key={sec.title} style={{ marginTop: '1rem' }}>
+                          <h3 style={{ marginBottom: '0.5rem', fontSize: '1.125rem' }}>{sec.title}</h3>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+                            {sec.items.map((it: any, idx: number) => (
+                              <div key={idx} style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem', backgroundColor: '#f8f9fa' }}>
+                                <h4 style={{ marginTop: 0, marginBottom: '0.5rem', fontSize: '1rem' }}>
+                                  {(it?.name || '(無名)') + (it?.isKey ? '🗝' : '')}
+                                </h4>
+                                {it?.memo && (
+                                  <div style={{ padding: '0.75rem', backgroundColor: '#fff', borderRadius: '4px', whiteSpace: 'pre-wrap', lineHeight: '1.6', fontSize: '0.875rem' }}>
+                                    {it.memo}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {sheetData.notes && (
+                    <div style={{ marginTop: '0.5rem' }}>
+                      <h3 style={{ marginBottom: '0.5rem', fontSize: '1.125rem' }}>その他のメモ</h3>
+                      <div style={{ padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '4px', border: '1px solid #dee2e6', whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
+                        {sheetData.notes}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+          </CollapsibleSection>
+        )}
+
         {/* 魔導書・呪文・アーティファクト・遭遇した超自然の存在セクション */}
-        {((sheetData.mythosBooks && sheetData.mythosBooks.length > 0) ||
+        {system !== 'cthulhu7' && ((sheetData.mythosBooks && sheetData.mythosBooks.length > 0) ||
           (sheetData.spells && sheetData.spells.length > 0) ||
           (sheetData.artifacts && sheetData.artifacts.length > 0) ||
           (sheetData.encounteredEntities && sheetData.encounteredEntities.length > 0)) && (
@@ -1174,7 +1357,7 @@ export const CthulhuSheetView = ({ data, showOnlyAttributes, showOnlySkills, sho
         )}
 
         {/* 背景・その他セクション */}
-        {(sheetData.backstory || sheetData.notes) && (
+        {system !== 'cthulhu7' && (sheetData.backstory || sheetData.notes) && (
           <CollapsibleSection title="背景・その他" defaultOpen={false}>
             {sheetData.backstory && (
               <div style={{ marginBottom: '1rem' }}>
