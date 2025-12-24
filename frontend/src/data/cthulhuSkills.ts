@@ -64,19 +64,26 @@ export const DEFAULT_CTHULHU_SKILLS: CthulhuSkill[] = DEFAULT_CTHULHU_SKILLS_RAW
  * - specialty が必要な技能は name + specialty で識別する想定
  */
 const DEFAULT_CTHULHU7_SKILLS_RAW: CthulhuSkill[] = [
-  // 既存（第6版）から保持するもの（※第7版で削除されるものは除外）
+  { name: '威圧', baseValue: 15, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 15, isCustom: false },
   { name: '言いくるめ', baseValue: 5, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 5, isCustom: false },
   { name: '医学', baseValue: 1, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 1, isCustom: false },
   { name: '運転', baseValue: 20, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 20, isCustom: false },
   { name: '応急手当', baseValue: 30, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 30, isCustom: false },
   { name: 'オカルト', baseValue: 5, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 5, isCustom: false },
+  { name: '隠密', baseValue: 20, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 20, isCustom: false },
+  { name: '科学', baseValue: 1, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 1, isCustom: false },
+  { name: '科学', specialty: '数学', baseValue: 10, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 10, isCustom: false },
   { name: '鍵開け', baseValue: 1, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 1, isCustom: false },
+  { name: '鑑定', baseValue: 5, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 5, isCustom: false },
   { name: '機械修理', baseValue: 10, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 10, isCustom: false },
   { name: '聞き耳', baseValue: 20, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 20, isCustom: false },
   { name: 'クトゥルフ神話', baseValue: 0, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 0, isCustom: false },
+  { name: '芸術/製作', baseValue: 5, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 5, isCustom: false },
   { name: '経理', baseValue: 5, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 5, isCustom: false },
   { name: '考古学', baseValue: 1, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 1, isCustom: false },
   { name: 'コンピューター', baseValue: 5, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 5, isCustom: false },
+  { name: 'サバイバル', baseValue: 10, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 10, isCustom: false },
+  { name: '自然', baseValue: 10, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 10, isCustom: false },
   { name: '写真術', baseValue: 10, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 10, isCustom: false },
   { name: '重機械操作', baseValue: 1, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 1, isCustom: false },
   { name: '乗馬', baseValue: 5, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 5, isCustom: false },
@@ -85,15 +92,13 @@ const DEFAULT_CTHULHU7_SKILLS_RAW: CthulhuSkill[] = [
   { name: '人類学', baseValue: 1, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 1, isCustom: false },
   { name: '水泳', baseValue: 20, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 20, isCustom: false },
   { name: '精神分析', baseValue: 1, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 1, isCustom: false },
-  { name: '生物学', baseValue: 1, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 1, isCustom: false },
   { name: '説得', baseValue: 10, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 10, isCustom: false },
   { name: '操縦', baseValue: 1, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 1, isCustom: false },
-  { name: '地質学', baseValue: 1, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 1, isCustom: false },
   { name: '跳躍', baseValue: 20, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 20, isCustom: false },
   { name: '追跡', baseValue: 10, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 10, isCustom: false },
+  { name: '手さばき', baseValue: 10, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 10, isCustom: false },
   { name: '電気修理', baseValue: 10, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 10, isCustom: false },
   { name: '電子工学', baseValue: 1, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 1, isCustom: false },
-  { name: '天文学', baseValue: 1, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 1, isCustom: false },
   { name: '登攀', baseValue: 40, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 40, isCustom: false },
   { name: '図書館', baseValue: 20, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 20, isCustom: false },
   { name: 'ナビゲート', baseValue: 10, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 10, isCustom: false },
@@ -102,21 +107,9 @@ const DEFAULT_CTHULHU7_SKILLS_RAW: CthulhuSkill[] = [
   { name: '他の言語', baseValue: 1, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 1, isCustom: false },
   // 母国語: 初期値は EDU*1（動的計算するため baseValue は 0 で保持）
   { name: '母国語', baseValue: 0, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 0, isCustom: false },
+  { name: '魅惑', baseValue: 15, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 15, isCustom: false },
   { name: '目星', baseValue: 25, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 25, isCustom: false },
   { name: '歴史', baseValue: 5, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 5, isCustom: false },
-
-  // 第7版 追加技能
-  { name: '威圧', baseValue: 15, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 15, isCustom: false },
-  { name: '隠密', baseValue: 20, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 20, isCustom: false },
-  { name: '科学', baseValue: 1, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 1, isCustom: false },
-  // 科学(数学) は別行として初期値10で追加（specialtyで識別）
-  { name: '科学', specialty: '数学', baseValue: 10, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 10, isCustom: false },
-  { name: '鑑定', baseValue: 5, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 5, isCustom: false },
-  { name: '芸術/製作', baseValue: 5, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 5, isCustom: false },
-  { name: 'サバイバル', baseValue: 10, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 10, isCustom: false },
-  { name: '自然', baseValue: 10, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 10, isCustom: false },
-  { name: '手さばき', baseValue: 10, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 10, isCustom: false },
-  { name: '魅惑', baseValue: 15, jobPoints: 0, interestPoints: 0, growth: 0, other: 0, total: 15, isCustom: false },
 ];
 
 export const DEFAULT_CTHULHU7_SKILLS: CthulhuSkill[] = DEFAULT_CTHULHU7_SKILLS_RAW;

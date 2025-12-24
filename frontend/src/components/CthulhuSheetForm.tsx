@@ -1159,9 +1159,7 @@ export const CthulhuSheetForm = ({ data, onChange, system }: CthulhuSheetFormPro
           })()}
 
           {/* 魔導書・呪文・アーティファクト・遭遇した超自然の存在（追加式 + キー・コネクション） */}
-          <div style={{ marginTop: '2rem' }}>
-            <h3 style={{ marginBottom: '1rem', fontSize: '1.25rem' }}>魔導書・呪文・アーティファクト・遭遇した超自然の存在</h3>
-
+          <div style={{ marginTop: '1rem' }}>
             {(['mythosBooks', 'spells', 'artifacts', 'encounteredEntities'] as const).map((type) => {
               const titleMap: Record<typeof type, string> = {
                 mythosBooks: '魔導書',
