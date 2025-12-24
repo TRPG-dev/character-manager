@@ -392,7 +392,7 @@ export function normalizeSheetData(data: any, system: CthulhuSystem = 'cthulhu6'
     return items.map((it: any) => ({
       name: it?.name ?? '',
       memo: it?.memo ?? '',
-      isKey: it?.isKey ?? false,
+      // isKeyは各項目では使用しないが、既存データとの互換性のため保持
     }));
   };
 
@@ -418,10 +418,15 @@ export function normalizeSheetData(data: any, system: CthulhuSystem = 'cthulhu6'
     notes: data.notes || '',
     backstory7,
     scenarios: data.scenarios || [],
-    mythosBooks: data.mythosBooks || [],
-    spells: data.spells || [],
+    mythosBooks: normalizeKeyFlagArray(data.mythosBooks),
+    spells: normalizeKeyFlagArray(data.spells),
     artifacts: normalizeKeyFlagArray(data.artifacts),
     encounteredEntities: normalizeKeyFlagArray(data.encounteredEntities),
+    // 第7版: カテゴリ全体のキー・コネクション
+    mythosBooksIsKey: data.mythosBooksIsKey ?? false,
+    spellsIsKey: data.spellsIsKey ?? false,
+    artifactsIsKey: data.artifactsIsKey ?? false,
+    encounteredEntitiesIsKey: data.encounteredEntitiesIsKey ?? false,
   };
 }
 

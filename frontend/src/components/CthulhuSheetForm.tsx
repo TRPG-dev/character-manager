@@ -443,7 +443,7 @@ export const CthulhuSheetForm = ({ data, onChange, system }: CthulhuSheetFormPro
 
   // 魔導書・呪文・アーティファクトの更新関数
   const addMythosItem = (type: 'mythosBooks' | 'spells' | 'artifacts' | 'encounteredEntities') => {
-    const newItems = [...(sheetData[type] || []), { name: '', memo: '', isKey: false }];
+    const newItems = [...(sheetData[type] || []), { name: '', memo: '' }];
     const updated = { ...sheetData, [type]: newItems };
     setSheetData(updated);
     onChange(updated);
@@ -457,10 +457,14 @@ export const CthulhuSheetForm = ({ data, onChange, system }: CthulhuSheetFormPro
     onChange(updated);
   };
 
-  const toggleMythosItemKey = (type: 'mythosBooks' | 'spells' | 'artifacts' | 'encounteredEntities', index: number, isKey: boolean) => {
-    const newItems = [...(sheetData[type] || [])];
-    newItems[index] = { ...newItems[index], isKey };
-    const updated = { ...sheetData, [type]: newItems };
+  const toggleMythosCategoryKey = (type: 'mythosBooks' | 'spells' | 'artifacts' | 'encounteredEntities', isKey: boolean) => {
+    const keyMap: Record<typeof type, keyof CthulhuSheetData> = {
+      mythosBooks: 'mythosBooksIsKey',
+      spells: 'spellsIsKey',
+      artifacts: 'artifactsIsKey',
+      encounteredEntities: 'encounteredEntitiesIsKey',
+    };
+    const updated = { ...sheetData, [keyMap[type]]: isKey };
     setSheetData(updated);
     onChange(updated);
   };
@@ -1165,11 +1169,27 @@ export const CthulhuSheetForm = ({ data, onChange, system }: CthulhuSheetFormPro
                 artifacts: 'アーティファクト',
                 encounteredEntities: '遭遇した超自然の存在',
               };
+              const keyMap: Record<typeof type, keyof CthulhuSheetData> = {
+                mythosBooks: 'mythosBooksIsKey',
+                spells: 'spellsIsKey',
+                artifacts: 'artifactsIsKey',
+                encounteredEntities: 'encounteredEntitiesIsKey',
+              };
               const items = (sheetData[type] || []) as any[];
+              const isKey = !!(sheetData[keyMap[type]] as boolean | undefined);
+              const labelWithKey = isKey ? `${titleMap[type]}🗝` : titleMap[type];
               return (
-                <div key={type} style={{ marginBottom: '2rem' }}>
+                <div key={type} style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem', marginBottom: '1.5rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                    <h4 style={{ margin: 0, fontSize: '1.125rem' }}>{titleMap[type]}</h4>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold', fontSize: '1.125rem', margin: 0 }}>
+                      <input
+                        type="checkbox"
+                        checked={isKey}
+                        onChange={(e) => toggleMythosCategoryKey(type, e.target.checked)}
+                        style={{ margin: 0 }}
+                      />
+                      {labelWithKey}
+                    </label>
                     <button
                       type="button"
                       onClick={() => addMythosItem(type)}
@@ -1188,17 +1208,8 @@ export const CthulhuSheetForm = ({ data, onChange, system }: CthulhuSheetFormPro
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     {items.map((item, index) => (
-                      <div key={index} style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', marginBottom: '0.5rem' }}>
-                          <label style={{ fontWeight: 'bold' }}>
-                            <input
-                              type="checkbox"
-                              checked={!!item.isKey}
-                              onChange={(e) => toggleMythosItemKey(type, index, e.target.checked)}
-                              style={{ marginRight: '0.5rem' }}
-                            />
-                            {item.isKey ? `キー・コネクション🗝` : 'キー・コネクション'}
-                          </label>
+                      <div key={index} style={{ border: '1px solid #e0e0e0', borderRadius: '4px', padding: '0.75rem', backgroundColor: '#f9f9f9' }}>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.5rem' }}>
                           <button
                             type="button"
                             onClick={() => removeMythosItem(type, index)}

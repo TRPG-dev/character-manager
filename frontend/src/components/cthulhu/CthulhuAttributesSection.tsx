@@ -20,7 +20,6 @@ export const CthulhuAttributesSection = ({ attributes, onUpdate, system }: Cthul
         { key: 'SIZ' as const, label: 'SIZ（体格）' },
         { key: 'INT' as const, label: 'INT（知性）' },
         { key: 'EDU' as const, label: 'EDU（教育）' },
-        ...(system === 'cthulhu7' ? [{ key: 'LUK' as const, label: 'LUK（幸運）' }] : []),
     ];
 
     return (

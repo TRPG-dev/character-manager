@@ -125,5 +125,11 @@ export interface CthulhuSheetData {
   spells?: CthulhuMythosItem[]; // 呪文
   artifacts?: CthulhuMythosItem[]; // アーティファクト
   encounteredEntities?: CthulhuMythosItem[]; // 遭遇した超自然の存在
+  
+  // 第7版: 魔導書・呪文・アーティファクト・遭遇した超自然の存在のキー・コネクション（カテゴリ全体）
+  mythosBooksIsKey?: boolean;
+  spellsIsKey?: boolean;
+  artifactsIsKey?: boolean;
+  encounteredEntitiesIsKey?: boolean;
 }
 
