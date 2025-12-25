@@ -50,7 +50,7 @@ export const AutoRollAttributes = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const isCthulhuSystem = system === 'cthulhu' || system === 'cthulhu6' || system === 'cthulhu7';
+  const isCthulhuSystem = system === 'cthulhu6' || system === 'cthulhu7';
 
   const handleRoll = async () => {
     if (!isCthulhuSystem) {

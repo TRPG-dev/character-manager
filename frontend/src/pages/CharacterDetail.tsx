@@ -4,7 +4,6 @@ import { FiArrowLeft, FiCopy, FiEdit, FiGlobe, FiLock, FiShare2, FiTrash2, FiX }
 import { useAuth } from '../auth/useAuth';
 import { getCharacter, deleteCharacter, publishCharacter, exportCocofolia } from '../services/api';
 import type { Character, SystemEnum } from '../services/api';
-import { CthulhuSheetView } from '../components/CthulhuSheetView';
 import type { CthulhuSheetData, CthulhuSkill } from '../types/cthulhu';
 import { normalizeSheetData as normalizeCthulhuSheetData } from '../utils/cthulhu';
 import { Cthulhu7BackstoryView, Cthulhu6MythosView } from '../components/CthulhuBackstoryView';
@@ -330,7 +329,6 @@ export const CharacterDetail = () => {
       {(character.system === 'cthulhu6' || character.system === 'cthulhu7') ? (
         // 第6版・第7版の場合は新しいタブ形式の表示
         (() => {
-          (() => {
             const sheetData = normalizeCthulhuSheetData(character.sheet_data, character.system as any) as CthulhuSheetData;
             const isCthulhu7 = character.system === 'cthulhu7';
             
@@ -928,7 +926,7 @@ export const CharacterDetail = () => {
                 <Tabs items={tabItems} defaultActiveIndex={0} />
               </>
             );
-          })()
+        })()
       ) : (
         <>
           {/* キャラクターシートセクション */}
