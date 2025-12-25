@@ -4,7 +4,7 @@ import { autoRollAttributes } from '../services/api';
 import { generateCthulhuAttributes, type CthulhuSystem } from '../utils/cthulhu';
 import type { CthulhuAttributes, CthulhuDerived } from '../types/cthulhu';
 
-type SystemEnum = 'cthulhu' | 'cthulhu6' | 'cthulhu7' | 'shinobigami' | 'sw25' | 'satasupe';
+type SystemEnum = 'cthulhu6' | 'cthulhu7' | 'shinobigami' | 'sw25' | 'satasupe';
 
 interface AutoRollAttributesResponse {
   attributes: {
