@@ -1123,7 +1123,7 @@ export const CthulhuSheetForm = ({ data, onChange, system }: CthulhuSheetFormPro
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {fields.map(({ key, label }) => {
                   const entry = sheetData.backstory7?.[key] || { memo: '', isKey: false };
-                  const labelWithKey = entry.isKey ? `${label}🗝` : label;
+                  const labelWithKey = entry.isKey ? `${label}★` : label;
                   return (
                     <div key={String(key)} style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', marginBottom: '0.5rem' }}>
