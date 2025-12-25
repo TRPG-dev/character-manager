@@ -161,7 +161,7 @@ export const CharacterDetail = () => {
 
   if (!character) {
     return (
-      <div style={{ padding: '2rem', textAlign: 'center' }}>
+      <div style={{ textAlign: 'center' }}>
         <h2>キャラクターが見つかりません</h2>
         <button
           onClick={() => navigate('/dashboard')}
@@ -182,7 +182,7 @@ export const CharacterDetail = () => {
   }
 
   return (
-    <div style={{ width: '100%', margin: '0 auto', padding: '2rem' }}>
+    <div style={{ width: '100%', margin: '0 auto'}}>
       {/* ヘッダーセクション */}
       <section style={{ marginBottom: '2rem' }}>
         <div style={{ marginBottom: '1rem' }}>
@@ -212,7 +212,6 @@ export const CharacterDetail = () => {
         }}>
           <div>
             <h1 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 'bold' }}>キャラクター詳細</h1>
-            <div style={{ marginTop: '0.25rem', fontSize: '1.25rem', fontWeight: 'bold' }}>{character.name}</div>
           </div>
           {isOwner && (
             <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
@@ -332,7 +331,7 @@ export const CharacterDetail = () => {
         // 第6版・第7版の場合は新しいタブ形式の表示
         (character.system === 'cthulhu6' || character.system === 'cthulhu7') ? (
           (() => {
-            const sheetData = normalizeCthulhuSheetData(character.sheet_data) as CthulhuSheetData;
+            const sheetData = normalizeCthulhuSheetData(character.sheet_data, character.system as any) as CthulhuSheetData;
             const isCthulhu7 = character.system === 'cthulhu7';
             
             // ヘルパー関数
@@ -363,7 +362,6 @@ export const CharacterDetail = () => {
               INT: 'INT (知性)',
               EDU: 'EDU (教育)',
               SIZ: 'SIZ (体格)',
-              LUK: 'LUK (幸運)',
             };
             
             // タブコンテンツの生成
@@ -383,7 +381,7 @@ export const CharacterDetail = () => {
                       gap: '1rem' 
                     }}>
                       {(Object.keys(sheetData.attributes) as Array<keyof typeof sheetData.attributes>)
-                        .filter(key => isCthulhu7 || key !== 'LUK') // 第6版の場合はLUKを表示しない
+                        .filter(key => key !== 'LUK') // LUK(幸運)は表示しない
                         .map((key) => (
                         <div key={key}>
                           <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>
@@ -439,12 +437,6 @@ export const CharacterDetail = () => {
                         <div>
                           <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>知識</div>
                           <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.derived.KNOW}</div>
-                        </div>
-                      )}
-                      {sheetData.derived.LUCK !== undefined && (
-                        <div>
-                          <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>幸運</div>
-                          <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.derived.LUCK}</div>
                         </div>
                       )}
                       {sheetData.derived.DB && (
@@ -736,12 +728,17 @@ export const CharacterDetail = () => {
                     { key: 'treasuredPossessions', label: '秘蔵の品' },
                   ];
                   
-                  // 全項目を表示（メモが空でも表示）
-                  const entries = fields.map((f) => ({
-                    ...f,
-                    memo: (sheetData.backstory7 as any)?.[f.key]?.memo || '',
-                    isKey: !!(sheetData.backstory7 as any)?.[f.key]?.isKey,
-                  }));
+                  // 入力された内容がある項目のみ表示（memoまたはisKeyがtrueの場合）
+                  const entries = fields
+                    .map((f) => {
+                      const entry = (sheetData.backstory7 as any)?.[f.key];
+                      return {
+                        ...f,
+                        memo: entry?.memo ?? '',
+                        isKey: !!entry?.isKey,
+                      };
+                    })
+                    .filter((f) => (f.memo && f.memo.trim().length > 0) || f.isKey);
                   
                   const mythosSections = [
                     { title: '魔導書', items: sheetData.mythosBooks || [] },
@@ -753,20 +750,18 @@ export const CharacterDetail = () => {
                   return (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                       {entries.length > 0 && (
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
-                          {entries.map((e) => (
-                            <div key={e.key} style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem', backgroundColor: '#f8f9fa' }}>
-                              <h3 style={{ marginTop: 0, marginBottom: '0.5rem', fontSize: '1.125rem' }}>
-                                {e.isKey ? `${e.label}🗝` : e.label}
-                              </h3>
-                              {e.memo && (
-                                <div style={{ padding: '0.75rem', backgroundColor: '#fff', borderRadius: '4px', whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
-                                  {e.memo}
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
+                        entries.map((e) => (
+                          <div key={e.key} style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem', backgroundColor: '#f8f9fa' }}>
+                            <h3 style={{ marginTop: 0, marginBottom: '0.5rem', fontSize: '1.125rem' }}>
+                              {e.isKey ? `${e.label}★` : e.label}
+                            </h3>
+                            {e.memo && (
+                              <div style={{ padding: '0.75rem', backgroundColor: '#fff', borderRadius: '4px', whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
+                                {e.memo}
+                              </div>
+                            )}
+                          </div>
+                        ))
                       )}
                       
                       {mythosSections.length > 0 && (
@@ -774,11 +769,11 @@ export const CharacterDetail = () => {
                           {mythosSections.map((sec) => (
                             <div key={sec.title} style={{ marginTop: '1rem' }}>
                               <h3 style={{ marginBottom: '0.5rem', fontSize: '1.125rem' }}>{sec.title}</h3>
-                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                 {sec.items.map((it: any, idx: number) => (
                                   <div key={idx} style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem', backgroundColor: '#f8f9fa' }}>
                                     <h4 style={{ marginTop: 0, marginBottom: '0.5rem', fontSize: '1rem' }}>
-                                      {(it?.name || '(無名)') + (it?.isKey ? '🗝' : '')}
+                                      {(it?.name || '(無名)') + (it?.isKey ? '★' : '')}
                                     </h4>
                                     {it?.memo && (
                                       <div style={{ padding: '0.75rem', backgroundColor: '#fff', borderRadius: '4px', whiteSpace: 'pre-wrap', lineHeight: '1.6', fontSize: '0.875rem' }}>
@@ -1034,7 +1029,7 @@ export const CharacterDetail = () => {
                     borderBottom: '2px solid var(--color-primary)',
                     paddingBottom: '0.5rem'
                   }}>
-                    基本情報
+                    {character.name}
                   </h2>
                   <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
                     {/* アイコン部分 */}
@@ -1091,7 +1086,7 @@ export const CharacterDetail = () => {
                     <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
                       <div>
                         <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>システム</div>
-                        <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{SYSTEM_NAMES[character.system]}</div>
+                        <div style={{ fontSize: '1.0rem', fontWeight: 'bold' }}>{SYSTEM_NAMES[character.system]}</div>
                       </div>
                       {character.tags.length > 0 && (
                         <div style={{ gridColumn: '1 / -1' }}>
@@ -1146,7 +1141,7 @@ export const CharacterDetail = () => {
                         </div>
                       )}
                       {!isCthulhu7 && sheetData.schoolDegree && (
-                        <div style={{ gridColumn: '1 / -1' }}>
+                        <div>
                           <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>学校・学位</div>
                           <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.schoolDegree}</div>
                         </div>
@@ -1299,7 +1294,7 @@ export const CharacterDetail = () => {
                       </div>
                     )}
                     {(() => {
-                      const sheetData = normalizeCthulhuSheetData(character.sheet_data) as CthulhuSheetData;
+                      const sheetData = normalizeCthulhuSheetData(character.sheet_data, character.system as any) as CthulhuSheetData;
                       return (
                         <>
                           {sheetData.playerName && (
@@ -1346,7 +1341,7 @@ export const CharacterDetail = () => {
 
                 {/* 能力値・派生値セクション（CthulhuSheetViewから取得） */}
                 <CthulhuSheetView 
-                  data={normalizeCthulhuSheetData(character.sheet_data) as CthulhuSheetData}
+                  data={normalizeCthulhuSheetData(character.sheet_data, character.system as any) as CthulhuSheetData}
                   system={character.system}
                   showOnlyAttributes={true}
                 />
@@ -1359,7 +1354,7 @@ export const CharacterDetail = () => {
                 gap: '1.5rem',
               }}>
                 <CthulhuSheetView 
-                  data={normalizeCthulhuSheetData(character.sheet_data) as CthulhuSheetData}
+                  data={normalizeCthulhuSheetData(character.sheet_data, character.system as any) as CthulhuSheetData}
                   system={character.system}
                   showOnlySkillsAndItems={true}
                 />
@@ -1368,7 +1363,7 @@ export const CharacterDetail = () => {
 
             {/* 2カラムレイアウトの下: その他 */}
             <CthulhuSheetView 
-              data={normalizeCthulhuSheetData(character.sheet_data) as CthulhuSheetData}
+              data={normalizeCthulhuSheetData(character.sheet_data, character.system as any) as CthulhuSheetData}
               system={character.system}
               showOnlyOther={true}
             />
