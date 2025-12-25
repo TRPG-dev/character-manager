@@ -4,7 +4,7 @@ import { autoRollAttributes } from '../services/api';
 import { generateCthulhuAttributes, type CthulhuSystem } from '../utils/cthulhu';
 import type { CthulhuAttributes, CthulhuDerived } from '../types/cthulhu';
 
-type SystemEnum = 'cthulhu' | 'cthulhu6' | 'cthulhu7' | 'shinobigami' | 'sw25' | 'satasupe';
+type SystemEnum = 'cthulhu6' | 'cthulhu7' | 'shinobigami' | 'sw25' | 'satasupe';
 
 interface AutoRollAttributesResponse {
   attributes: {
@@ -50,7 +50,7 @@ export const AutoRollAttributes = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const isCthulhuSystem = system === 'cthulhu' || system === 'cthulhu6' || system === 'cthulhu7';
+  const isCthulhuSystem = system === 'cthulhu6' || system === 'cthulhu7';
 
   const handleRoll = async () => {
     if (!isCthulhuSystem) {

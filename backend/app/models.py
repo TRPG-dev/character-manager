@@ -9,7 +9,6 @@ from app.database import Base
 
 
 class SystemEnum(str, enum.Enum):
-    cthulhu = "cthulhu"
     cthulhu6 = "cthulhu6"
     cthulhu7 = "cthulhu7"
     shinobigami = "shinobigami"

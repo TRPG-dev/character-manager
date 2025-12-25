@@ -103,7 +103,7 @@
 #### characters
 - **id:** UUID（PK）
 - **user_id:** UUID（FK → users.id）
-- **system:** enum（'cthulhu' | 'shinobigami' | 'sw25' | 'satasupe'）
+- **system:** enum（'cthulhu6' | 'cthulhu7' | 'shinobigami' | 'sw25' | 'satasupe'）
 - **name:** string
 - **profile_image_url:** string
 - **tags:** text[]（自由入力）
@@ -122,7 +122,7 @@
 
 ### JSONB例
 
-#### クトゥルフ（cthulhu）
+#### クトゥルフ神話TRPG（cthulhu6/cthulhu7）
 ```json
 {
   "attributes": { "STR": 50, "CON": 60, "POW": 55, "DEX": 65, "APP": 50, "INT": 70, "EDU": 75, "SIZ": 60 },
@@ -226,8 +226,8 @@
 
 - **GET /characters/{id}/export/pdf**
     - **説明:** PDF出力（サーバレンダリング）
-- **GET /characters/{id}/export/chatpalette?system=cthulhu**
-    - **説明:** ココフォリア用チャットパレット出力（まずクトゥルフ対応）
+- **GET /characters/{id}/export/cocofolia?system=cthulhu6**
+    - **説明:** ココフォリア用チャットパレット出力（cthulhu6/cthulhu7対応）
 - **POST /import/json**
     - **ボディ:** { data: JSON }
     - **説明:** JSONからインポート（1キャラ）

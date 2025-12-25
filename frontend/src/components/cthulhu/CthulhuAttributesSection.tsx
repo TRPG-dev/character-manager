@@ -1,16 +1,14 @@
 import type { CthulhuSheetData } from '../../types/cthulhu';
-import type { CthulhuSystem } from '../../utils/cthulhu';
 
 interface CthulhuAttributesSectionProps {
     attributes: CthulhuSheetData['attributes'];
     onUpdate: (key: keyof CthulhuSheetData['attributes'], value: number) => void;
-    system: CthulhuSystem;
 }
 
 /**
  * クトゥルフ能力値入力セクション
  */
-export const CthulhuAttributesSection = ({ attributes, onUpdate, system }: CthulhuAttributesSectionProps) => {
+export const CthulhuAttributesSection = ({ attributes, onUpdate }: CthulhuAttributesSectionProps) => {
     const attributeFields = [
         { key: 'STR' as const, label: 'STR（筋力）' },
         { key: 'CON' as const, label: 'CON（体力）' },
