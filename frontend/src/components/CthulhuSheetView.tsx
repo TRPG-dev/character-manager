@@ -26,7 +26,7 @@ export const CthulhuSheetView = ({ data, system = 'cthulhu6', showOnlyAttributes
     return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
 
-  const attributeLabels: Record<keyof typeof sheetData.attributes, string> = {
+  const attributeLabels: Partial<Record<keyof typeof sheetData.attributes, string>> = {
     STR: 'STR (筋力)',
     CON: 'CON (体力)',
     POW: 'POW (精神力)',
@@ -35,7 +35,6 @@ export const CthulhuSheetView = ({ data, system = 'cthulhu6', showOnlyAttributes
     INT: 'INT (知性)',
     EDU: 'EDU (教育)',
     SIZ: 'SIZ (体格)',
-    LUK: 'LUK (幸運)',
   };
 
   // 初期値と変わっていない技能をフィルタリング
@@ -141,14 +140,6 @@ export const CthulhuSheetView = ({ data, system = 'cthulhu6', showOnlyAttributes
                   <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>知識</div>
                   <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>
                     {sheetData.derived.KNOW}
-                  </div>
-                </div>
-              )}
-              {sheetData.derived.LUCK !== undefined && (
-                <div>
-                  <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>幸運</div>
-                  <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>
-                    {sheetData.derived.LUCK}
                   </div>
                 </div>
               )}
@@ -480,12 +471,15 @@ export const CthulhuSheetView = ({ data, system = 'cthulhu6', showOnlyAttributes
                 { key: 'treasuredPossessions', label: '秘蔵の品' },
               ];
               const entries = fields
-                .map((f) => ({
-                  ...f,
-                  memo: (sheetData.backstory7 as any)?.[f.key]?.memo || '',
-                  isKey: !!(sheetData.backstory7 as any)?.[f.key]?.isKey,
-                }))
-                .filter((f) => f.memo || f.isKey);
+                .map((f) => {
+                  const entry = (sheetData.backstory7 as any)?.[f.key];
+                  return {
+                    ...f,
+                    memo: entry?.memo ?? '',
+                    isKey: !!entry?.isKey,
+                  };
+                })
+                .filter((f) => (f.memo && f.memo.trim().length > 0) || f.isKey);
 
               const mythosSections = [
                 { title: '魔導書', items: sheetData.mythosBooks || [] },
@@ -497,20 +491,18 @@ export const CthulhuSheetView = ({ data, system = 'cthulhu6', showOnlyAttributes
               return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   {entries.length > 0 && (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
-                      {entries.map((e) => (
-                        <div key={e.key} style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem', backgroundColor: '#f8f9fa' }}>
-                          <h3 style={{ marginTop: 0, marginBottom: '0.5rem', fontSize: '1.125rem' }}>
-                            {e.isKey ? `${e.label}🗝` : e.label}
-                          </h3>
-                          {e.memo && (
-                            <div style={{ padding: '0.75rem', backgroundColor: '#fff', borderRadius: '4px', whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
-                              {e.memo}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
+                    entries.map((e) => (
+                      <div key={e.key} style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem', backgroundColor: '#f8f9fa' }}>
+                        <h3 style={{ marginTop: 0, marginBottom: '0.5rem', fontSize: '1.125rem' }}>
+                          {e.isKey ? `${e.label}★` : e.label}
+                        </h3>
+                        {e.memo && (
+                          <div style={{ padding: '0.75rem', backgroundColor: '#fff', borderRadius: '4px', whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
+                            {e.memo}
+                          </div>
+                        )}
+                      </div>
+                    ))
                   )}
 
                   {mythosSections.length > 0 && (
@@ -518,11 +510,11 @@ export const CthulhuSheetView = ({ data, system = 'cthulhu6', showOnlyAttributes
                       {mythosSections.map((sec) => (
                         <div key={sec.title} style={{ marginTop: '1rem' }}>
                           <h3 style={{ marginBottom: '0.5rem', fontSize: '1.125rem' }}>{sec.title}</h3>
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                             {sec.items.map((it: any, idx: number) => (
                               <div key={idx} style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem', backgroundColor: '#f8f9fa' }}>
                                 <h4 style={{ marginTop: 0, marginBottom: '0.5rem', fontSize: '1rem' }}>
-                                  {(it?.name || '(無名)') + (it?.isKey ? '🗝' : '')}
+                                  {(it?.name || '(無名)') + (it?.isKey ? '★' : '')}
                                 </h4>
                                 {it?.memo && (
                                   <div style={{ padding: '0.75rem', backgroundColor: '#fff', borderRadius: '4px', whiteSpace: 'pre-wrap', lineHeight: '1.6', fontSize: '0.875rem' }}>
@@ -857,14 +849,6 @@ export const CthulhuSheetView = ({ data, system = 'cthulhu6', showOnlyAttributes
                   </div>
                 </div>
               )}
-              {sheetData.derived.LUCK !== undefined && (
-                <div>
-                  <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>幸運</div>
-                  <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>
-                    {sheetData.derived.LUCK}
-                  </div>
-                </div>
-              )}
               {sheetData.derived.DB && (
                 <div>
                   <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>ダメージボーナス</div>
@@ -1125,12 +1109,15 @@ export const CthulhuSheetView = ({ data, system = 'cthulhu6', showOnlyAttributes
                 { key: 'treasuredPossessions', label: '秘蔵の品' },
               ];
               const entries = fields
-                .map((f) => ({
-                  ...f,
-                  memo: (sheetData.backstory7 as any)?.[f.key]?.memo || '',
-                  isKey: !!(sheetData.backstory7 as any)?.[f.key]?.isKey,
-                }))
-                .filter((f) => f.memo || f.isKey);
+                .map((f) => {
+                  const entry = (sheetData.backstory7 as any)?.[f.key];
+                  return {
+                    ...f,
+                    memo: entry?.memo ?? '',
+                    isKey: !!entry?.isKey,
+                  };
+                })
+                .filter((f) => (f.memo && f.memo.trim().length > 0) || f.isKey);
 
               const mythosSections = [
                 { title: '魔導書', items: sheetData.mythosBooks || [] },
@@ -1142,20 +1129,18 @@ export const CthulhuSheetView = ({ data, system = 'cthulhu6', showOnlyAttributes
               return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   {entries.length > 0 && (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
-                      {entries.map((e) => (
-                        <div key={e.key} style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem', backgroundColor: '#f8f9fa' }}>
-                          <h3 style={{ marginTop: 0, marginBottom: '0.5rem', fontSize: '1.125rem' }}>
-                            {e.isKey ? `${e.label}🗝` : e.label}
-                          </h3>
-                          {e.memo && (
-                            <div style={{ padding: '0.75rem', backgroundColor: '#fff', borderRadius: '4px', whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
-                              {e.memo}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
+                    entries.map((e) => (
+                      <div key={e.key} style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem', backgroundColor: '#f8f9fa' }}>
+                        <h3 style={{ marginTop: 0, marginBottom: '0.5rem', fontSize: '1.125rem' }}>
+                          {e.isKey ? `${e.label}★` : e.label}
+                        </h3>
+                        {e.memo && (
+                          <div style={{ padding: '0.75rem', backgroundColor: '#fff', borderRadius: '4px', whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
+                            {e.memo}
+                          </div>
+                        )}
+                      </div>
+                    ))
                   )}
 
                   {mythosSections.length > 0 && (
@@ -1163,11 +1148,11 @@ export const CthulhuSheetView = ({ data, system = 'cthulhu6', showOnlyAttributes
                       {mythosSections.map((sec) => (
                         <div key={sec.title} style={{ marginTop: '1rem' }}>
                           <h3 style={{ marginBottom: '0.5rem', fontSize: '1.125rem' }}>{sec.title}</h3>
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                             {sec.items.map((it: any, idx: number) => (
                               <div key={idx} style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem', backgroundColor: '#f8f9fa' }}>
                                 <h4 style={{ marginTop: 0, marginBottom: '0.5rem', fontSize: '1rem' }}>
-                                  {(it?.name || '(無名)') + (it?.isKey ? '🗝' : '')}
+                                  {(it?.name || '(無名)') + (it?.isKey ? '★' : '')}
                                 </h4>
                                 {it?.memo && (
                                   <div style={{ padding: '0.75rem', backgroundColor: '#fff', borderRadius: '4px', whiteSpace: 'pre-wrap', lineHeight: '1.6', fontSize: '0.875rem' }}>
