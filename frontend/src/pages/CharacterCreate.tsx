@@ -23,7 +23,6 @@ import { handleApiError, formatErrorMessage } from '../utils/errorHandler';
 import { IconText } from '../components/IconText';
 
 const SYSTEM_NAMES: Record<SystemEnum, string> = {
-  cthulhu: 'クトゥルフ神話TRPG（旧）',
   cthulhu6: 'クトゥルフ神話TRPG 第6版',
   cthulhu7: 'クトゥルフ神話TRPG 第7版',
   shinobigami: 'シノビガミ',
@@ -54,7 +53,7 @@ export const CharacterCreate = () => {
     setSelectedSystem(system);
     setStep('form');
     // システムに応じて初期シートデータを設定
-    if (system === 'cthulhu' || system === 'cthulhu6' || system === 'cthulhu7') {
+    if (system === 'cthulhu6' || system === 'cthulhu7') {
       setSheetData(normalizeCthulhuSheetData({
         attributes: {
           STR: 0,
@@ -182,7 +181,7 @@ export const CharacterCreate = () => {
     if (!selectedSystem || !name.trim()) return;
 
     // クトゥルフの場合、ポイント上限チェック
-    if ((selectedSystem === 'cthulhu' || selectedSystem === 'cthulhu6' || selectedSystem === 'cthulhu7') && sheetData && 'customSkills' in sheetData) {
+    if ((selectedSystem === 'cthulhu6' || selectedSystem === 'cthulhu7') && sheetData && 'customSkills' in sheetData) {
       const { calculateTotalJobPoints, calculateTotalInterestPoints } = await import('../data/cthulhuSkills');
       const { getCthulhuJobPointsLimit, getCthulhuInterestPointsLimit } = await import('../utils/cthulhu');
       
@@ -216,7 +215,7 @@ export const CharacterCreate = () => {
         system: selectedSystem,
         name: name.trim(),
         tags,
-        sheet_data: (selectedSystem === 'cthulhu' || selectedSystem === 'cthulhu6' || selectedSystem === 'cthulhu7' || selectedSystem === 'shinobigami' || selectedSystem === 'sw25') && sheetData ? sheetData : undefined,
+        sheet_data: (selectedSystem === 'cthulhu6' || selectedSystem === 'cthulhu7' || selectedSystem === 'shinobigami' || selectedSystem === 'sw25') && sheetData ? sheetData : undefined,
       });
       
       setCreatedCharacterId(character.id);
@@ -296,7 +295,7 @@ export const CharacterCreate = () => {
       <h1 style={{ marginTop: 0 }}>キャラクター作成</h1>
       <form onSubmit={handleSubmit}>
         <CollapsibleSection title="基本情報" defaultOpen={true}>
-          {(selectedSystem === 'cthulhu' || selectedSystem === 'cthulhu6' || selectedSystem === 'cthulhu7') && sheetData && (
+          {(selectedSystem === 'cthulhu6' || selectedSystem === 'cthulhu7') && sheetData && (
             <BasicInfoForm
               data={sheetData as CthulhuSheetData}
               onChange={(data) => setSheetData(data)}
@@ -359,7 +358,7 @@ export const CharacterCreate = () => {
           <CollapsibleSection title="ツール" defaultOpen={false}>
             <DiceRoller initialFormula="3d6" />
 
-            {(selectedSystem === 'cthulhu' || selectedSystem === 'cthulhu6' || selectedSystem === 'cthulhu7') && (
+            {(selectedSystem === 'cthulhu6' || selectedSystem === 'cthulhu7') && (
               <div style={{ marginTop: '1rem' }}>
                 <AutoRollAttributes
                   characterId={createdCharacterId || undefined}
@@ -428,7 +427,7 @@ export const CharacterCreate = () => {
         )}
 
         <CollapsibleSection title="キャラクターシート" defaultOpen={true}>
-          {(selectedSystem === 'cthulhu' || selectedSystem === 'cthulhu6' || selectedSystem === 'cthulhu7') && sheetData && (
+          {(selectedSystem === 'cthulhu6' || selectedSystem === 'cthulhu7') && sheetData && (
             <CthulhuSheetForm
               data={sheetData as CthulhuSheetData}
               onChange={(data) => setSheetData(data)}
@@ -498,7 +497,7 @@ export const CharacterCreate = () => {
                       return;
                     }
                     await updateCharacter(token, createdCharacterId, {
-                      sheet_data: (selectedSystem === 'cthulhu' || selectedSystem === 'cthulhu6' || selectedSystem === 'cthulhu7' || selectedSystem === 'shinobigami' || selectedSystem === 'sw25') && sheetData ? sheetData : undefined,
+                      sheet_data: (selectedSystem === 'cthulhu6' || selectedSystem === 'cthulhu7' || selectedSystem === 'shinobigami' || selectedSystem === 'sw25') && sheetData ? sheetData : undefined,
                     });
                     showSuccess('更新が完了しました');
                     navigate(`/characters/${createdCharacterId}`);

@@ -25,7 +25,7 @@ from app.services.gcs import maybe_sign_read_url
 
 router = APIRouter(prefix="/api/characters", tags=["characters"])
 
-_CTHULHU_SYSTEMS = {SystemEnum.cthulhu, SystemEnum.cthulhu6, SystemEnum.cthulhu7}
+_CTHULHU_SYSTEMS = {SystemEnum.cthulhu6, SystemEnum.cthulhu7}
 
 def _to_character_response(c: Character) -> CharacterResponse:
     """Character → APIレスポンス（画像URLは署名付きに差し替え）"""
@@ -99,7 +99,7 @@ async def list_characters(
             q = q.filter(Character.tags.op('@>')(f'{{{tag}}}'))
 
     # 並び替え
-    # - system_asc は PostgreSQL enum の定義順ではなく文字列として昇順（cthulhu, ...）にする
+    # - system_asc は PostgreSQL enum の定義順ではなく文字列として昇順にする
     order_by_map = {
         "name_asc": [Character.name.asc(), Character.updated_at.desc(), Character.id.asc()],
         "name_desc": [Character.name.desc(), Character.updated_at.desc(), Character.id.asc()],
@@ -343,7 +343,7 @@ async def auto_roll_attributes(
     if request.system not in _CTHULHU_SYSTEMS:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"能力値自動生成は現在 {SystemEnum.cthulhu.value}/{SystemEnum.cthulhu6.value}/{SystemEnum.cthulhu7.value} のみ対応しています",
+            detail=f"能力値自動生成は現在 {SystemEnum.cthulhu6.value}/{SystemEnum.cthulhu7.value} のみ対応しています",
         )
 
     # キャラクターのシステムと一致するかチェック

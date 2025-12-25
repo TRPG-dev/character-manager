@@ -80,8 +80,9 @@ export const useCharacterForm = (): UseCharacterFormResult => {
         // Normalize sheet data based on system
         let normalized: SheetData;
         switch (system) {
-            case 'cthulhu':
-                normalized = normalizeCthulhuSheetData(initialData.sheetData);
+            case 'cthulhu6':
+            case 'cthulhu7':
+                normalized = normalizeCthulhuSheetData(initialData.sheetData, system);
                 break;
             case 'shinobigami':
                 normalized = normalizeShinobigamiSheetData(initialData.sheetData);

@@ -121,7 +121,7 @@ def generate_cthulhu_attributes(system: SystemEnum = SystemEnum.cthulhu6) -> Dic
         能力値と派生値の辞書
     """
     # NOTE:
-    # - cthulhu/cthulhu6: 第6版のルール（従来実装）
+    # - cthulhu6: 第6版のルール
     # - cthulhu7: 第7版のルール（倍率5 + LUK追加）
     if system == SystemEnum.cthulhu7:
         # 7版: 3d6*5（STR/CON/POW/DEX/APP） (2d6+6)*5（SIZ/INT/EDU） + LUK=3d6*5

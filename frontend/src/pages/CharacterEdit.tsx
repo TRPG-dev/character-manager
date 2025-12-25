@@ -26,7 +26,6 @@ import { LoadingSpinner } from '../components/LoadingSpinner';
 import { IconText } from '../components/IconText';
 
 const SYSTEM_NAMES: Record<SystemEnum, string> = {
-  cthulhu: 'クトゥルフ神話TRPG（旧）',
   cthulhu6: 'クトゥルフ神話TRPG 第6版',
   cthulhu7: 'クトゥルフ神話TRPG 第7版',
   shinobigami: 'シノビガミ',
@@ -75,7 +74,7 @@ export const CharacterEdit = () => {
           setPendingImageAction('none');
           setSheetData(JSON.stringify(char.sheet_data, null, 2));
           // システムに応じてシートデータを正規化
-          if (char.system === 'cthulhu' || char.system === 'cthulhu6' || char.system === 'cthulhu7') {
+          if (char.system === 'cthulhu6' || char.system === 'cthulhu7') {
             setCthulhuSheetData(normalizeCthulhuSheetData(char.sheet_data, char.system));
             setShinobigamiSheetData(null);
             setSw25SheetData(null);
@@ -191,7 +190,7 @@ export const CharacterEdit = () => {
     if (!id || !character) return;
 
     // クトゥルフの場合、ポイント上限チェック
-    if ((character.system === 'cthulhu' || character.system === 'cthulhu6' || character.system === 'cthulhu7') && cthulhuSheetData) {
+    if ((character.system === 'cthulhu6' || character.system === 'cthulhu7') && cthulhuSheetData) {
       const { calculateTotalJobPoints, calculateTotalInterestPoints } = await import('../data/cthulhuSkills');
       const { getCthulhuJobPointsLimit, getCthulhuInterestPointsLimit } = await import('../utils/cthulhu');
       
@@ -217,7 +216,7 @@ export const CharacterEdit = () => {
       const token = await getAccessToken();
       if (token) {
         let parsedSheetData;
-        if ((character.system === 'cthulhu' || character.system === 'cthulhu6' || character.system === 'cthulhu7') && cthulhuSheetData) {
+        if ((character.system === 'cthulhu6' || character.system === 'cthulhu7') && cthulhuSheetData) {
           // クトゥルフの場合はフォームデータを使用
           parsedSheetData = cthulhuSheetData;
         } else if (character.system === 'shinobigami' && shinobigamiSheetData) {
@@ -388,19 +387,7 @@ export const CharacterEdit = () => {
             )}
           </div>
 
-          {character.system === 'cthulhu' && cthulhuSheetData ? (
-            <>
-              <BasicInfoForm
-                data={cthulhuSheetData}
-                onChange={(data) => setCthulhuSheetData(data as CthulhuSheetData)}
-                system={character.system}
-                name={name}
-                onNameChange={setName}
-                tags={tags}
-                onTagsChange={setTags}
-              />
-            </>
-          ) : (character.system === 'cthulhu6' || character.system === 'cthulhu7') && cthulhuSheetData ? (
+          {(character.system === 'cthulhu6' || character.system === 'cthulhu7') && cthulhuSheetData ? (
             <>
               <BasicInfoForm
                 data={cthulhuSheetData}
@@ -655,7 +642,7 @@ export const CharacterEdit = () => {
           <CollapsibleSection title="ツール" defaultOpen={false}>
             <DiceRoller initialFormula="3d6" />
 
-            {id && (character.system === 'cthulhu' || character.system === 'cthulhu6' || character.system === 'cthulhu7') && (
+            {id && (character.system === 'cthulhu6' || character.system === 'cthulhu7') && (
               <div style={{ marginTop: '1rem' }}>
                 <AutoRollAttributes
                   characterId={id}
@@ -723,7 +710,7 @@ export const CharacterEdit = () => {
 
 
         <CollapsibleSection title="キャラクターシート" defaultOpen={true}>
-          {(character.system === 'cthulhu' || character.system === 'cthulhu6' || character.system === 'cthulhu7') && cthulhuSheetData ? (
+          {(character.system === 'cthulhu6' || character.system === 'cthulhu7') && cthulhuSheetData ? (
             <CthulhuSheetForm
               data={cthulhuSheetData}
               onChange={(data) => setCthulhuSheetData(data)}
