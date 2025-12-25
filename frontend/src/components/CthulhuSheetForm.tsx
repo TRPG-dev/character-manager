@@ -482,7 +482,6 @@ export const CthulhuSheetForm = ({ data, onChange, system }: CthulhuSheetFormPro
       <CthulhuAttributesSection
         attributes={sheetData.attributes}
         onUpdate={updateAttributes}
-        system={system}
       />
 
       {/* 派生値セクション */}
