@@ -489,7 +489,7 @@ export const BasicInfoForm = ({
                 <select
                   value={(data as ShinobigamiSheetData).type || ''}
                   onChange={(e) => {
-                    const updated = { ...data, type: e.target.value as "忍者" | "人間" | "半忍" | undefined } as ShinobigamiSheetData;
+                    const updated = { ...data, type: e.target.value as "忍者" | "人間" | undefined } as ShinobigamiSheetData;
                     onChange(updated);
                   }}
                   style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
@@ -497,7 +497,6 @@ export const BasicInfoForm = ({
                   <option value="">選択してください</option>
                   <option value="忍者">忍者</option>
                   <option value="人間">人間</option>
-                  <option value="半忍">半忍</option>
                 </select>
               </div>
               <div>

@@ -1,5 +1,5 @@
 // シノビガミ用のユーティリティ関数
-import type { ShinobigamiSheetData, ShinobigamiAttributes, ShinobigamiNingu } from '../types/shinobigami';
+import type { ShinobigamiSheetData, ShinobigamiAttributes, ShinobigamiNingu, ShinobigamiNinpo } from '../types/shinobigami';
 
 /**
  * シートデータを正規化（不足しているフィールドを追加）
@@ -16,7 +16,18 @@ export function normalizeSheetData(data: any): ShinobigamiSheetData {
 
   const attributes = { ...defaultAttributes, ...(data.attributes || {}) };
   const skills = Array.isArray(data.skills) ? data.skills : [];
-  const ninpo = Array.isArray(data.ninpo) ? data.ninpo : [];
+  const defaultNinpo: ShinobigamiNinpo[] = [
+    {
+      name: '接近戦攻撃',
+      type: '攻撃',
+      skill: '',
+      range: '1',
+      cost: '',
+      effect: '',
+      page: '基78',
+    }
+  ];
+  const ninpo = Array.isArray(data.ninpo) && data.ninpo.length > 0 ? data.ninpo : defaultNinpo;
   const okugi = Array.isArray(data.okugi) ? data.okugi : [];
   const emotions = Array.isArray(data.emotions) ? data.emotions : [];
   const hencho = Array.isArray(data.hencho) ? data.hencho : [];

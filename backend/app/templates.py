@@ -99,7 +99,7 @@ def generate_shinobigami_template() -> Dict[str, Any]:
                 "type": "攻撃",
                 "skill": "",
                 "range": "1",
-                "cost": "0",
+                "cost": "",
                 "effect": "",
                 "page": "基78",
             }
