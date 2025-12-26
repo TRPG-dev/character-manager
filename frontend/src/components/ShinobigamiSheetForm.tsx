@@ -36,7 +36,7 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
 
   const updateSchool = (school: string) => {
     const ryuugi = school ? getRyuugiFromSchool(school) : '';
-    const updated = { ...sheetData, school, ryuugi };
+    const updated = { ...sheetData, school, upperSchool: school, ryuugi };
     setIsInternalUpdate(true);
     setSheetData(updated);
     onChange(updated);
@@ -76,6 +76,7 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
       skill: '',
       range: '',
       cost: '',
+      effect: '',
       page: '',
     };
     const updated = { ...sheetData, ninpo: [...(sheetData.ninpo || []), newNinpo] };
@@ -115,6 +116,7 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
       effect: '',
       strength: '',
       weakness: '',
+      page: '',
       memo: '',
     };
     const updated = { ...sheetData, okugi: [...(sheetData.okugi || []), newOkugi] };
@@ -180,69 +182,76 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
     onChange(updated);
   };
 
-  const selectedDomain = sheetData.school ? getDomainFromSchool(sheetData.school) : null;
+  const selectedDomain = (sheetData.upperSchool || sheetData.school) ? getDomainFromSchool(sheetData.upperSchool || sheetData.school || '') : null;
   const [emptyLeftIndex, emptyRightIndex] = selectedDomain ? getEmptyColumnIndices(selectedDomain) : [-1, -1];
+
+  const addBackground = () => {
+    const newBackground = {
+      name: '',
+      type: '長所' as const,
+      koseki: '',
+      effect: '',
+      page: '',
+    };
+    const updated = { ...sheetData, backgrounds: [...(sheetData.backgrounds || []), newBackground] };
+    setIsInternalUpdate(true);
+    setSheetData(updated);
+    onChange(updated);
+  };
+
+  const updateBackground = (index: number, field: keyof typeof sheetData.backgrounds[0], value: string) => {
+    const newBackgrounds = [...(sheetData.backgrounds || [])];
+    newBackgrounds[index] = { ...newBackgrounds[index], [field]: value };
+    const updated = { ...sheetData, backgrounds: newBackgrounds };
+    setIsInternalUpdate(true);
+    setSheetData(updated);
+    onChange(updated);
+  };
+
+  const removeBackground = (index: number) => {
+    const newBackgrounds = (sheetData.backgrounds || []).filter((_, i) => i !== index);
+    const updated = { ...sheetData, backgrounds: newBackgrounds };
+    setIsInternalUpdate(true);
+    setSheetData(updated);
+    onChange(updated);
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      {/* 流派セクション */}
+      {/* 流派情報セクション */}
       <section>
         <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
-          流派
+          流派情報
         </h2>
-        <div>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-            流派を選択
-          </label>
-          <select
-            value={sheetData.school || ''}
-            onChange={(e) => updateSchool(e.target.value)}
-            style={{
-              width: '100%',
-              maxWidth: '400px',
-              padding: '0.5rem',
-              fontSize: '1rem',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-            }}
-          >
-            <option value="">選択してください</option>
-            {SHINOBI_SCHOOLS.map((school) => (
-              <option key={school.value} value={school.value}>
-                {school.label} ({school.domain})
-              </option>
-            ))}
-          </select>
-          {sheetData.school && selectedDomain && (
-            <div style={{ marginTop: '0.5rem', padding: '0.5rem', backgroundColor: '#f0f0f0', borderRadius: '4px' }}>
-              <div>特技属性: {selectedDomain}</div>
-              {sheetData.ryuugi && (
-                <div style={{ marginTop: '0.5rem' }}>
-                  <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold' }}>流儀</label>
-                  <textarea
-                    value={sheetData.ryuugi}
-                    onChange={(e) => {
-                      const updated = { ...sheetData, ryuugi: e.target.value };
-                      setIsInternalUpdate(true);
-                      setSheetData(updated);
-                      onChange(updated);
-                    }}
-                    rows={2}
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem',
-                      fontSize: '1rem',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px',
-                      fontFamily: 'inherit',
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem', marginTop: '1rem' }}>
+        {(sheetData.upperSchool || sheetData.school) && selectedDomain && (
+          <div style={{ marginBottom: '1rem', padding: '0.5rem', backgroundColor: '#f0f0f0', borderRadius: '4px' }}>
+            <div>特技属性: {selectedDomain}</div>
+            {sheetData.ryuugi && (
+              <div style={{ marginTop: '0.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold' }}>流儀</label>
+                <textarea
+                  value={sheetData.ryuugi}
+                  onChange={(e) => {
+                    const updated = { ...sheetData, ryuugi: e.target.value };
+                    setIsInternalUpdate(true);
+                    setSheetData(updated);
+                    onChange(updated);
+                  }}
+                  rows={2}
+                  style={{
+                    width: '100%',
+                    padding: '0.5rem',
+                    fontSize: '1rem',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    fontFamily: 'inherit',
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        )}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
               階級
@@ -500,9 +509,9 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
           </div>
         </div>
 
-        {!sheetData.school ? (
+        {!(sheetData.upperSchool || sheetData.school) ? (
           <div style={{ padding: '1rem', backgroundColor: '#fff3cd', borderRadius: '4px', color: '#856404' }}>
-            流派を選択すると特技テーブルが表示されます。
+            上位流派を選択すると特技テーブルが表示されます。
           </div>
         ) : (
           <>
@@ -730,6 +739,15 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
                     style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
                   />
                 </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>参照ページ</label>
+                  <input
+                    type="text"
+                    value={okugi.page || ''}
+                    onChange={(e) => updateOkugi(index, 'page', e.target.value)}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  />
+                </div>
                 <div style={{ gridColumn: '1 / -1' }}>
                   <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>メモ</label>
                   <textarea
@@ -847,30 +865,111 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
         </div>
       </section>
 
+      {/* 背景セクション */}
+      <section>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h2 style={{ fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem', margin: 0 }}>
+            背景
+          </h2>
+          <button
+            type="button"
+            onClick={addBackground}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: '#28a745',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+            }}
+          >
+            + 背景を追加
+          </button>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {(sheetData.backgrounds || []).map((background, index) => (
+            <div key={index} style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <h3 style={{ margin: 0, fontSize: '1rem' }}>背景 #{index + 1}</h3>
+                <button
+                  type="button"
+                  onClick={() => removeBackground(index)}
+                  style={{
+                    padding: '0.25rem 0.5rem',
+                    backgroundColor: '#dc3545',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                  }}
+                >
+                  削除
+                </button>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.5rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>名称</label>
+                  <input
+                    type="text"
+                    value={background.name}
+                    onChange={(e) => updateBackground(index, 'name', e.target.value)}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>種別</label>
+                  <select
+                    value={background.type}
+                    onChange={(e) => updateBackground(index, 'type', e.target.value)}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  >
+                    <option value="長所">長所</option>
+                    <option value="短所">短所</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>功績点</label>
+                  <input
+                    type="text"
+                    value={background.koseki}
+                    onChange={(e) => updateBackground(index, 'koseki', e.target.value)}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>参照ページ</label>
+                  <input
+                    type="text"
+                    value={background.page}
+                    onChange={(e) => updateBackground(index, 'page', e.target.value)}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  />
+                </div>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>効果</label>
+                  <textarea
+                    value={background.effect}
+                    onChange={(e) => updateBackground(index, 'effect', e.target.value)}
+                    rows={3}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+          {(sheetData.backgrounds || []).length === 0 && (
+            <p style={{ color: '#6c757d', fontStyle: 'italic' }}>背景がありません。追加ボタンで追加してください。</p>
+          )}
+        </div>
+      </section>
+
       {/* その他セクション */}
       <section>
         <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
           その他
         </h2>
-        <div style={{ marginBottom: '1rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-            背景
-          </label>
-          <textarea
-            value={sheetData.background}
-            onChange={(e) => updateBackground(e.target.value)}
-            rows={6}
-            style={{
-              width: '100%',
-              padding: '0.75rem',
-              fontSize: '1rem',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-              fontFamily: 'inherit',
-            }}
-            placeholder="キャラクターの背景を記入してください"
-          />
-        </div>
         <div>
           <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
             メモ
