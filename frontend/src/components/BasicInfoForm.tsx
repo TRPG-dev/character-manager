@@ -4,6 +4,7 @@ import type { ShinobigamiSheetData } from '../types/shinobigami';
 import type { Sw25SheetData } from '../types/sw25';
 import type { SystemEnum } from '../services/api';
 import { SW25_RACES, getAvailableBirthsByRaceFromMapping, getBaseAbilitiesByRaceBirth } from '../data/sw25';
+import { SHINOBI_SCHOOLS, getEnemyFromUpperSchool } from '../data/shinobigamiSkills';
 
 const SYSTEM_NAMES: Record<SystemEnum, string> = {
   cthulhu6: 'クトゥルフ神話TRPG 第6版',
@@ -421,6 +422,97 @@ export const BasicInfoForm = ({
                     onChange(updated);
                   }}
                   style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
+                  上位流派を選択
+                </label>
+                <select
+                  value={(data as ShinobigamiSheetData).upperSchool || (data as ShinobigamiSheetData).school || ''}
+                  onChange={(e) => {
+                    const shinobigamiData = data as ShinobigamiSheetData;
+                    const upperSchool = e.target.value;
+                    const enemy = upperSchool ? getEnemyFromUpperSchool(upperSchool) : '';
+                    const updated = { 
+                      ...shinobigamiData, 
+                      upperSchool,
+                      school: upperSchool,
+                      enemy: shinobigamiData.enemy || enemy,
+                    } as ShinobigamiSheetData;
+                    onChange(updated);
+                  }}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                >
+                  <option value="">選択してください</option>
+                  {SHINOBI_SCHOOLS.map((school) => (
+                    <option key={school.value} value={school.value}>
+                      {school.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
+                  下位流派
+                </label>
+                <input
+                  type="text"
+                  value={(data as ShinobigamiSheetData).lowerSchool || ''}
+                  onChange={(e) => {
+                    const updated = { ...data, lowerSchool: e.target.value } as ShinobigamiSheetData;
+                    onChange(updated);
+                  }}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  placeholder="下位流派を入力"
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
+                  レギュレーション
+                </label>
+                <input
+                  type="text"
+                  value={(data as ShinobigamiSheetData).regulation || ''}
+                  onChange={(e) => {
+                    const updated = { ...data, regulation: e.target.value } as ShinobigamiSheetData;
+                    onChange(updated);
+                  }}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  placeholder="レギュレーションを入力"
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
+                  タイプ
+                </label>
+                <select
+                  value={(data as ShinobigamiSheetData).type || ''}
+                  onChange={(e) => {
+                    const updated = { ...data, type: e.target.value as "忍者" | "人間" | "半忍" | undefined } as ShinobigamiSheetData;
+                    onChange(updated);
+                  }}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                >
+                  <option value="">選択してください</option>
+                  <option value="忍者">忍者</option>
+                  <option value="人間">人間</option>
+                  <option value="半忍">半忍</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
+                  仇敵
+                </label>
+                <input
+                  type="text"
+                  value={(data as ShinobigamiSheetData).enemy || ''}
+                  onChange={(e) => {
+                    const updated = { ...data, enemy: e.target.value } as ShinobigamiSheetData;
+                    onChange(updated);
+                  }}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                  placeholder="仇敵を入力"
                 />
               </div>
             </>
