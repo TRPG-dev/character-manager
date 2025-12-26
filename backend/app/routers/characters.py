@@ -139,35 +139,42 @@ async def create_character(
     db: Session = Depends(get_db),
 ):
     """キャラクター新規作成"""
-    # テンプレートを生成
-    template = generate_template(character_data.system)
+    import logging
+    logger = logging.getLogger(__name__)
     
-    # sheet_dataが空の場合、テンプレートを使用
-    sheet_data = character_data.sheet_data if character_data.sheet_data else template
+    try:
+        # テンプレートを生成
+        template = generate_template(character_data.system)
+        
+        # sheet_dataが空の場合、テンプレートを使用
+        sheet_data = character_data.sheet_data if character_data.sheet_data else template
 
-    # クトゥルフの場合、技能ポイント上限チェック
-    if character_data.system in _CTHULHU_SYSTEMS:
-        validate_cthulhu_skill_points(sheet_data, character_data.system)
+        # クトゥルフの場合、技能ポイント上限チェック
+        if character_data.system in _CTHULHU_SYSTEMS:
+            validate_cthulhu_skill_points(sheet_data, character_data.system)
 
-    character = Character(
-        id=uuid.uuid4(),
-        user_id=current_user.id,
-        system=character_data.system,
-        name=character_data.name,
-        tags=character_data.tags,
-        profile_image_url=character_data.profile_image_url,
-        sheet_data=sheet_data,
-        is_public=False,
-    )
-    db.add(character)
-    db.commit()
-    db.refresh(character)
+        character = Character(
+            id=uuid.uuid4(),
+            user_id=current_user.id,
+            system=character_data.system,
+            name=character_data.name,
+            tags=character_data.tags,
+            profile_image_url=character_data.profile_image_url,
+            sheet_data=sheet_data,
+            is_public=False,
+        )
+        db.add(character)
+        db.commit()
+        db.refresh(character)
 
-    # 監査ログ
-    create_audit_log(db, current_user.id, character.id, ActionEnum.create)
+        # 監査ログ
+        create_audit_log(db, current_user.id, character.id, ActionEnum.create)
 
-    # APIの画像URL返却形式を統一（署名付きURL）
-    return _to_character_response(character)
+        # APIの画像URL返却形式を統一（署名付きURL）
+        return _to_character_response(character)
+    except Exception as e:
+        logger.error(f"Error creating character: {e}", exc_info=True)
+        raise
 
 
 @router.get("/{character_id}", response_model=CharacterResponse)
