@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
-import type { ShinobigamiSheetData, ShinobigamiNinpo, ShinobigamiOkugi, ShinobigamiEmotion } from '../types/shinobigami';
+import type { ShinobigamiSheetData, ShinobigamiNinpo, ShinobigamiOkugi, ShinobigamiEmotion, ShinobigamiBackground } from '../types/shinobigami';
 import { normalizeSheetData } from '../utils/shinobigami';
 import {
   SHINOBI_SCHOOLS,
   SKILL_TABLE_COLUMNS,
   SKILL_TABLE_DATA,
-  MAX_SKILLS,
+  MAX_SKILLS_BY_RANK,
+  MAX_NINPO_BY_RANK,
+  MAX_OKUGI_BY_RANK,
   getDomainFromSchool,
   getEmptyColumnIndices,
   getRyuugiFromSchool,
@@ -54,13 +56,7 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
       return;
     }
 
-    // 最大6個まで
-    if (sheetData.skills.length >= MAX_SKILLS) {
-      alert(`特技は最大${MAX_SKILLS}個まで選択できます。`);
-      return;
-    }
-
-    // 新規追加
+    // 新規追加（制限なし）
     const newSkills = [...sheetData.skills, { name: skillName, value: 0, domain }];
     const updated = { ...sheetData, skills: newSkills };
     setIsInternalUpdate(true);
@@ -192,7 +188,7 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
     onChange(updated);
   };
 
-  const updateBackground = (index: number, field: keyof typeof sheetData.backgrounds[0], value: string) => {
+  const updateBackground = (index: number, field: keyof ShinobigamiBackground, value: string) => {
     const newBackgrounds = [...(sheetData.backgrounds || [])];
     newBackgrounds[index] = { ...newBackgrounds[index], [field]: value };
     const updated = { ...sheetData, backgrounds: newBackgrounds };
@@ -498,7 +494,7 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
             特技
           </h2>
           <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>
-            選択数: {sheetData.skills.length} / {MAX_SKILLS}
+            選択数: {sheetData.skills.length} / {sheetData.rank ? (MAX_SKILLS_BY_RANK[sheetData.rank] ?? '-') : '-'}
           </div>
         </div>
 
@@ -596,7 +592,6 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
                         } else {
                           const skillName = SKILL_TABLE_DATA[rowValue]?.[col.domain] || '';
                           const isSelected = sheetData.skills.some(s => s.name === skillName);
-                          const isDisabled = sheetData.skills.length >= MAX_SKILLS && !isSelected;
                           return (
                             <td
                               key={colIndex}
@@ -605,15 +600,14 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
                                 border: '1px solid #ddd',
                                 backgroundColor: isSelected ? '#d4edda' : '#fff',
                                 textAlign: 'center',
-                                cursor: isDisabled ? 'not-allowed' : 'pointer',
-                                opacity: isDisabled ? 0.5 : 1,
+                                cursor: 'pointer',
                               }}
                               onClick={() => {
-                                if (!isDisabled && skillName) {
+                                if (skillName) {
                                   toggleSkill(skillName, col.domain);
                                 }
                               }}
-                              title={isDisabled ? `特技は最大${MAX_SKILLS}個まで選択できます` : skillName}
+                              title={skillName}
                             >
                               {skillName}
                               {isSelected && ' ✓'}
@@ -629,7 +623,7 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
 
             {/* 選択された特技の数表示のみ（テーブル上で可視化されるため表示削除） */}
             <div style={{ marginTop: '0.5rem', padding: '0.5rem', backgroundColor: '#e7f3ff', borderRadius: '4px', textAlign: 'center' }}>
-              選択された特技: {sheetData.skills.length} / {MAX_SKILLS}（テーブル上の✓マークで確認できます）
+              選択された特技: {sheetData.skills.length} / {sheetData.rank ? (MAX_SKILLS_BY_RANK[sheetData.rank] ?? '-') : '-'}（テーブル上の✓マークで確認できます）
             </div>
           </>
         )}
@@ -641,6 +635,8 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
         onAdd={addNinpo}
         onUpdate={updateNinpo}
         onRemove={removeNinpo}
+        rank={sheetData.rank}
+        maxNinpo={sheetData.rank ? (MAX_NINPO_BY_RANK[sheetData.rank] ?? undefined) : undefined}
       />
 
       {/* 奥義セクション */}
@@ -649,21 +645,28 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
           <h2 style={{ fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem', margin: 0 }}>
             奥義
           </h2>
-          <button
-            type="button"
-            onClick={addOkugi}
-            style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: '#28a745',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '0.875rem',
-            }}
-          >
-            + 奥義を追加
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            {sheetData.rank && MAX_OKUGI_BY_RANK[sheetData.rank] !== undefined && (
+              <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>
+                数: {(sheetData.okugi || []).length} / {MAX_OKUGI_BY_RANK[sheetData.rank]}
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={addOkugi}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#28a745',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+              }}
+            >
+              + 奥義を追加
+            </button>
+          </div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {(sheetData.okugi || []).map((okugi, index) => (

@@ -47,7 +47,43 @@ export const SKILL_TABLE_DATA: Record<number, Record<string, string>> = {
   12: { 器術: '掘削術', 体術: '怪力', 忍術: '第六感', 謀術: '経済力', 戦術: '人脈', 妖術: '呪術' },
 };
 
-// 特技の最大取得数
+// 階級に応じた特技の最大取得数
+export const MAX_SKILLS_BY_RANK: Record<string, number> = {
+  '草': 4,
+  '下忍': 5,
+  '下忍頭': 5,
+  '中忍': 6,
+  '中忍頭': 6,
+  '上忍': 7,
+  '上忍頭': 7,
+  '頭領': 8,
+};
+
+// 階級に応じた忍法の最大数
+export const MAX_NINPO_BY_RANK: Record<string, number> = {
+  '草': 2,
+  '下忍': 3,
+  '下忍頭': 4,
+  '中忍': 5,
+  '中忍頭': 6,
+  '上忍': 7,
+  '上忍頭': 8,
+  '頭領': 9,
+};
+
+// 階級に応じた奥義の最大数
+export const MAX_OKUGI_BY_RANK: Record<string, number> = {
+  '草': 0,
+  '下忍': 0,
+  '下忍頭': 0,
+  '中忍': 1,
+  '中忍頭': 1,
+  '上忍': 2,
+  '上忍頭': 2,
+  '頭領': 3,
+};
+
+// 特技の最大取得数（後方互換性のため維持、デフォルト値）
 export const MAX_SKILLS = 6;
 
 /**

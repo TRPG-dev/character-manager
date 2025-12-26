@@ -5,33 +5,42 @@ interface ShinobigamiNinpoSectionProps {
     onAdd: () => void;
     onUpdate: (index: number, field: keyof ShinobigamiNinpo, value: string) => void;
     onRemove: (index: number) => void;
+    rank?: string;
+    maxNinpo?: number;
 }
 
 /**
  * シノビガミ忍法管理セクション
  */
-export const ShinobigamiNinpoSection = ({ ninpos, onAdd, onUpdate, onRemove }: ShinobigamiNinpoSectionProps) => {
+export const ShinobigamiNinpoSection = ({ ninpos, onAdd, onUpdate, onRemove, rank, maxNinpo }: ShinobigamiNinpoSectionProps) => {
     return (
         <section>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                 <h2 style={{ fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem', margin: 0 }}>
                     忍法
                 </h2>
-                <button
-                    type="button"
-                    onClick={onAdd}
-                    style={{
-                        padding: '0.5rem 1rem',
-                        backgroundColor: '#28a745',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '0.875rem',
-                    }}
-                >
-                    + 忍法を追加
-                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    {rank && maxNinpo !== undefined && (
+                        <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>
+                            数: {ninpos.length} / {maxNinpo}
+                        </div>
+                    )}
+                    <button
+                        type="button"
+                        onClick={onAdd}
+                        style={{
+                            padding: '0.5rem 1rem',
+                            backgroundColor: '#28a745',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem',
+                        }}
+                    >
+                        + 忍法を追加
+                    </button>
+                </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {ninpos.map((ninpo, index) => (

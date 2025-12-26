@@ -438,7 +438,7 @@ export const BasicInfoForm = ({
                       ...shinobigamiData, 
                       upperSchool,
                       school: upperSchool,
-                      enemy: shinobigamiData.enemy || enemy,
+                      enemy,
                     } as ShinobigamiSheetData;
                     onChange(updated);
                   }}
