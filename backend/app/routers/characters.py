@@ -139,9 +139,6 @@ async def create_character(
     db: Session = Depends(get_db),
 ):
     """キャラクター新規作成"""
-    import logging
-    logger = logging.getLogger(__name__)
-    
     try:
         # テンプレートを生成
         template = generate_template(character_data.system)

@@ -17,8 +17,6 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
-# エラーログを詳細に出力
-logging.getLogger("uvicorn.error").setLevel(logging.INFO)
 
 # アプリケーションの起動状態を追跡
 _startup_complete = False
@@ -66,16 +64,13 @@ allow_origins = [
     if origin.strip()
 ]
 
-# デバッグ用: CORS設定をログに出力
-logger.info(f"CORS allowed origins: {allow_origins}")
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allow_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-    expose_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept"],
+    expose_headers=[],
 )
 
 # ルーターの登録
