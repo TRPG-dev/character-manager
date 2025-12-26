@@ -20,40 +20,70 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     """Upgrade schema."""
     # PostgreSQL enum: add values (idempotent)
-    op.execute(
-        """
-        DO $$
-        BEGIN
-            IF NOT EXISTS (SELECT 1 FROM pg_type t WHERE t.typname = 'systemenum') THEN
-                RAISE EXCEPTION 'enum type systemenum does not exist';
-            END IF;
-        END $$;
-        """
-    )
+    # Note: ALTER TYPE ... ADD VALUE must be committed before the new enum value can be used
+    
+    from sqlalchemy import text
+    
+    connection = op.get_bind()
+    
+    # Check if enum type exists
+    result = connection.execute(text("SELECT 1 FROM pg_type WHERE typname = 'systemenum'")).fetchone()
+    if not result:
+        raise Exception('enum type systemenum does not exist')
 
-    op.execute(
-        """
-        DO $$
-        BEGIN
-            ALTER TYPE systemenum ADD VALUE 'cthulhu6';
-        EXCEPTION
-            WHEN duplicate_object THEN NULL;
-        END $$;
-        """
-    )
-    op.execute(
-        """
-        DO $$
-        BEGIN
-            ALTER TYPE systemenum ADD VALUE 'cthulhu7';
-        EXCEPTION
-            WHEN duplicate_object THEN NULL;
-        END $$;
-        """
-    )
+    # Add cthulhu6 enum value (idempotent)
+    cthulhu6_exists = connection.execute(
+        text("""
+            SELECT 1 FROM pg_enum 
+            WHERE enumlabel = 'cthulhu6' 
+            AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'systemenum')
+        """)
+    ).fetchone()
+    
+    if not cthulhu6_exists:
+        op.execute("ALTER TYPE systemenum ADD VALUE 'cthulhu6'")
+        # Commit the transaction so the new enum value can be used
+        if hasattr(connection, 'commit'):
+            connection.commit()
+        elif hasattr(connection, 'connection') and hasattr(connection.connection, 'commit'):
+            connection.connection.commit()
+    
+    # Add cthulhu7 enum value (idempotent)
+    cthulhu7_exists = connection.execute(
+        text("""
+            SELECT 1 FROM pg_enum 
+            WHERE enumlabel = 'cthulhu7' 
+            AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'systemenum')
+        """)
+    ).fetchone()
+    
+    if not cthulhu7_exists:
+        op.execute("ALTER TYPE systemenum ADD VALUE 'cthulhu7'")
+        # Commit the transaction so the new enum value can be used
+        if hasattr(connection, 'commit'):
+            connection.commit()
+        elif hasattr(connection, 'connection') and hasattr(connection.connection, 'commit'):
+            connection.connection.commit()
 
-    # migrate existing legacy records to cthulhu6
-    op.execute("UPDATE characters SET system = 'cthulhu6' WHERE system = 'cthulhu'")
+    # Migrate existing legacy records to cthulhu6 (only if 'cthulhu' value exists)
+    # NOTE: This must be done AFTER the enum values are committed
+    cthulhu_exists = connection.execute(
+        text("""
+            SELECT 1 FROM pg_enum 
+            WHERE enumlabel = 'cthulhu' 
+            AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'systemenum')
+        """)
+    ).fetchone()
+    
+    if cthulhu_exists:
+        record_count = connection.execute(
+            text("SELECT COUNT(*) FROM characters WHERE system = 'cthulhu'::systemenum")
+        ).scalar()
+        
+        if record_count and record_count > 0:
+            op.execute(
+                "UPDATE characters SET system = 'cthulhu6'::systemenum WHERE system = 'cthulhu'::systemenum"
+            )
 
 
 def downgrade() -> None:
