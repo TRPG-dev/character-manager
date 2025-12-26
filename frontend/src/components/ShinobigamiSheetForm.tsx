@@ -102,13 +102,6 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
     onChange(updated);
   };
 
-  const updateBackground = (value: string) => {
-    const updated = { ...sheetData, background: value };
-    setIsInternalUpdate(true);
-    setSheetData(updated);
-    onChange(updated);
-  };
-
   const addOkugi = () => {
     const newOkugi: ShinobigamiOkugi = {
       name: '',
