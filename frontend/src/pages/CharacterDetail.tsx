@@ -1014,103 +1014,185 @@ export const CharacterDetail = () => {
                     </section>
 
                     {/* 基本情報セクション */}
-                    <section style={{ 
-                      padding: '1.5rem',
-                      backgroundColor: 'var(--color-surface-muted)',
-                      borderRadius: '8px',
-                      border: '1px solid var(--color-border)'
-                    }}>
-                      <h2 style={{ 
-                        marginTop: 0, 
-                        marginBottom: '1rem', 
-                        fontSize: '1.5rem',
-                        borderBottom: '2px solid var(--color-primary)',
-                        paddingBottom: '0.5rem'
-                      }}>
-                        基本情報
-                      </h2>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
-                        <div>
-                          <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>システム</div>
-                          <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{SYSTEM_NAMES[character.system]}</div>
-                        </div>
-                        {character.system === 'shinobigami' && (() => {
-                          const sheetData = normalizeShinobigamiSheetData(character.sheet_data) as ShinobigamiSheetData;
-                          return (
-                            <>
-                              {sheetData.playerName && (
-                                <div>
-                                  <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>プレイヤー名</div>
-                                  <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.playerName}</div>
-                                </div>
-                              )}
-                              {sheetData.age !== undefined && (
-                                <div>
-                                  <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>年齢</div>
-                                  <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.age}</div>
-                                </div>
-                              )}
-                              {sheetData.gender && (
-                                <div>
-                                  <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>性別</div>
-                                  <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.gender}</div>
-                                </div>
-                              )}
-                            </>
-                          );
-                        })()}
-                        {character.tags.length > 0 && (
-                          <div style={{ gridColumn: '1 / -1' }}>
-                            <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>タグ</div>
-                            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                              {character.tags.map(tag => (
-                                <span
-                                  key={tag}
+                    {character.system === 'shinobigami' && (() => {
+                      const sheetData = normalizeShinobigamiSheetData(character.sheet_data) as ShinobigamiSheetData;
+                      return (
+                        <section style={{ 
+                          padding: '1.5rem',
+                          backgroundColor: 'var(--color-surface-muted)',
+                          borderRadius: '8px',
+                          border: '1px solid var(--color-border)'
+                        }}>
+                          <h2 style={{ 
+                            marginTop: 0, 
+                            marginBottom: '1rem', 
+                            fontSize: '1.5rem',
+                            borderBottom: '2px solid var(--color-primary)',
+                            paddingBottom: '0.5rem'
+                          }}>
+                            基本情報
+                          </h2>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            {/* アイコン＋基本情報内容を1カラムで表示 */}
+                            <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+                              {character.profile_image_url ? (
+                                <img
+                                  src={character.profile_image_url}
+                                  alt={character.name}
                                   style={{
-                                    padding: '0.375rem 0.75rem',
-                                    backgroundColor: 'var(--color-primary)',
-                                    color: 'var(--color-text-inverse)',
-                                    borderRadius: '4px',
-                                    fontSize: '0.875rem',
-                                    fontWeight: '500',
+                                    width: '120px',
+                                    height: '120px',
+                                    objectFit: 'cover',
+                                    borderRadius: '8px',
+                                    border: '2px solid var(--color-border)',
+                                    flexShrink: 0,
                                   }}
-                                >
-                                  {tag}
-                                </span>
-                              ))}
+                                />
+                              ) : (
+                                <div style={{
+                                  width: '120px',
+                                  height: '120px',
+                                  backgroundColor: 'var(--color-surface-muted)',
+                                  border: '2px dashed var(--color-border)',
+                                  borderRadius: '8px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  color: 'var(--color-text-muted)',
+                                  fontSize: '2rem',
+                                  flexShrink: 0,
+                                }}>
+                                  🖼️
+                                </div>
+                              )}
+                              <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+                                <div>
+                                  <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>システム</div>
+                                  <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{SYSTEM_NAMES[character.system]}</div>
+                                </div>
+                                {sheetData.playerName && (
+                                  <div>
+                                    <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>プレイヤー名</div>
+                                    <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.playerName}</div>
+                                  </div>
+                                )}
+                                {sheetData.characterName && (
+                                  <div>
+                                    <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>キャラクター名</div>
+                                    <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.characterName}</div>
+                                  </div>
+                                )}
+                                {sheetData.age !== undefined && (
+                                  <div>
+                                    <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>年齢</div>
+                                    <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.age}</div>
+                                  </div>
+                                )}
+                                {sheetData.gender && (
+                                  <div>
+                                    <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>性別</div>
+                                    <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.gender}</div>
+                                  </div>
+                                )}
+                                {(sheetData.upperSchool || sheetData.school) && (
+                                  <div>
+                                    <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>上位流派</div>
+                                    <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.upperSchool || sheetData.school}</div>
+                                  </div>
+                                )}
+                                {sheetData.lowerSchool && (
+                                  <div>
+                                    <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>下位流派</div>
+                                    <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.lowerSchool}</div>
+                                  </div>
+                                )}
+                                {sheetData.ryuugi && (
+                                  <div>
+                                    <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>流儀</div>
+                                    <div style={{ fontSize: '1.125rem', fontWeight: 'bold', whiteSpace: 'pre-wrap' }}>{sheetData.ryuugi}</div>
+                                  </div>
+                                )}
+                                {sheetData.regulation && (
+                                  <div>
+                                    <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>レギュレーション</div>
+                                    <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.regulation}</div>
+                                  </div>
+                                )}
+                                {sheetData.type && (
+                                  <div>
+                                    <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>タイプ</div>
+                                    <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.type}</div>
+                                  </div>
+                                )}
+                                {sheetData.enemy && (
+                                  <div>
+                                    <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>仇敵</div>
+                                    <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.enemy}</div>
+                                  </div>
+                                )}
+                                {sheetData.rank && (
+                                  <div>
+                                    <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>階級</div>
+                                    <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.rank}</div>
+                                  </div>
+                                )}
+                                {sheetData.surfaceFace && (
+                                  <div>
+                                    <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>表の顔</div>
+                                    <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.surfaceFace}</div>
+                                  </div>
+                                )}
+                                {sheetData.shinnen && (
+                                  <div>
+                                    <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>信念</div>
+                                    <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.shinnen}</div>
+                                  </div>
+                                )}
+                                {sheetData.koseki !== undefined && (
+                                  <div>
+                                    <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>功績点</div>
+                                    <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.koseki}</div>
+                                  </div>
+                                )}
+                                {character.tags.length > 0 && (
+                                  <div style={{ gridColumn: '1 / -1' }}>
+                                    <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>タグ</div>
+                                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                      {character.tags.map(tag => (
+                                        <span
+                                          key={tag}
+                                          style={{
+                                            padding: '0.375rem 0.75rem',
+                                            backgroundColor: 'var(--color-primary)',
+                                            color: 'var(--color-text-inverse)',
+                                            borderRadius: '4px',
+                                            fontSize: '0.875rem',
+                                            fontWeight: '500',
+                                          }}
+                                        >
+                                          {tag}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        )}
-                      </div>
-                    </section>
-
-                    {/* キャラクターシート（流派・能力値） */}
-                    <ShinobigamiSheetView 
-                      data={normalizeShinobigamiSheetData(character.sheet_data) as ShinobigamiSheetData}
-                      isDesktop={isDesktop}
-                      showLeftColumn={true}
-                    />
+                        </section>
+                      );
+                    })()}
                   </div>
 
-                  {/* 右カラム: 忍法、奥義、忍具、背景、メモ */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  {/* タブ形式で各セクションを表示 */}
+                  <div style={{ marginTop: '2rem' }}>
                     <ShinobigamiSheetView 
                       data={normalizeShinobigamiSheetData(character.sheet_data) as ShinobigamiSheetData}
                       isDesktop={isDesktop}
-                      showRightColumn={true}
                     />
                   </div>
                 </div>
               ) : null}
-
-              {/* 特技セクション（2カラムの下に表示） */}
-              {isDesktop && (
-                <ShinobigamiSheetView 
-                  data={normalizeShinobigamiSheetData(character.sheet_data) as ShinobigamiSheetData}
-                  isDesktop={isDesktop}
-                  showSkills={true}
-                />
-              )}
 
               {!isDesktop && (
                 <>
@@ -1186,76 +1268,175 @@ export const CharacterDetail = () => {
                   </section>
 
                   {/* 基本情報セクション */}
-                  <section style={{ 
-                    marginBottom: '2rem',
-                    padding: '1.5rem',
-                    backgroundColor: 'var(--color-surface-muted)',
-                    borderRadius: '8px',
-                    border: '1px solid var(--color-border)'
-                  }}>
-                    <h2 style={{ 
-                      marginTop: 0, 
-                      marginBottom: '1rem', 
-                      fontSize: '1.5rem',
-                      borderBottom: '2px solid var(--color-primary)',
-                      paddingBottom: '0.5rem'
-                    }}>
-                      基本情報
-                    </h2>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
-                      <div>
-                        <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>システム</div>
-                        <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{SYSTEM_NAMES[character.system]}</div>
-                      </div>
-                      {character.system === 'shinobigami' && (() => {
-                        const sheetData = normalizeShinobigamiSheetData(character.sheet_data) as ShinobigamiSheetData;
-                        return (
-                          <>
-                            {sheetData.playerName && (
-                              <div>
-                                <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>プレイヤー名</div>
-                                <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.playerName}</div>
-                              </div>
-                            )}
-                            {sheetData.age !== undefined && (
-                              <div>
-                                <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>年齢</div>
-                                <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.age}</div>
-                              </div>
-                            )}
-                            {sheetData.gender && (
-                              <div>
-                                <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>性別</div>
-                                <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.gender}</div>
-                              </div>
-                            )}
-                          </>
-                        );
-                      })()}
-                      {character.tags.length > 0 && (
-                        <div style={{ gridColumn: '1 / -1' }}>
-                          <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>タグ</div>
-                          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                            {character.tags.map(tag => (
-                              <span
-                                key={tag}
+                  {character.system === 'shinobigami' && (() => {
+                    const sheetData = normalizeShinobigamiSheetData(character.sheet_data) as ShinobigamiSheetData;
+                    return (
+                      <section style={{ 
+                        marginBottom: '2rem',
+                        padding: '1.5rem',
+                        backgroundColor: 'var(--color-surface-muted)',
+                        borderRadius: '8px',
+                        border: '1px solid var(--color-border)'
+                      }}>
+                        <h2 style={{ 
+                          marginTop: 0, 
+                          marginBottom: '1rem', 
+                          fontSize: '1.5rem',
+                          borderBottom: '2px solid var(--color-primary)',
+                          paddingBottom: '0.5rem'
+                        }}>
+                          基本情報
+                        </h2>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                          {/* アイコン＋基本情報内容を1カラムで表示 */}
+                          <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+                            {character.profile_image_url ? (
+                              <img
+                                src={character.profile_image_url}
+                                alt={character.name}
                                 style={{
-                                  padding: '0.375rem 0.75rem',
-                                  backgroundColor: 'var(--color-primary)',
-                                  color: 'var(--color-text-inverse)',
-                                  borderRadius: '4px',
-                                  fontSize: '0.875rem',
-                                  fontWeight: '500',
+                                  width: '120px',
+                                  height: '120px',
+                                  objectFit: 'cover',
+                                  borderRadius: '8px',
+                                  border: '2px solid var(--color-border)',
+                                  flexShrink: 0,
                                 }}
-                              >
-                                {tag}
-                              </span>
-                            ))}
+                              />
+                            ) : (
+                              <div style={{
+                                width: '120px',
+                                height: '120px',
+                                backgroundColor: 'var(--color-surface-muted)',
+                                border: '2px dashed var(--color-border)',
+                                borderRadius: '8px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: 'var(--color-text-muted)',
+                                fontSize: '2rem',
+                                flexShrink: 0,
+                              }}>
+                                🖼️
+                              </div>
+                            )}
+                            <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+                              <div>
+                                <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>システム</div>
+                                <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{SYSTEM_NAMES[character.system]}</div>
+                              </div>
+                              {sheetData.playerName && (
+                                <div>
+                                  <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>プレイヤー名</div>
+                                  <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.playerName}</div>
+                                </div>
+                              )}
+                              {sheetData.characterName && (
+                                <div>
+                                  <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>キャラクター名</div>
+                                  <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.characterName}</div>
+                                </div>
+                              )}
+                              {sheetData.age !== undefined && (
+                                <div>
+                                  <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>年齢</div>
+                                  <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.age}</div>
+                                </div>
+                              )}
+                              {sheetData.gender && (
+                                <div>
+                                  <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>性別</div>
+                                  <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.gender}</div>
+                                </div>
+                              )}
+                              {(sheetData.upperSchool || sheetData.school) && (
+                                <div>
+                                  <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>上位流派</div>
+                                  <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.upperSchool || sheetData.school}</div>
+                                </div>
+                              )}
+                              {sheetData.lowerSchool && (
+                                <div>
+                                  <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>下位流派</div>
+                                  <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.lowerSchool}</div>
+                                </div>
+                              )}
+                              {sheetData.ryuugi && (
+                                <div>
+                                  <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>流儀</div>
+                                  <div style={{ fontSize: '1.125rem', fontWeight: 'bold', whiteSpace: 'pre-wrap' }}>{sheetData.ryuugi}</div>
+                                </div>
+                              )}
+                              {sheetData.regulation && (
+                                <div>
+                                  <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>レギュレーション</div>
+                                  <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.regulation}</div>
+                                </div>
+                              )}
+                              {sheetData.type && (
+                                <div>
+                                  <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>タイプ</div>
+                                  <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.type}</div>
+                                </div>
+                              )}
+                              {sheetData.enemy && (
+                                <div>
+                                  <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>仇敵</div>
+                                  <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.enemy}</div>
+                                </div>
+                              )}
+                              {sheetData.rank && (
+                                <div>
+                                  <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>階級</div>
+                                  <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.rank}</div>
+                                </div>
+                              )}
+                              {sheetData.surfaceFace && (
+                                <div>
+                                  <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>表の顔</div>
+                                  <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.surfaceFace}</div>
+                                </div>
+                              )}
+                              {sheetData.shinnen && (
+                                <div>
+                                  <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>信念</div>
+                                  <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.shinnen}</div>
+                                </div>
+                              )}
+                              {sheetData.koseki !== undefined && (
+                                <div>
+                                  <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>功績点</div>
+                                  <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.koseki}</div>
+                                </div>
+                              )}
+                              {character.tags.length > 0 && (
+                                <div style={{ gridColumn: '1 / -1' }}>
+                                  <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>タグ</div>
+                                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                    {character.tags.map(tag => (
+                                      <span
+                                        key={tag}
+                                        style={{
+                                          padding: '0.375rem 0.75rem',
+                                          backgroundColor: 'var(--color-primary)',
+                                          color: 'var(--color-text-inverse)',
+                                          borderRadius: '4px',
+                                          fontSize: '0.875rem',
+                                          fontWeight: '500',
+                                        }}
+                                      >
+                                        {tag}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      )}
-                    </div>
-                  </section>
+                      </section>
+                    );
+                  })()}
 
                   {/* キャラクターシートセクション */}
                   <section style={{ 
