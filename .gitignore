@@ -1,6 +1,7 @@
 # 環境構築用ファイル
 .env
 .env.local
+.cursor/
 
 # GCP service account key (never commit)
 backend/gcp-service-account.json

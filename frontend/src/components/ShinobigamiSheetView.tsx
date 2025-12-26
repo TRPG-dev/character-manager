@@ -136,10 +136,34 @@ export const ShinobigamiSheetView = ({
               流派
             </h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
-              {sheetData.school && (
+              {(sheetData.upperSchool || sheetData.school) && (
                 <div>
-                  <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>流派</div>
-                  <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.school}</div>
+                  <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>上位流派</div>
+                  <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.upperSchool || sheetData.school}</div>
+                </div>
+              )}
+              {sheetData.lowerSchool && (
+                <div>
+                  <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>下位流派</div>
+                  <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.lowerSchool}</div>
+                </div>
+              )}
+              {sheetData.regulation && (
+                <div>
+                  <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>レギュレーション</div>
+                  <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.regulation}</div>
+                </div>
+              )}
+              {sheetData.type && (
+                <div>
+                  <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>タイプ</div>
+                  <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.type}</div>
+                </div>
+              )}
+              {sheetData.enemy && (
+                <div>
+                  <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>仇敵</div>
+                  <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.enemy}</div>
                 </div>
               )}
               {sheetData.rank && (
@@ -224,6 +248,12 @@ export const ShinobigamiSheetView = ({
                       </div>
                     )}
                   </div>
+                  {ninpo.effect && (
+                    <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid #ddd' }}>
+                      <div style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '0.25rem' }}>効果</div>
+                      <div style={{ fontSize: '0.875rem', whiteSpace: 'pre-wrap' }}>{ninpo.effect}</div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -271,6 +301,12 @@ export const ShinobigamiSheetView = ({
                         <div style={{ fontSize: '0.875rem', whiteSpace: 'pre-wrap' }}>{okugi.weakness}</div>
                       </div>
                     )}
+                    {okugi.page && (
+                      <div>
+                        <div style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '0.25rem' }}>参照ページ</div>
+                        <div style={{ fontWeight: 'bold' }}>{okugi.page}</div>
+                      </div>
+                    )}
                     {okugi.memo && (
                       <div>
                         <div style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '0.25rem' }}>メモ</div>
@@ -305,19 +341,61 @@ export const ShinobigamiSheetView = ({
         )}
 
         {/* 背景セクション */}
-        {sheetData.background && (
+        {((sheetData.backgrounds && sheetData.backgrounds.length > 0) || sheetData.background) && (
           <CollapsibleSection title="背景" defaultOpen={false}>
-            <div
-              style={{
-                padding: '1rem',
-                backgroundColor: '#fff',
-                borderRadius: '4px',
-                border: '1px solid #dee2e6',
-                whiteSpace: 'pre-wrap',
-                lineHeight: '1.6',
-              }}
-            >
-              {sheetData.background}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {(sheetData.backgrounds || []).map((background, index) => (
+                <div
+                  key={index}
+                  style={{
+                    border: '1px solid #ddd',
+                    borderRadius: '8px',
+                    padding: '1rem',
+                    backgroundColor: '#fff',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                  }}
+                >
+                  <h3 style={{ marginTop: 0, marginBottom: '0.75rem', fontSize: '1.125rem', color: '#007bff' }}>
+                    {background.name || '(無名の背景)'}
+                  </h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '1rem' }}>
+                    <div>
+                      <div style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '0.25rem' }}>種別</div>
+                      <div style={{ fontWeight: 'bold' }}>{background.type || '-'}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '0.25rem' }}>功績点</div>
+                      <div style={{ fontWeight: 'bold' }}>{background.koseki || '-'}</div>
+                    </div>
+                    {background.page && (
+                      <div>
+                        <div style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '0.25rem' }}>参照ページ</div>
+                        <div style={{ fontWeight: 'bold' }}>{background.page}</div>
+                      </div>
+                    )}
+                  </div>
+                  {background.effect && (
+                    <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid #ddd' }}>
+                      <div style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '0.25rem' }}>効果</div>
+                      <div style={{ fontSize: '0.875rem', whiteSpace: 'pre-wrap' }}>{background.effect}</div>
+                    </div>
+                  )}
+                </div>
+              ))}
+              {(!sheetData.backgrounds || sheetData.backgrounds.length === 0) && sheetData.background && (
+                <div
+                  style={{
+                    padding: '1rem',
+                    backgroundColor: '#fff',
+                    borderRadius: '4px',
+                    border: '1px solid #dee2e6',
+                    whiteSpace: 'pre-wrap',
+                    lineHeight: '1.6',
+                  }}
+                >
+                  {sheetData.background}
+                </div>
+              )}
             </div>
           </CollapsibleSection>
         )}
@@ -679,7 +757,7 @@ export const ShinobigamiSheetView = ({
             {/* 左カラム: 流派情報、能力値 */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               {/* 流派セクション */}
-              {(sheetData.school || sheetData.rank || sheetData.ryuugi || sheetData.surfaceFace || sheetData.shinnen || sheetData.koseki !== undefined) && (
+              {((sheetData.upperSchool || sheetData.school) || sheetData.lowerSchool || sheetData.regulation || sheetData.type || sheetData.enemy || sheetData.rank || sheetData.ryuugi || sheetData.surfaceFace || sheetData.shinnen || sheetData.koseki !== undefined) && (
                 <section style={{
                   padding: '1.5rem',
                   backgroundColor: '#f8f9fa',
@@ -690,10 +768,34 @@ export const ShinobigamiSheetView = ({
                     流派
                   </h2>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
-                    {sheetData.school && (
+                    {(sheetData.upperSchool || sheetData.school) && (
                       <div>
-                        <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>流派</div>
-                        <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.school}</div>
+                        <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>上位流派</div>
+                        <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.upperSchool || sheetData.school}</div>
+                      </div>
+                    )}
+                    {sheetData.lowerSchool && (
+                      <div>
+                        <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>下位流派</div>
+                        <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.lowerSchool}</div>
+                      </div>
+                    )}
+                    {sheetData.regulation && (
+                      <div>
+                        <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>レギュレーション</div>
+                        <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.regulation}</div>
+                      </div>
+                    )}
+                    {sheetData.type && (
+                      <div>
+                        <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>タイプ</div>
+                        <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.type}</div>
+                      </div>
+                    )}
+                    {sheetData.enemy && (
+                      <div>
+                        <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>仇敵</div>
+                        <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.enemy}</div>
                       </div>
                     )}
                     {sheetData.rank && (
@@ -775,6 +877,12 @@ export const ShinobigamiSheetView = ({
                             </div>
                           )}
                         </div>
+                        {ninpo.effect && (
+                          <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid #ddd' }}>
+                            <div style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '0.25rem' }}>効果</div>
+                            <div style={{ fontSize: '0.875rem', whiteSpace: 'pre-wrap' }}>{ninpo.effect}</div>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -804,6 +912,12 @@ export const ShinobigamiSheetView = ({
                             <div style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '0.25rem' }}>指定特技</div>
                             <div style={{ fontWeight: 'bold' }}>{okugi.skill || '-'}</div>
                           </div>
+                          {okugi.page && (
+                            <div>
+                              <div style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '0.25rem' }}>参照ページ</div>
+                              <div style={{ fontWeight: 'bold' }}>{okugi.page}</div>
+                            </div>
+                          )}
                           {okugi.effect && (
                             <div>
                               <div style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '0.25rem' }}>効果</div>
@@ -856,19 +970,61 @@ export const ShinobigamiSheetView = ({
               )}
 
               {/* 背景セクション */}
-              {sheetData.background && (
+              {((sheetData.backgrounds && sheetData.backgrounds.length > 0) || sheetData.background) && (
                 <CollapsibleSection title="背景" defaultOpen={false}>
-                  <div
-                    style={{
-                      padding: '1rem',
-                      backgroundColor: '#fff',
-                      borderRadius: '4px',
-                      border: '1px solid #dee2e6',
-                      whiteSpace: 'pre-wrap',
-                      lineHeight: '1.6',
-                    }}
-                  >
-                    {sheetData.background}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {(sheetData.backgrounds || []).map((background, index) => (
+                      <div
+                        key={index}
+                        style={{
+                          border: '1px solid #ddd',
+                          borderRadius: '8px',
+                          padding: '1rem',
+                          backgroundColor: '#fff',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                        }}
+                      >
+                        <h3 style={{ marginTop: 0, marginBottom: '0.75rem', fontSize: '1.125rem', color: '#007bff' }}>
+                          {background.name || '(無名の背景)'}
+                        </h3>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '1rem' }}>
+                          <div>
+                            <div style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '0.25rem' }}>種別</div>
+                            <div style={{ fontWeight: 'bold' }}>{background.type || '-'}</div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '0.25rem' }}>功績点</div>
+                            <div style={{ fontWeight: 'bold' }}>{background.koseki || '-'}</div>
+                          </div>
+                          {background.page && (
+                            <div>
+                              <div style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '0.25rem' }}>参照ページ</div>
+                              <div style={{ fontWeight: 'bold' }}>{background.page}</div>
+                            </div>
+                          )}
+                        </div>
+                        {background.effect && (
+                          <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid #ddd' }}>
+                            <div style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '0.25rem' }}>効果</div>
+                            <div style={{ fontSize: '0.875rem', whiteSpace: 'pre-wrap' }}>{background.effect}</div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    {(!sheetData.backgrounds || sheetData.backgrounds.length === 0) && sheetData.background && (
+                      <div
+                        style={{
+                          padding: '1rem',
+                          backgroundColor: '#fff',
+                          borderRadius: '4px',
+                          border: '1px solid #dee2e6',
+                          whiteSpace: 'pre-wrap',
+                          lineHeight: '1.6',
+                        }}
+                      >
+                        {sheetData.background}
+                      </div>
+                    )}
                   </div>
                 </CollapsibleSection>
               )}
@@ -1528,15 +1684,52 @@ export const ShinobigamiSheetView = ({
             </section>
           )}
 
-          {/* その他セクション */}
-          {(sheetData.background || sheetData.memo) && (
+          {/* 背景セクション */}
+          {((sheetData.backgrounds && sheetData.backgrounds.length > 0) || sheetData.background) && (
             <section>
               <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
-                その他
+                背景
               </h2>
-              {sheetData.background && (
-                <div style={{ marginBottom: '1rem' }}>
-                  <h3 style={{ marginBottom: '0.5rem', fontSize: '1.125rem' }}>背景</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {(sheetData.backgrounds || []).map((background, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      border: '1px solid #ddd',
+                      borderRadius: '8px',
+                      padding: '1rem',
+                      backgroundColor: '#f8f9fa',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                    }}
+                  >
+                    <h3 style={{ marginTop: 0, marginBottom: '0.75rem', fontSize: '1.125rem', color: '#007bff' }}>
+                      {background.name || '(無名の背景)'}
+                    </h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '1rem' }}>
+                      <div>
+                        <div style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '0.25rem' }}>種別</div>
+                        <div style={{ fontWeight: 'bold' }}>{background.type || '-'}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '0.25rem' }}>功績点</div>
+                        <div style={{ fontWeight: 'bold' }}>{background.koseki || '-'}</div>
+                      </div>
+                      {background.page && (
+                        <div>
+                          <div style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '0.25rem' }}>参照ページ</div>
+                          <div style={{ fontWeight: 'bold' }}>{background.page}</div>
+                        </div>
+                      )}
+                    </div>
+                    {background.effect && (
+                      <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid #ddd' }}>
+                        <div style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '0.25rem' }}>効果</div>
+                        <div style={{ fontSize: '0.875rem', whiteSpace: 'pre-wrap' }}>{background.effect}</div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {(!sheetData.backgrounds || sheetData.backgrounds.length === 0) && sheetData.background && (
                   <div
                     style={{
                       padding: '1rem',
@@ -1549,8 +1742,17 @@ export const ShinobigamiSheetView = ({
                   >
                     {sheetData.background}
                   </div>
-                </div>
-              )}
+                )}
+              </div>
+            </section>
+          )}
+
+          {/* その他セクション */}
+          {sheetData.memo && (
+            <section>
+              <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
+                その他
+              </h2>
               {sheetData.memo && (
                 <div>
                   <h3 style={{ marginBottom: '0.5rem', fontSize: '1.125rem' }}>メモ</h3>
