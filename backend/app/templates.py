@@ -7,7 +7,7 @@ from app.models import SystemEnum
 
 def generate_template(system: SystemEnum) -> Dict[str, Any]:
     """システムに応じた初期テンプレートを生成"""
-    if system in (SystemEnum.cthulhu, SystemEnum.cthulhu6, SystemEnum.cthulhu7):
+    if system in (SystemEnum.cthulhu6, SystemEnum.cthulhu7):
         return generate_cthulhu_template()
     elif system == SystemEnum.shinobigami:
         return generate_shinobigami_template()
