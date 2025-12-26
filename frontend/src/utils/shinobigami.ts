@@ -29,6 +29,10 @@ export function normalizeSheetData(data: any): ShinobigamiSheetData {
   };
   const ningu = data.ningu ? { ...defaultNingu, ...data.ningu } : defaultNingu;
 
+  const upperSchool = data.upperSchool || data.school || '';
+  const lowerSchool = data.lowerSchool || '';
+  const backgrounds = Array.isArray(data.backgrounds) ? data.backgrounds : [];
+
   return {
     playerName: data.playerName || '',
     characterName: data.characterName || '',
@@ -38,17 +42,23 @@ export function normalizeSheetData(data: any): ShinobigamiSheetData {
     hp: data.hp ?? 6,
     hencho,
     emotions,
-    school: data.school || '',
+    school: data.school || upperSchool || '',
+    upperSchool,
+    lowerSchool,
     rank: data.rank || '',
     ryuugi: data.ryuugi || '',
     surfaceFace: data.surfaceFace || '',
     shinnen: data.shinnen || '',
     koseki: data.koseki ?? 0,
+    regulation: data.regulation || '',
+    type: data.type || undefined,
+    enemy: data.enemy || '',
     skills,
-    ninpo,
-    okugi,
+    ninpo: ninpo.map(n => ({ ...n, effect: n.effect || '' })),
+    okugi: okugi.map(o => ({ ...o, page: o.page || '' })),
     ningu,
     background: data.background || '',
+    backgrounds,
     memo: data.memo || '',
     sessionHistory,
   };

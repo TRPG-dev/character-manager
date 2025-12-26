@@ -82,11 +82,16 @@ def generate_shinobigami_template() -> Dict[str, Any]:
         "hencho": [],
         "emotions": [],
         "school": "",
+        "upperSchool": "",
+        "lowerSchool": "",
         "rank": "",
         "ryuugi": "",
         "surfaceFace": "",
         "shinnen": "",
         "koseki": 0,
+        "regulation": "",
+        "type": "",
+        "enemy": "",
         "skills": [],
         "ninpo": [
             {
@@ -95,6 +100,7 @@ def generate_shinobigami_template() -> Dict[str, Any]:
                 "skill": "",
                 "range": "1",
                 "cost": "0",
+                "effect": "",
                 "page": "基78",
             }
         ],
@@ -105,6 +111,7 @@ def generate_shinobigami_template() -> Dict[str, Any]:
             "tonkofu": 0,
         },
         "background": "",
+        "backgrounds": [],
         "memo": "",
         "sessionHistory": [],
     }

@@ -91,6 +91,23 @@ export function getRyuugiFromSchool(school: string): string {
   return SCHOOL_RYUUGI_MAP[school] || '';
 }
 
+// 上位流派と仇敵の対応関係
+export const SCHOOL_ENEMY_MAP: Record<string, string> = {
+  '斜歯忍軍': '鞍馬神流',
+  '鞍馬神流': '隠忍の血統',
+  '隠忍の血統': '比良坂機関',
+  '比良坂機関': '私立御斎学園',
+  '私立御斎学園': 'ハグレモノ',
+  'ハグレモノ': '斜歯忍軍',
+};
+
+/**
+ * 上位流派から仇敵を取得
+ */
+export function getEnemyFromUpperSchool(upperSchool: string): string {
+  return SCHOOL_ENEMY_MAP[upperSchool] || '';
+}
+
 // 階級の選択肢
 export const RANKS = [
   '草',
