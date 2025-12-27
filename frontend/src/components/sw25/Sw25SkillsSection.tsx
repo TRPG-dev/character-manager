@@ -36,10 +36,9 @@ export const Sw25SkillsSection = ({
   const canAddSkill = currentSkills < maxSkills;
 
   // スキル名を変更する際の特別な処理
-  const handleSkillNameChange = (skill: Sw25Skill, newName: string) => {
-    const originalIndex = skills.findIndex(s => s === skill);
+  const handleSkillNameChange = (originalIndex: number, newName: string) => {
     const selectedSkill = SW25_SKILLS.find(s => s.name === newName);
-    if (selectedSkill && originalIndex !== -1) {
+    if (selectedSkill) {
       // 名前を変更
       onUpdateSkill(originalIndex, 'name', newName);
       // 効果も自動的に更新
@@ -136,7 +135,7 @@ export const Sw25SkillsSection = ({
                 </label>
                 <select
                   value={skill.name}
-                  onChange={(e) => handleSkillNameChange(skill, e.target.value)}
+                  onChange={(e) => handleSkillNameChange(originalIndex, e.target.value)}
                   style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
                 >
                   <option value="">選択してください</option>
