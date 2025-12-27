@@ -106,6 +106,7 @@ export interface Sw25Skill {
   name: string; // 戦闘特技名
   effect: string; // 効果
   memo?: string; // 備考
+  referencePage?: string; // 参照ページ
 }
 
 // 魔法・スキル
@@ -115,6 +116,7 @@ export interface Sw25Magic {
   cost: number; // 消費MP
   effect: string; // 効果
   memo?: string; // 備考
+  referencePage?: string; // 参照ページ
 }
 
 // アイテム
@@ -122,6 +124,8 @@ export interface Sw25Item {
   name: string; // アイテム名
   quantity: number; // 数量
   memo?: string; // 備考
+  referencePage?: string; // 参照ページ
+  price?: number; // 価格
 }
 
 // 武器
