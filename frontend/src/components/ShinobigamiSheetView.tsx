@@ -17,25 +17,17 @@ export const ShinobigamiSheetView = ({
   const selectedDomain = sheetData.school ? getDomainFromSchool(sheetData.school) : null;
   const [emptyLeftIndex, emptyRightIndex] = selectedDomain ? getEmptyColumnIndices(selectedDomain) : [-1, -1];
 
-  // 選択された特技の名前のセットを作成
   const selectedSkillNames = new Set(sheetData.skills.map(s => s.name));
-
-  // ダメージ状態を管理（選択された特技名のセット）
-  const [damagedSkills, setDamagedSkills] = useState<Set<string>>(new Set());
   
-  // 一時的な感情データを管理（DBに保存されない）
+  const [selectedHeaders, setSelectedHeaders] = useState<Set<string>>(new Set());
   const [temporaryEmotions, setTemporaryEmotions] = useState<ShinobigamiEmotion[]>([]);
-  
-  // 生命点スロットのチェック状態を管理（HPが6より大きい場合）
   const [hpSlots, setHpSlots] = useState<Set<number>>(new Set());
-  
-  // 一時的な変調データを管理（DBに保存されない）
   const [temporaryHencho, setTemporaryHencho] = useState<Set<string>>(new Set());
+  const [isJudgmentMode, setIsJudgmentMode] = useState(false);
+  const [judgmentValue, setJudgmentValue] = useState<string>('');
+  const [judgmentCommand, setJudgmentCommand] = useState<string>('');
   
-  // 表示用の感情データ（元のデータ + 一時的なデータ）
   const displayEmotions = [...(sheetData.emotions || []), ...temporaryEmotions];
-  
-  // 表示用の変調データ（元のデータ + 一時的なデータ）
   const baseHencho = new Set(sheetData.hencho || []);
   const displayHencho = new Set([...baseHencho, ...temporaryHencho]);
 
@@ -55,22 +47,80 @@ export const ShinobigamiSheetView = ({
     setTemporaryEmotions(prev => prev.filter((_, i) => i !== index));
   };
   
-  const handleSkillClick = (skillName: string) => {
-    if (!selectedSkillNames.has(skillName)) return;
-    
-    setDamagedSkills(prev => {
+  const handleHeaderClick = (domain: string) => {
+    setSelectedHeaders(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(skillName)) {
-        newSet.delete(skillName);
+      if (newSet.has(domain)) {
+        newSet.delete(domain);
       } else {
-        newSet.add(skillName);
+        newSet.add(domain);
       }
       return newSet;
     });
   };
   
+  const getSkillPosition = (skillName: string): { row: number; col: number } | null => {
+    for (const [rowValue, skills] of Object.entries(SKILL_TABLE_DATA)) {
+      for (const [domain, name] of Object.entries(skills)) {
+        if (name === skillName) {
+          const colIndex = SKILL_TABLE_COLUMNS.findIndex(col => col.type === 'skill' && col.domain === domain);
+          return { row: parseInt(rowValue), col: colIndex };
+        }
+      }
+    }
+    return null;
+  };
+  
+  const calculateDistance = (pos1: { row: number; col: number }, pos2: { row: number; col: number }, emptyLeftIndex: number, emptyRightIndex: number): number => {
+    const rowDiff = Math.abs(pos1.row - pos2.row);
+    let colDiff = Math.abs(pos1.col - pos2.col);
+    
+    const minCol = Math.min(pos1.col, pos2.col);
+    const maxCol = Math.max(pos1.col, pos2.col);
+    
+    for (let i = minCol; i < maxCol; i++) {
+      const col = SKILL_TABLE_COLUMNS[i];
+      if (col && col.type === 'empty' && (i === emptyLeftIndex || i === emptyRightIndex)) {
+        colDiff--;
+      }
+    }
+    
+    return rowDiff + colDiff;
+  };
+  
+  const handleSkillClickInJudgmentMode = (skillName: string) => {
+    const clickedPos = getSkillPosition(skillName);
+    if (!clickedPos) return;
+    
+    const selectedSkills = Array.from(selectedSkillNames).map(name => ({
+      name,
+      pos: getSkillPosition(name),
+    })).filter(s => s.pos !== null) as Array<{ name: string; pos: { row: number; col: number } }>;
+    
+    const availableSkills = selectedSkills.filter(skill => {
+      const col = SKILL_TABLE_COLUMNS[skill.pos.col];
+      return col && col.type === 'skill' && !selectedHeaders.has(col.domain);
+    });
+    
+    if (availableSkills.length === 0) return;
+    
+    const distances = availableSkills.map(skill => ({
+      skill: skill.name,
+      distance: calculateDistance(clickedPos, skill.pos, emptyLeftIndex, emptyRightIndex),
+    }));
+    
+    const minDistance = Math.min(...distances.map(d => d.distance));
+    const closestSkill = distances.find(d => d.distance === minDistance)?.skill;
+    
+    if (closestSkill) {
+      const value = minDistance + 5;
+      setJudgmentValue(value.toString());
+      setJudgmentCommand(`2d6>=${value} 【${skillName}(判定：${closestSkill})】`);
+    }
+  };
+  
   const baseHp = sheetData.hp !== undefined ? sheetData.hp : 6;
-  const currentHp = Math.max(0, baseHp - damagedSkills.size - hpSlots.size);
+  const currentHp = Math.max(0, baseHp - selectedHeaders.size - hpSlots.size);
   
   const toggleHpSlot = (index: number) => {
     setHpSlots(prev => {
@@ -287,16 +337,19 @@ export const ShinobigamiSheetView = ({
                             />
                           );
                         } else {
+                          const isHeaderSelected = selectedHeaders.has(col.domain);
                           return (
                             <th
                               key={colIndex}
+                              onClick={() => handleHeaderClick(col.domain)}
                               style={{
                                 padding: '0.5rem',
                                 border: '1px solid #ddd',
-                                backgroundColor: '#f8f9fa',
+                                backgroundColor: isHeaderSelected ? '#f8d7da' : '#f8f9fa',
                                 fontWeight: 'bold',
                                 textAlign: 'center',
                                 minWidth: '100px',
+                                cursor: 'pointer',
                               }}
                             >
                               {col.domain}
@@ -341,26 +394,24 @@ export const ShinobigamiSheetView = ({
                           } else {
                             const skillName = SKILL_TABLE_DATA[rowValue]?.[col.domain] || '';
                             const isSelected = selectedSkillNames.has(skillName);
-                            const isDamaged = damagedSkills.has(skillName);
+                            const isHeaderSelected = selectedHeaders.has(col.domain);
+                            const backgroundColor = isHeaderSelected ? '#f8d7da' : (isSelected ? '#d4edda' : '#fff');
                             return (
                               <td
                                 key={colIndex}
-                                onClick={() => handleSkillClick(skillName)}
+                                onClick={() => isJudgmentMode && handleSkillClickInJudgmentMode(skillName)}
                                 style={{
                                   padding: '0.5rem',
                                   border: '1px solid #ddd',
-                                  backgroundColor: isSelected ? (isDamaged ? '#f8d7da' : '#d4edda') : '#fff',
+                                  backgroundColor,
                                   textAlign: 'center',
                                   fontWeight: isSelected ? 'bold' : 'normal',
-                                  cursor: isSelected ? 'pointer' : 'default',
+                                  cursor: isJudgmentMode ? 'pointer' : 'default',
                                   position: 'relative',
                                 }}
                               >
                                 {skillName}
-                                {isSelected && !isDamaged && ' ✓'}
-                                {isSelected && isDamaged && (
-                                  <span style={{ color: '#dc3545', fontSize: '1.2em', marginLeft: '0.25rem' }}>✗</span>
-                                )}
+                                {isSelected && ' ✓'}
                               </td>
                             );
                           }
@@ -370,22 +421,58 @@ export const ShinobigamiSheetView = ({
                   </tbody>
                 </table>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.75rem' }}>
-                {sheetData.skills.map((skill, index) => (
-                  <div
-                    key={index}
-                    style={{
-                      padding: '0.75rem',
-                      backgroundColor: '#fff',
-                      borderRadius: '4px',
-                      border: '2px solid #28a745',
+              <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '4px', border: '1px solid #dee2e6' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: isJudgmentMode ? '1rem' : 0 }}>
+                  <input
+                    type="checkbox"
+                    checked={isJudgmentMode}
+                    onChange={(e) => {
+                      setIsJudgmentMode(e.target.checked);
+                      if (!e.target.checked) {
+                        setJudgmentValue('');
+                        setJudgmentCommand('');
+                      }
                     }}
-                  >
-                    <div style={{ fontWeight: 'bold', marginBottom: '0.25rem' }}>{skill.name}</div>
-                    <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>属性: {skill.domain}</div>
-                    <div style={{ fontSize: '1.25rem', color: '#007bff', marginTop: '0.25rem', fontWeight: 'bold' }}>値: {skill.value}</div>
+                    style={{ cursor: 'pointer' }}
+                  />
+                  <span style={{ fontSize: '0.875rem', fontWeight: 'bold' }}>判定モード</span>
+                </label>
+                {isJudgmentMode && (
+                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <div style={{ flex: 1, minWidth: '150px' }}>
+                      <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>判定値</div>
+                      <input
+                        type="text"
+                        value={judgmentValue}
+                        readOnly
+                        style={{
+                          width: '100%',
+                          padding: '0.5rem',
+                          fontSize: '0.875rem',
+                          border: '1px solid #ddd',
+                          borderRadius: '4px',
+                          backgroundColor: '#fff',
+                        }}
+                      />
+                    </div>
+                    <div style={{ flex: 2, minWidth: '300px' }}>
+                      <div style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>コマンド</div>
+                      <input
+                        type="text"
+                        value={judgmentCommand}
+                        readOnly
+                        style={{
+                          width: '100%',
+                          padding: '0.5rem',
+                          fontSize: '0.875rem',
+                          border: '1px solid #ddd',
+                          borderRadius: '4px',
+                          backgroundColor: '#fff',
+                        }}
+                      />
+                    </div>
                   </div>
-                ))}
+                )}
               </div>
               <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '4px', border: '1px solid #dee2e6', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>

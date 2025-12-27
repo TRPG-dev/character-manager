@@ -11,7 +11,6 @@ export interface ShinobigamiAttributes {
 
 export interface ShinobigamiSkill {
   name: string;
-  value: number;
   domain: string; // 体術、忍術、謀術、戦術、器術、心術のいずれか
 }
 
