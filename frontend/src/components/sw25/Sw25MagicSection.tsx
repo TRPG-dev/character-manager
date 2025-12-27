@@ -80,7 +80,7 @@ export const Sw25MagicSection = ({
                 const originalIndex = magics.findIndex(m => m === magic);
                 return (
                   <div key={originalIndex} style={{ marginBottom: '1rem', padding: '1rem', border: '1px solid #ddd', borderRadius: '4px' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 100px auto', gap: '1rem', marginBottom: '0.5rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 150px auto', gap: '1rem', marginBottom: '0.5rem' }}>
                       <div>
                         <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                           魔法・スキル名
@@ -95,27 +95,6 @@ export const Sw25MagicSection = ({
                       </div>
                       <div>
                         <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                          系統
-                        </label>
-                        <select
-                          value={magic.system}
-                          onChange={(e) => onUpdateMagic(originalIndex, 'system', e.target.value)}
-                          style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                        >
-                          <option value="">選択してください</option>
-                          <option value="真語魔法">真語魔法</option>
-                          <option value="操霊魔法">操霊魔法</option>
-                          <option value="神聖魔法">神聖魔法</option>
-                          <option value="妖精魔法">妖精魔法</option>
-                          <option value="魔導機術">魔導機術</option>
-                          <option value="呪歌">呪歌</option>
-                          <option value="練技">練技</option>
-                          <option value="賦術">賦術</option>
-                          <option value="騎乗">騎乗</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                           消費MP
                         </label>
                         <input
@@ -123,6 +102,18 @@ export const Sw25MagicSection = ({
                           min="0"
                           value={magic.cost}
                           onChange={(e) => onUpdateMagic(originalIndex, 'cost', parseInt(e.target.value) || 0)}
+                          style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                          参照ページ
+                        </label>
+                        <input
+                          type="text"
+                          value={magic.referencePage || ''}
+                          onChange={(e) => onUpdateMagic(originalIndex, 'referencePage', e.target.value)}
+                          placeholder="参照p"
                           style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
                         />
                       </div>
@@ -186,7 +177,7 @@ export const Sw25MagicSection = ({
             const magicIdx = magics.findIndex(m => m === magic);
             return (
               <div key={magicIdx} style={{ marginBottom: '1rem', padding: '1rem', border: '1px solid #ddd', borderRadius: '4px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 100px auto', gap: '1rem', marginBottom: '0.5rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 150px auto', gap: '1rem', marginBottom: '0.5rem' }}>
                   <div>
                     <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                       魔法・スキル名
@@ -201,27 +192,6 @@ export const Sw25MagicSection = ({
                   </div>
                   <div>
                     <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                      系統
-                    </label>
-                    <select
-                      value={magic.system}
-                      onChange={(e) => onUpdateMagic(magicIdx, 'system', e.target.value)}
-                      style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                    >
-                      <option value="">選択してください</option>
-                      <option value="真語魔法">真語魔法</option>
-                      <option value="操霊魔法">操霊魔法</option>
-                      <option value="神聖魔法">神聖魔法</option>
-                      <option value="妖精魔法">妖精魔法</option>
-                      <option value="魔導機術">魔導機術</option>
-                      <option value="呪歌">呪歌</option>
-                      <option value="練技">練技</option>
-                      <option value="賦術">賦術</option>
-                      <option value="騎乗">騎乗</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                       消費MP
                     </label>
                     <input
@@ -229,6 +199,18 @@ export const Sw25MagicSection = ({
                       min="0"
                       value={magic.cost}
                       onChange={(e) => onUpdateMagic(magicIdx, 'cost', parseInt(e.target.value) || 0)}
+                      style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                      参照ページ
+                    </label>
+                    <input
+                      type="text"
+                      value={magic.referencePage || ''}
+                      onChange={(e) => onUpdateMagic(magicIdx, 'referencePage', e.target.value)}
+                      placeholder="参照p"
                       style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
                     />
                   </div>
@@ -282,4 +264,6 @@ export const Sw25MagicSection = ({
     </>
   );
 };
+
+
 

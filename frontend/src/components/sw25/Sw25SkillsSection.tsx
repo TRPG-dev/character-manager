@@ -6,7 +6,7 @@ interface Sw25SkillsSectionProps {
   skills: Sw25Skill[];
   classes: Sw25Class[];
   onAddSkill: () => void;
-  onUpdateSkill: (index: number, field: 'name' | 'effect' | 'memo', value: string) => void;
+  onUpdateSkill: (index: number, field: 'name' | 'effect' | 'memo' | 'referencePage', value: string) => void;
   onRemoveSkill: (index: number) => void;
 }
 
@@ -129,7 +129,7 @@ export const Sw25SkillsSection = ({
         const skillData = SW25_SKILLS.find(s => s.name === skill.name);
         return (
           <div key={originalIndex} style={{ marginBottom: '1rem', padding: '1rem', border: '1px solid #ddd', borderRadius: '4px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '1rem', marginBottom: '0.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 150px auto', gap: '1rem', marginBottom: '0.5rem' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                   戦闘特技名
@@ -151,6 +151,18 @@ export const Sw25SkillsSection = ({
                     習得条件: {skillData.requirements}
                   </div>
                 )}
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                  参照ページ
+                </label>
+                <input
+                  type="text"
+                  value={skill.referencePage || ''}
+                  onChange={(e) => onUpdateSkill(originalIndex, 'referencePage', e.target.value)}
+                  placeholder="参照p"
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                />
               </div>
               <div>
                 <button
@@ -200,4 +212,6 @@ export const Sw25SkillsSection = ({
     </>
   );
 };
+
+
 
