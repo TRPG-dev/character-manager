@@ -6,12 +6,12 @@ import type { ShinobigamiSheetData, ShinobigamiAttributes, ShinobigamiNingu, Shi
  */
 export function normalizeSheetData(data: any): ShinobigamiSheetData {
   const defaultAttributes: ShinobigamiAttributes = {
+    器術: 0,
     体術: 0,
     忍術: 0,
     謀術: 0,
     戦術: 0,
-    器術: 0,
-    心術: 0,
+    妖術: 0,
   };
 
   const attributes = { ...defaultAttributes, ...(data.attributes || {}) };
@@ -43,6 +43,8 @@ export function normalizeSheetData(data: any): ShinobigamiSheetData {
   const upperSchool = data.upperSchool || data.school || '';
   const lowerSchool = data.lowerSchool || '';
   const backgrounds = Array.isArray(data.backgrounds) ? data.backgrounds : [];
+  const skillDomain = data.skillDomain || undefined;
+  const personas = Array.isArray(data.personas) ? data.personas : [];
 
   return {
     playerName: data.playerName || '',
@@ -64,12 +66,14 @@ export function normalizeSheetData(data: any): ShinobigamiSheetData {
     regulation: data.regulation || '',
     type: data.type || undefined,
     enemy: data.enemy || '',
+    skillDomain,
     skills,
-    ninpo: ninpo.map(n => ({ ...n, effect: n.effect || '' })),
-    okugi: okugi.map(o => ({ ...o, page: o.page || '' })),
+    ninpo: ninpo.map((n: ShinobigamiNinpo) => ({ ...n, effect: n.effect || '', cost: n.cost || '' })),
+    okugi: okugi.map((o: any) => ({ ...o, page: o.page || '' })),
     ningu,
     background: data.background || '',
     backgrounds,
+    personas,
     memo: data.memo || '',
     sessionHistory,
   };

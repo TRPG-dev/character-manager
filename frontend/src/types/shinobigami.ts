@@ -1,17 +1,17 @@
 // シノビガミ用の型定義
 
 export interface ShinobigamiAttributes {
+  器術: number;
   体術: number;
   忍術: number;
   謀術: number;
   戦術: number;
-  器術: number;
-  心術: number;
+  妖術: number;
 }
 
 export interface ShinobigamiSkill {
   name: string;
-  domain: string; // 体術、忍術、謀術、戦術、器術、心術のいずれか
+  domain: string; // 体術、忍術、謀術、戦術、器術、妖術のいずれか
 }
 
 export interface ShinobigamiNinpo {
@@ -19,7 +19,7 @@ export interface ShinobigamiNinpo {
   type: string; // タイプ（攻撃・サポート・装備）
   skill: string; // 指定特技
   range: string; // 間合い
-  cost: string; // コスト
+  cost: string; // コスト（テキスト入力）
   effect?: string; // 効果
   page: string; // 参照ページ
 }
@@ -59,6 +59,14 @@ export interface ShinobigamiBackground {
   page: string; // 参照ページ
 }
 
+export interface ShinobigamiPersona {
+  disguise: string; // 偽装
+  trueName: string; // 真実名
+  setting: string; // 設定
+  effect: string; // 効果
+  page: string; // 参照ページ
+}
+
 export interface ShinobigamiSheetData {
   // 基本情報
   playerName?: string; // プレイヤー名
@@ -82,13 +90,17 @@ export interface ShinobigamiSheetData {
   shinnen?: string; // 信念（凶、律、我、情、忠、和）
   koseki?: number; // 功績点
   regulation?: string; // レギュレーション
-  type?: "忍者" | "人間"; // タイプ
+  type?: "忍者" | "一般人"; // タイプ
   enemy?: string; // 仇敵
+  skillDomain?: string; // 古流流派選択時の特技分野
   skills: ShinobigamiSkill[];
   
   // 忍法・奥義
   ninpo?: ShinobigamiNinpo[]; // 忍法
   okugi?: ShinobigamiOkugi[]; // 奥義
+  
+  // ペルソナ（一般人選択時）
+  personas?: ShinobigamiPersona[]; // ペルソナ情報（最大2つ）
   
   // 忍具
   ningu?: ShinobigamiNingu;

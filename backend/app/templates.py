@@ -71,12 +71,12 @@ def generate_shinobigami_template() -> Dict[str, Any]:
         "age": None,
         "gender": "",
         "attributes": {
+            "器術": 0,
             "体術": 0,
             "忍術": 0,
             "謀術": 0,
             "戦術": 0,
-            "器術": 0,
-            "心術": 0,
+            "妖術": 0,
         },
         "hp": 6,
         "hencho": [],
@@ -92,6 +92,7 @@ def generate_shinobigami_template() -> Dict[str, Any]:
         "regulation": "",
         "type": "",
         "enemy": "",
+        "skillDomain": "",
         "skills": [],
         "ninpo": [
             {
@@ -112,6 +113,7 @@ def generate_shinobigami_template() -> Dict[str, Any]:
         },
         "background": "",
         "backgrounds": [],
+        "personas": [],
         "memo": "",
         "sessionHistory": [],
     }

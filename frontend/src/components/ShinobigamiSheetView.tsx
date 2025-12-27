@@ -14,7 +14,9 @@ export const ShinobigamiSheetView = ({
   isDesktop = false,
 }: ShinobigamiSheetViewProps) => {
   const sheetData = normalizeSheetData(data);
-  const selectedDomain = sheetData.school ? getDomainFromSchool(sheetData.school) : null;
+  const isIppanjin = sheetData.type === '一般人';
+  const isKoryu = (sheetData.upperSchool || sheetData.school) === '古流流派';
+  const selectedDomain = isKoryu ? sheetData.skillDomain : (sheetData.school ? getDomainFromSchool(sheetData.school) : null);
   const [emptyLeftIndex, emptyRightIndex] = selectedDomain ? getEmptyColumnIndices(selectedDomain) : [-1, -1];
 
   const selectedSkillNames = new Set(sheetData.skills.map(s => s.name));
@@ -158,7 +160,7 @@ export const ShinobigamiSheetView = ({
   
   const tabItems = [];
   
-  if ((sheetData.ninpo || []).length > 0 || (sheetData.okugi || []).length > 0) {
+  if (!isIppanjin && ((sheetData.ninpo || []).length > 0 || (sheetData.okugi || []).length > 0)) {
     tabItems.push({
       label: '忍法・奥義',
       content: (
@@ -281,7 +283,63 @@ export const ShinobigamiSheetView = ({
     });
   }
   
-  if (sheetData.ningu && (sheetData.ningu.heiryomaru > 0 || sheetData.ningu.jintsumaru > 0 || sheetData.ningu.tonkofu > 0) || sheetData.school && sheetData.skills.length > 0 || displayEmotions.length > 0) {
+  if (isIppanjin && (sheetData.personas || []).length > 0) {
+    tabItems.push({
+      label: 'ペルソナ',
+      content: (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          {(sheetData.personas || []).map((persona, index) => (
+            <div
+              key={index}
+              style={{
+                border: '1px solid #ddd',
+                borderRadius: '8px',
+                padding: '1rem',
+                backgroundColor: '#fff',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              }}
+            >
+              <h3 style={{ marginTop: 0, marginBottom: '1rem', fontSize: '1.25rem', borderBottom: '2px solid #007bff', paddingBottom: '0.5rem' }}>
+                ペルソナ #{index + 1}
+              </h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+                <div>
+                  <div style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '0.25rem' }}>真実名</div>
+                  <div style={{ fontWeight: 'bold' }}>{persona.trueName || '-'}</div>
+                </div>
+                {persona.page && (
+                  <div>
+                    <div style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '0.25rem' }}>参照ページ</div>
+                    <div style={{ fontWeight: 'bold' }}>{persona.page}</div>
+                  </div>
+                )}
+                {persona.disguise && (
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <div style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '0.25rem' }}>偽装</div>
+                    <div style={{ fontSize: '0.875rem', whiteSpace: 'pre-wrap' }}>{persona.disguise}</div>
+                  </div>
+                )}
+                {persona.setting && (
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <div style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '0.25rem' }}>概要</div>
+                    <div style={{ fontSize: '0.875rem', whiteSpace: 'pre-wrap' }}>{persona.setting}</div>
+                  </div>
+                )}
+                {persona.effect && (
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <div style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '0.25rem' }}>効果</div>
+                    <div style={{ fontSize: '0.875rem', whiteSpace: 'pre-wrap' }}>{persona.effect}</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      ),
+    });
+  }
+  
+  if (!isIppanjin && sheetData.ningu && (sheetData.ningu.heiryomaru > 0 || sheetData.ningu.jintsumaru > 0 || sheetData.ningu.tonkofu > 0) || sheetData.school && sheetData.skills.length > 0 || displayEmotions.length > 0) {
     tabItems.push({
       label: '忍具・特技・感情',
       content: (
