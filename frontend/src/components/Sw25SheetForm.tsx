@@ -8,6 +8,7 @@ import {
   calculateUsedExperiencePoints,
   updateAutoSkills,
   updateAutoLanguages,
+  rollAttributeInitialsByRace,
 } from '../utils/sw25';
 import {
   getClassesByCategory,
@@ -43,6 +44,8 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
     normalized.skills = updateAutoSkills(normalized);
     // 自動追加される言語を更新
     normalized.languages = updateAutoLanguages(normalized);
+    // 能力値を再計算
+    normalized.attributes = calculateAttributes(normalized);
     setSheetData(normalized);
   }, [data]);
 
@@ -87,6 +90,21 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
     };
     const newGrowth = { ...currentGrowth, [key]: value };
     const updated = { ...sheetData, attributeGrowth: newGrowth };
+    const calculatedAttributes = calculateAttributes(updated);
+    updated.attributes = calculatedAttributes;
+    setIsInternalUpdate(true);
+    setSheetData(updated);
+    onChange(updated);
+  };
+
+  // 能力値初期値ダイスロール
+  const handleRollAttributeInitials = () => {
+    if (!sheetData.race) {
+      alert('種族を選択してください');
+      return;
+    }
+    const rolledInitials = rollAttributeInitialsByRace(sheetData.race);
+    const updated = { ...sheetData, attributeInitials: rolledInitials };
     const calculatedAttributes = calculateAttributes(updated);
     updated.attributes = calculatedAttributes;
     setIsInternalUpdate(true);
@@ -150,13 +168,27 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
   };
 
   // 戦闘特技の更新
-  const updateSkill = (index: number, field: 'name' | 'effect' | 'memo', value: string) => {
+  const updateSkill = (index: number, field: 'name' | 'effect' | 'memo' | 'referencePage', value: string) => {
     const newSkills = [...sheetData.skills];
-    newSkills[index] = { ...newSkills[index], [field]: value };
-    const updated = { ...sheetData, skills: newSkills };
-    setIsInternalUpdate(true);
-    setSheetData(updated);
-    onChange(updated);
+    if (index >= 0 && index < newSkills.length) {
+      newSkills[index] = { ...newSkills[index], [field]: value };
+      const updated = { ...sheetData, skills: newSkills };
+      setIsInternalUpdate(true);
+      setSheetData(updated);
+      onChange(updated);
+    }
+  };
+
+  // 戦闘特技名と効果を一度に更新
+  const updateSkillNameAndEffect = (index: number, name: string, effect: string) => {
+    const newSkills = [...sheetData.skills];
+    if (index >= 0 && index < newSkills.length) {
+      newSkills[index] = { ...newSkills[index], name, effect };
+      const updated = { ...sheetData, skills: newSkills };
+      setIsInternalUpdate(true);
+      setSheetData(updated);
+      onChange(updated);
+    }
   };
 
   // 戦闘特技の削除
@@ -169,7 +201,7 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
   };
 
   // 魔法・スキルの更新
-  const updateMagic = (index: number, field: 'name' | 'system' | 'cost' | 'effect' | 'memo', value: string | number) => {
+  const updateMagic = (index: number, field: 'name' | 'system' | 'cost' | 'effect' | 'memo' | 'referencePage', value: string | number) => {
     const newMagics = [...sheetData.magics];
     newMagics[index] = { ...newMagics[index], [field]: value };
     const updated = { ...sheetData, magics: newMagics };
@@ -267,7 +299,7 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
   };
 
   // アイテムの更新
-  const updateItem = (index: number, field: 'name' | 'quantity' | 'memo', value: string | number) => {
+  const updateItem = (index: number, field: 'name' | 'quantity' | 'memo' | 'referencePage' | 'price', value: string | number) => {
     const newItems = [...sheetData.items];
     newItems[index] = { ...newItems[index], [field]: value };
     const updated = { ...sheetData, items: newItems };
@@ -394,6 +426,28 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
           onUpdate={updateAbility}
         />
 
+        <div style={{ marginBottom: '1rem' }}>
+          <button
+            type="button"
+            onClick={handleRollAttributeInitials}
+            disabled={!sheetData.race}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: sheetData.race ? '#007bff' : '#ccc',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: sheetData.race ? 'pointer' : 'not-allowed',
+            }}
+          >
+            能力値初期値をダイスロール
+          </button>
+          {!sheetData.race && (
+            <span style={{ marginLeft: '0.5rem', fontSize: '0.875rem', color: '#666' }}>
+              （種族を選択してください）
+            </span>
+          )}
+        </div>
 
         <Sw25AttributeTable
           abilities={sheetData.abilities}
@@ -404,7 +458,6 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
           onUpdateGrowth={updateAttributeGrowth}
           calculateAttributeBonus={calculateAttributeBonus}
         />
-
 
         <Sw25DerivedStats attributes={sheetData.attributes} />
       </CollapsibleSection>
@@ -530,6 +583,7 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
           classes={sheetData.classes}
           onAddSkill={addSkill}
           onUpdateSkill={updateSkill}
+          onUpdateSkillNameAndEffect={updateSkillNameAndEffect}
           onRemoveSkill={removeSkill}
         />
       </CollapsibleSection>

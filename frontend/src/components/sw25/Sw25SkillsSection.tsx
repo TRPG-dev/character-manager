@@ -6,7 +6,8 @@ interface Sw25SkillsSectionProps {
   skills: Sw25Skill[];
   classes: Sw25Class[];
   onAddSkill: () => void;
-  onUpdateSkill: (index: number, field: 'name' | 'effect' | 'memo', value: string) => void;
+  onUpdateSkill: (index: number, field: 'name' | 'effect' | 'memo' | 'referencePage', value: string) => void;
+  onUpdateSkillNameAndEffect?: (index: number, name: string, effect: string) => void;
   onRemoveSkill: (index: number) => void;
 }
 
@@ -15,6 +16,7 @@ export const Sw25SkillsSection = ({
   classes,
   onAddSkill,
   onUpdateSkill,
+  onUpdateSkillNameAndEffect,
   onRemoveSkill,
 }: Sw25SkillsSectionProps) => {
   // 冒険者レベルの計算
@@ -36,14 +38,17 @@ export const Sw25SkillsSection = ({
   const canAddSkill = currentSkills < maxSkills;
 
   // スキル名を変更する際の特別な処理
-  const handleSkillNameChange = (skill: Sw25Skill, newName: string) => {
-    const originalIndex = skills.findIndex(s => s === skill);
+  const handleSkillNameChange = (originalIndex: number, newName: string) => {
     const selectedSkill = SW25_SKILLS.find(s => s.name === newName);
-    if (selectedSkill && originalIndex !== -1) {
-      // 名前を変更
+    if (onUpdateSkillNameAndEffect && selectedSkill) {
+      // 名前と効果を一度に更新
+      onUpdateSkillNameAndEffect(originalIndex, newName, selectedSkill.effect);
+    } else {
+      // フォールバック: 名前だけを更新
       onUpdateSkill(originalIndex, 'name', newName);
-      // 効果も自動的に更新
-      onUpdateSkill(originalIndex, 'effect', selectedSkill.effect);
+      if (selectedSkill) {
+        onUpdateSkill(originalIndex, 'effect', selectedSkill.effect);
+      }
     }
   };
 
@@ -124,19 +129,23 @@ export const Sw25SkillsSection = ({
           </div>
         )}
       </div>
-      {manualSkills.map((skill) => {
-        const originalIndex = skills.findIndex(s => s === skill);
+      {skills.map((skill, index) => {
         const skillData = SW25_SKILLS.find(s => s.name === skill.name);
+        // 自動追加された戦闘特技はスキップ
+        if (skillData?.category === '自動') {
+          return null;
+        }
+        
         return (
-          <div key={originalIndex} style={{ marginBottom: '1rem', padding: '1rem', border: '1px solid #ddd', borderRadius: '4px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '1rem', marginBottom: '0.5rem' }}>
+          <div key={index} style={{ marginBottom: '1rem', padding: '1rem', border: '1px solid #ddd', borderRadius: '4px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 150px auto', gap: '1rem', marginBottom: '0.5rem' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                   戦闘特技名
                 </label>
                 <select
                   value={skill.name}
-                  onChange={(e) => handleSkillNameChange(skill, e.target.value)}
+                  onChange={(e) => handleSkillNameChange(index, e.target.value)}
                   style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
                 >
                   <option value="">選択してください</option>
@@ -153,9 +162,21 @@ export const Sw25SkillsSection = ({
                 )}
               </div>
               <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                  参照ページ
+                </label>
+                <input
+                  type="text"
+                  value={skill.referencePage || ''}
+                  onChange={(e) => onUpdateSkill(index, 'referencePage', e.target.value)}
+                  placeholder="参照p"
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                />
+              </div>
+              <div>
                 <button
                   type="button"
-                  onClick={() => onRemoveSkill(originalIndex)}
+                  onClick={() => onRemoveSkill(index)}
                   style={{
                     padding: '0.5rem 1rem',
                     backgroundColor: '#dc3545',
@@ -176,7 +197,7 @@ export const Sw25SkillsSection = ({
               </label>
               <textarea
                 value={skill.effect}
-                onChange={(e) => onUpdateSkill(originalIndex, 'effect', e.target.value)}
+                onChange={(e) => onUpdateSkill(index, 'effect', e.target.value)}
                 placeholder="効果を入力"
                 rows={2}
                 style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
@@ -189,7 +210,7 @@ export const Sw25SkillsSection = ({
               <input
                 type="text"
                 value={skill.memo || ''}
-                onChange={(e) => onUpdateSkill(originalIndex, 'memo', e.target.value)}
+                onChange={(e) => onUpdateSkill(index, 'memo', e.target.value)}
                 placeholder="備考を入力"
                 style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
               />
@@ -200,4 +221,6 @@ export const Sw25SkillsSection = ({
     </>
   );
 };
+
+
 

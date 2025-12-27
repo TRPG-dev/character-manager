@@ -44,6 +44,7 @@ export function normalizeSheetData(data: any): Sw25SheetData {
         name: s.name || '',
         effect: s.effect || '',
         memo: s.memo || '',
+        referencePage: s.referencePage || '',
       }))
     : [];
 
@@ -54,6 +55,7 @@ export function normalizeSheetData(data: any): Sw25SheetData {
         cost: typeof m.cost === 'number' ? m.cost : 0,
         effect: m.effect || '',
         memo: m.memo || '',
+        referencePage: m.referencePage || '',
       }))
     : [];
 
@@ -79,6 +81,8 @@ export function normalizeSheetData(data: any): Sw25SheetData {
         name: i.name || '',
         quantity: typeof i.quantity === 'number' ? i.quantity : 0,
         memo: i.memo || '',
+        referencePage: i.referencePage || '',
+        price: typeof i.price === 'number' ? i.price : undefined,
       }))
     : [];
 
@@ -133,7 +137,7 @@ export function normalizeSheetData(data: any): Sw25SheetData {
     weapons,
     armors,
     accessories,
-    money: typeof data.money === 'number' ? data.money : undefined,
+    money: typeof data.money === 'number' ? data.money : 1200,
     items,
     languages,
     background: data.background || '',
