@@ -778,59 +778,88 @@ export const CharacterDetail = () => {
             
             return (
               <>
-                {/* 基本情報セクション（アイコン＋基本情報を1カラムで表示） */}
-                <section style={{ 
-                  padding: '1.5rem',
-                  backgroundColor: 'var(--color-surface-muted)',
-                  borderRadius: '8px',
-                  border: '1px solid var(--color-border)',
-                  marginBottom: '2rem',
-                }}>
-                  <h2 style={{ 
-                    marginTop: 0, 
-                    marginBottom: '1rem', 
-                    fontSize: '1.5rem',
-                    borderBottom: '2px solid var(--color-primary)',
-                    paddingBottom: '0.5rem'
-                  }}>
-                    {character.name}
-                  </h2>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    {/* アイコン＋基本情報内容を1カラムで表示 */}
-                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-                      {character.profile_image_url ? (
+                {/* キャラクター画像と基本情報を横並びに配置 */}
+                <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start', marginBottom: '2rem' }}>
+                  {/* キャラクター画像部分 */}
+                  <div style={{ flexShrink: 0 }}>
+                    {character.profile_image_url ? (
+                      <div 
+                        style={{ 
+                          cursor: 'pointer',
+                          display: 'inline-block',
+                        }}
+                        onClick={() => setIsImageModalOpen(true)}
+                      >
                         <img
                           src={character.profile_image_url}
                           alt={character.name}
                           style={{
-                            width: '120px',
-                            height: '120px',
-                            objectFit: 'cover',
+                            maxWidth: '300px',
+                            maxHeight: '400px',
+                            width: 'auto',
+                            height: 'auto',
                             borderRadius: '8px',
                             border: '2px solid var(--color-border)',
-                            flexShrink: 0,
-                            cursor: 'pointer',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                            transition: 'transform 0.2s, box-shadow 0.2s',
                           }}
-                          onClick={() => setIsImageModalOpen(true)}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'scale(1.02)';
+                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'scale(1)';
+                            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                          }}
                         />
-                      ) : (
-                        <div style={{
-                          width: '120px',
-                          height: '120px',
-                          backgroundColor: 'var(--color-surface-muted)',
-                          border: '2px dashed var(--color-border)',
-                          borderRadius: '8px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
+                        <div style={{ 
+                          marginTop: '0.5rem', 
+                          fontSize: '0.875rem', 
                           color: 'var(--color-text-muted)',
-                          fontSize: '2rem',
-                          flexShrink: 0,
+                          textAlign: 'center'
                         }}>
-                          🖼️
+                          クリックで拡大表示
                         </div>
-                      )}
-                      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+                      </div>
+                    ) : (
+                      <div style={{
+                        width: '300px',
+                        height: '400px',
+                        backgroundColor: 'var(--color-surface-muted)',
+                        border: '2px dashed var(--color-border)',
+                        borderRadius: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'var(--color-text-muted)',
+                        fontSize: '1rem',
+                      }}>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>🖼️</div>
+                          <div>プロフィール画像なし</div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 基本情報セクション */}
+                  <section style={{ 
+                    flex: 1,
+                    padding: '1.5rem',
+                    backgroundColor: 'var(--color-surface-muted)',
+                    borderRadius: '8px',
+                    border: '1px solid var(--color-border)',
+                  }}>
+                    <h2 style={{ 
+                      marginTop: 0, 
+                      marginBottom: '1rem', 
+                      fontSize: '1.5rem',
+                      borderBottom: '2px solid var(--color-primary)',
+                      paddingBottom: '0.5rem'
+                    }}>
+                      {character.name}
+                    </h2>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
                       <div>
                         <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>システム</div>
                         <div style={{ fontSize: '1.0rem', fontWeight: 'bold' }}>{SYSTEM_NAMES[character.system]}</div>
@@ -893,10 +922,9 @@ export const CharacterDetail = () => {
                           <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.schoolDegree}</div>
                         </div>
                       )}
-                      </div>
                     </div>
-                  </div>
-                </section>
+                  </section>
+                </div>
                 
                 {isImageModalOpen && character.profile_image_url && (
                   <ImageModal
@@ -916,60 +944,91 @@ export const CharacterDetail = () => {
           {/* キャラクターシートセクション */}
           {character.system === 'shinobigami' ? (
             <>
-              {/* 基本情報セクション */}
+              {/* キャラクター画像と基本情報を横並びに配置 */}
               {(() => {
                 const sheetData = normalizeShinobigamiSheetData(character.sheet_data) as ShinobigamiSheetData;
                 return (
-                  <section style={{ 
-                    padding: '1.5rem',
-                    backgroundColor: 'var(--color-surface-muted)',
-                    borderRadius: '8px',
-                    border: '1px solid var(--color-border)',
-                    marginBottom: '2rem',
-                  }}>
-                    <h2 style={{ 
-                      marginTop: 0, 
-                      marginBottom: '1rem', 
-                      fontSize: '1.5rem',
-                      borderBottom: '2px solid var(--color-primary)',
-                      paddingBottom: '0.5rem'
-                    }}>
-                      基本情報
-                    </h2>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                      {/* アイコン＋基本情報内容を1カラムで表示 */}
-                      <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-                        {character.profile_image_url ? (
+                  <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start', marginBottom: '2rem' }}>
+                    {/* キャラクター画像部分 */}
+                    <div style={{ flexShrink: 0 }}>
+                      {character.profile_image_url ? (
+                        <div 
+                          style={{ 
+                            cursor: 'pointer',
+                            display: 'inline-block',
+                          }}
+                          onClick={() => setIsImageModalOpen(true)}
+                        >
                           <img
                             src={character.profile_image_url}
                             alt={character.name}
                             style={{
-                              width: '120px',
-                              height: '120px',
-                              objectFit: 'cover',
+                              maxWidth: '300px',
+                              maxHeight: '400px',
+                              width: 'auto',
+                              height: 'auto',
                               borderRadius: '8px',
                               border: '2px solid var(--color-border)',
-                              flexShrink: 0,
+                              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                              transition: 'transform 0.2s, box-shadow 0.2s',
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.transform = 'scale(1.02)';
+                              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.transform = 'scale(1)';
+                              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
                             }}
                           />
-                        ) : (
-                          <div style={{
-                            width: '120px',
-                            height: '120px',
-                            backgroundColor: 'var(--color-surface-muted)',
-                            border: '2px dashed var(--color-border)',
-                            borderRadius: '8px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
+                          <div style={{ 
+                            marginTop: '0.5rem', 
+                            fontSize: '0.875rem', 
                             color: 'var(--color-text-muted)',
-                            fontSize: '2rem',
-                            flexShrink: 0,
+                            textAlign: 'center'
                           }}>
-                            🖼️
+                            クリックで拡大表示
                           </div>
-                        )}
-                        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+                        </div>
+                      ) : (
+                        <div style={{
+                          width: '300px',
+                          height: '400px',
+                          backgroundColor: 'var(--color-surface-muted)',
+                          border: '2px dashed var(--color-border)',
+                          borderRadius: '8px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: 'var(--color-text-muted)',
+                          fontSize: '1rem',
+                        }}>
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>🖼️</div>
+                            <div>プロフィール画像なし</div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 基本情報セクション */}
+                    <section style={{ 
+                      flex: 1,
+                      padding: '1.5rem',
+                      backgroundColor: 'var(--color-surface-muted)',
+                      borderRadius: '8px',
+                      border: '1px solid var(--color-border)',
+                    }}>
+                      <h2 style={{ 
+                        marginTop: 0, 
+                        marginBottom: '1rem', 
+                        fontSize: '1.5rem',
+                        borderBottom: '2px solid var(--color-primary)',
+                        paddingBottom: '0.5rem'
+                      }}>
+                        {character.name}
+                      </h2>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
                           <div>
                             <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>システム</div>
                             <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{SYSTEM_NAMES[character.system]}</div>
@@ -1081,11 +1140,10 @@ export const CharacterDetail = () => {
                             </div>
                           )}
                         </div>
-                      </div>
+                      </section>
                     </div>
-                  </section>
-                );
-              })()}
+                  );
+                })()}
 
               {/* タブ形式で各セクションを表示 */}
               <ShinobigamiSheetView 
@@ -1095,60 +1153,91 @@ export const CharacterDetail = () => {
 
               {!isDesktop && (
                 <>
-                  {/* 基本情報セクション */}
+                  {/* キャラクター画像と基本情報を横並びに配置（モバイル） */}
                   {character.system === 'shinobigami' && (() => {
                     const sheetData = normalizeShinobigamiSheetData(character.sheet_data) as ShinobigamiSheetData;
                     return (
-                      <section style={{ 
-                        marginBottom: '2rem',
-                        padding: '1.5rem',
-                        backgroundColor: 'var(--color-surface-muted)',
-                        borderRadius: '8px',
-                        border: '1px solid var(--color-border)'
-                      }}>
-                        <h2 style={{ 
-                          marginTop: 0, 
-                          marginBottom: '1rem', 
-                          fontSize: '1.5rem',
-                          borderBottom: '2px solid var(--color-primary)',
-                          paddingBottom: '0.5rem'
-                        }}>
-                          基本情報
-                        </h2>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                          {/* アイコン＋基本情報内容を1カラムで表示 */}
-                          <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-                            {character.profile_image_url ? (
+                      <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start', marginBottom: '2rem' }}>
+                        {/* キャラクター画像部分 */}
+                        <div style={{ flexShrink: 0 }}>
+                          {character.profile_image_url ? (
+                            <div 
+                              style={{ 
+                                cursor: 'pointer',
+                                display: 'inline-block',
+                              }}
+                              onClick={() => setIsImageModalOpen(true)}
+                            >
                               <img
                                 src={character.profile_image_url}
                                 alt={character.name}
                                 style={{
-                                  width: '120px',
-                                  height: '120px',
-                                  objectFit: 'cover',
+                                  maxWidth: '300px',
+                                  maxHeight: '400px',
+                                  width: 'auto',
+                                  height: 'auto',
                                   borderRadius: '8px',
                                   border: '2px solid var(--color-border)',
-                                  flexShrink: 0,
+                                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                                  transition: 'transform 0.2s, box-shadow 0.2s',
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.transform = 'scale(1.02)';
+                                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.transform = 'scale(1)';
+                                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
                                 }}
                               />
-                            ) : (
-                              <div style={{
-                                width: '120px',
-                                height: '120px',
-                                backgroundColor: 'var(--color-surface-muted)',
-                                border: '2px dashed var(--color-border)',
-                                borderRadius: '8px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
+                              <div style={{ 
+                                marginTop: '0.5rem', 
+                                fontSize: '0.875rem', 
                                 color: 'var(--color-text-muted)',
-                                fontSize: '2rem',
-                                flexShrink: 0,
+                                textAlign: 'center'
                               }}>
-                                🖼️
+                                クリックで拡大表示
                               </div>
-                            )}
-                            <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+                            </div>
+                          ) : (
+                            <div style={{
+                              width: '300px',
+                              height: '400px',
+                              backgroundColor: 'var(--color-surface-muted)',
+                              border: '2px dashed var(--color-border)',
+                              borderRadius: '8px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: 'var(--color-text-muted)',
+                              fontSize: '1rem',
+                            }}>
+                              <div style={{ textAlign: 'center' }}>
+                                <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>🖼️</div>
+                                <div>プロフィール画像なし</div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* 基本情報セクション */}
+                        <section style={{ 
+                          flex: 1,
+                          padding: '1.5rem',
+                          backgroundColor: 'var(--color-surface-muted)',
+                          borderRadius: '8px',
+                          border: '1px solid var(--color-border)'
+                        }}>
+                          <h2 style={{ 
+                            marginTop: 0, 
+                            marginBottom: '1rem', 
+                            fontSize: '1.5rem',
+                            borderBottom: '2px solid var(--color-primary)',
+                            paddingBottom: '0.5rem'
+                          }}>
+                            {character.name}
+                          </h2>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
                               <div>
                                 <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>システム</div>
                                 <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{SYSTEM_NAMES[character.system]}</div>
@@ -1260,11 +1349,10 @@ export const CharacterDetail = () => {
                                 </div>
                               )}
                             </div>
-                          </div>
+                          </section>
                         </div>
-                      </section>
-                    );
-                  })()}
+                      );
+                    })()}
 
                   {/* タブ形式で各セクションを表示 */}
                   <ShinobigamiSheetView 
@@ -1277,102 +1365,91 @@ export const CharacterDetail = () => {
           ) : character.system === 'sw25' ? (
             <>
               {/* ソードワールド2.5の場合 */}
-              <section style={{ marginBottom: '2rem' }}>
-                {character.profile_image_url ? (
-                  <div 
-                    style={{ 
-                      marginBottom: '1rem',
-                      cursor: 'pointer',
-                      display: 'inline-block',
-                    }}
-                    onClick={() => setIsImageModalOpen(true)}
-                  >
-                    <img
-                      src={character.profile_image_url}
-                      alt={character.name}
-                      style={{
-                        maxWidth: '100%',
-                        maxHeight: '400px',
-                        width: 'auto',
-                        height: 'auto',
-                        borderRadius: '8px',
-                        border: '2px solid var(--color-border)',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                        transition: 'transform 0.2s, box-shadow 0.2s',
+              <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '2rem', alignItems: 'flex-start' }}>
+                <div style={{ flexShrink: 0 }}>
+                  {character.profile_image_url ? (
+                    <div 
+                      style={{ 
+                        cursor: 'pointer',
+                        display: 'inline-block',
                       }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'scale(1.02)';
-                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'scale(1)';
-                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
-                      }}
-                    />
-                    <div style={{ 
-                      marginTop: '0.5rem', 
-                      fontSize: '0.875rem', 
+                      onClick={() => setIsImageModalOpen(true)}
+                    >
+                      <img
+                        src={character.profile_image_url}
+                        alt={character.name}
+                        style={{
+                          maxWidth: '300px',
+                          maxHeight: '400px',
+                          width: 'auto',
+                          height: 'auto',
+                          borderRadius: '8px',
+                          border: '2px solid var(--color-border)',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                          transition: 'transform 0.2s, box-shadow 0.2s',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = 'scale(1.02)';
+                          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'scale(1)';
+                          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                        }}
+                      />
+                      <div style={{ 
+                        marginTop: '0.5rem', 
+                        fontSize: '0.875rem', 
+                        color: 'var(--color-text-muted)',
+                        textAlign: 'center'
+                      }}>
+                        クリックで拡大表示
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{
+                      width: '300px',
+                      height: '400px',
+                      backgroundColor: 'var(--color-surface-muted)',
+                      border: '2px dashed var(--color-border)',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                       color: 'var(--color-text-muted)',
-                      textAlign: 'center'
+                      fontSize: '1rem',
                     }}>
-                      クリックで拡大表示
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>🖼️</div>
+                        <div>プロフィール画像なし</div>
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <div style={{
-                    width: '100%',
-                    maxWidth: '400px',
-                    height: '300px',
-                    backgroundColor: 'var(--color-surface-muted)',
-                    border: '2px dashed var(--color-border)',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'var(--color-text-muted)',
-                    fontSize: '1rem',
-                  }}>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>🖼️</div>
-                      <div>プロフィール画像なし</div>
-                    </div>
-                  </div>
-                )}
-                {isImageModalOpen && character.profile_image_url && (
-                  <ImageModal
-                    imageUrl={character.profile_image_url}
-                    alt={character.name}
-                    onClose={() => setIsImageModalOpen(false)}
-                  />
-                )}
-              </section>
-
-              {/* 基本情報セクション */}
-              <section style={{ 
-                marginBottom: '2rem',
-                padding: '1.5rem',
-                backgroundColor: 'var(--color-surface-muted)',
-                borderRadius: '8px',
-                border: '1px solid var(--color-border)'
-              }}>
-                <h2 style={{ 
-                  marginTop: 0, 
-                  marginBottom: '1rem', 
-                  fontSize: '1.5rem',
-                  borderBottom: '2px solid var(--color-primary)',
-                  paddingBottom: '0.5rem'
-                }}>
-                  基本情報
-                </h2>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
-                  <div>
-                    <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>システム</div>
-                    <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{SYSTEM_NAMES[character.system]}</div>
-                  </div>
-                  {character.system === 'sw25' && (() => {
-                    const sheetData = normalizeSw25SheetData(character.sheet_data) as Sw25SheetData;
-                    return (
-                      <>
+                  )}
+                </div>
+                {(() => {
+                  const sheetData = normalizeSw25SheetData(character.sheet_data) as Sw25SheetData;
+                  return (
+                    <section style={{ 
+                      flex: 1,
+                      padding: '1.5rem',
+                      backgroundColor: 'var(--color-surface-muted)',
+                      borderRadius: '8px',
+                      border: '1px solid var(--color-border)',
+                    }}>
+                      <h2 style={{ 
+                        marginTop: 0, 
+                        marginBottom: '1rem', 
+                        fontSize: '1.5rem',
+                        borderBottom: '2px solid var(--color-primary)',
+                        paddingBottom: '0.5rem'
+                      }}>
+                        {character.name}
+                      </h2>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+                        <div>
+                          <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>システム</div>
+                          <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{SYSTEM_NAMES[character.system]}</div>
+                        </div>
                         {sheetData.playerName && (
                           <div>
                             <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>プレイヤー名</div>
@@ -1409,33 +1486,40 @@ export const CharacterDetail = () => {
                             <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.gender}</div>
                           </div>
                         )}
-                      </>
-                    );
-                  })()}
-                  {character.tags.length > 0 && (
-                    <div style={{ gridColumn: '1 / -1' }}>
-                      <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>タグ</div>
-                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                        {character.tags.map(tag => (
-                          <span
-                            key={tag}
-                            style={{
-                              padding: '0.375rem 0.75rem',
-                              backgroundColor: 'var(--color-primary)',
-                              color: 'var(--color-text-inverse)',
-                              borderRadius: '4px',
-                              fontSize: '0.875rem',
-                              fontWeight: '500',
-                            }}
-                          >
-                            {tag}
-                          </span>
-                        ))}
+                        {character.tags.length > 0 && (
+                          <div style={{ gridColumn: '1 / -1' }}>
+                            <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>タグ</div>
+                            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                              {character.tags.map(tag => (
+                                <span
+                                  key={tag}
+                                  style={{
+                                    padding: '0.375rem 0.75rem',
+                                    backgroundColor: 'var(--color-primary)',
+                                    color: 'var(--color-text-inverse)',
+                                    borderRadius: '4px',
+                                    fontSize: '0.875rem',
+                                    fontWeight: '500',
+                                  }}
+                                >
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  )}
-                </div>
-              </section>
+                    </section>
+                  );
+                })()}
+              </div>
+              {isImageModalOpen && character.profile_image_url && (
+                <ImageModal
+                  imageUrl={character.profile_image_url}
+                  alt={character.name}
+                  onClose={() => setIsImageModalOpen(false)}
+                />
+              )}
 
               {/* キャラクターシートセクション */}
               <section style={{ 
