@@ -132,16 +132,6 @@
 }
 ```
 
-#### シノビガミ（shinobigami）
-```json
-{
-  "attributes": { "体術": 3, "忍術": 2, "謀術": 1, "戦術": 2, "器術": 3, "心術": 1 },
-  "skills": [{ "name": "隠密", "value": 5, "domain": "忍術" }],
-  "secret_flag": true,
-  "background": "..."
-}
-```
-
 #### ソードワールド2.5（sw25）
 ```json
 {

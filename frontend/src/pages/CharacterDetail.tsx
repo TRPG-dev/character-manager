@@ -795,7 +795,42 @@ export const CharacterDetail = () => {
                   }}>
                     {character.name}
                   </h2>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {/* アイコン＋基本情報内容を1カラムで表示 */}
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+                      {character.profile_image_url ? (
+                        <img
+                          src={character.profile_image_url}
+                          alt={character.name}
+                          style={{
+                            width: '120px',
+                            height: '120px',
+                            objectFit: 'cover',
+                            borderRadius: '8px',
+                            border: '2px solid var(--color-border)',
+                            flexShrink: 0,
+                            cursor: 'pointer',
+                          }}
+                          onClick={() => setIsImageModalOpen(true)}
+                        />
+                      ) : (
+                        <div style={{
+                          width: '120px',
+                          height: '120px',
+                          backgroundColor: 'var(--color-surface-muted)',
+                          border: '2px dashed var(--color-border)',
+                          borderRadius: '8px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: 'var(--color-text-muted)',
+                          fontSize: '2rem',
+                          flexShrink: 0,
+                        }}>
+                          🖼️
+                        </div>
+                      )}
+                      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
                       <div>
                         <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>システム</div>
                         <div style={{ fontSize: '1.0rem', fontWeight: 'bold' }}>{SYSTEM_NAMES[character.system]}</div>
@@ -858,7 +893,9 @@ export const CharacterDetail = () => {
                           <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.schoolDegree}</div>
                         </div>
                       )}
+                      </div>
                     </div>
+                  </div>
                 </section>
                 
                 {isImageModalOpen && character.profile_image_url && (
