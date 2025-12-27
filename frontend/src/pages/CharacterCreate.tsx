@@ -80,12 +80,12 @@ export const CharacterCreate = () => {
     } else if (system === 'shinobigami') {
       setSheetData(normalizeShinobigamiSheetData({
         attributes: {
+          器術: 0,
           体術: 0,
           忍術: 0,
           謀術: 0,
           戦術: 0,
-          器術: 0,
-          心術: 0,
+          妖術: 0,
         },
         skills: [],
         secret_flag: false,

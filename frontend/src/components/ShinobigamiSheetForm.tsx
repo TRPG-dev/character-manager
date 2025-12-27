@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
-import type { ShinobigamiSheetData, ShinobigamiNinpo, ShinobigamiOkugi, ShinobigamiEmotion, ShinobigamiBackground } from '../types/shinobigami';
+import type { ShinobigamiSheetData, ShinobigamiNinpo, ShinobigamiOkugi, ShinobigamiEmotion, ShinobigamiBackground, ShinobigamiPersona } from '../types/shinobigami';
 import { normalizeSheetData } from '../utils/shinobigami';
 import {
-  SHINOBI_SCHOOLS,
   SKILL_TABLE_COLUMNS,
   SKILL_TABLE_DATA,
   MAX_SKILLS_BY_RANK,
@@ -37,8 +36,10 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
   }, [data, isInternalUpdate]);
 
   const updateSchool = (school: string) => {
-    const ryuugi = school ? getRyuugiFromSchool(school) : '';
-    const updated = { ...sheetData, school, upperSchool: school, ryuugi };
+    const isKoryu = school === '古流流派';
+    const ryuugi = isKoryu ? '' : (school ? getRyuugiFromSchool(school) : '');
+    const skillDomain = isKoryu ? (sheetData.skillDomain || '') : undefined;
+    const updated = { ...sheetData, school, upperSchool: school, ryuugi, skillDomain: isKoryu ? skillDomain : undefined };
     setIsInternalUpdate(true);
     setSheetData(updated);
     onChange(updated);
@@ -171,9 +172,6 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
     onChange(updated);
   };
 
-  const selectedDomain = (sheetData.upperSchool || sheetData.school) ? getDomainFromSchool(sheetData.upperSchool || sheetData.school || '') : null;
-  const [emptyLeftIndex, emptyRightIndex] = selectedDomain ? getEmptyColumnIndices(selectedDomain) : [-1, -1];
-
   const addBackground = () => {
     const newBackground = {
       name: '',
@@ -205,46 +203,61 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
     onChange(updated);
   };
 
+  const updatePersona = (index: number, field: keyof ShinobigamiPersona, value: string) => {
+    const newPersonas = [...(sheetData.personas || [])];
+    newPersonas[index] = { ...newPersonas[index], [field]: value };
+    const updated = { ...sheetData, personas: newPersonas };
+    setIsInternalUpdate(true);
+    setSheetData(updated);
+    onChange(updated);
+  };
+
+  const isJinjin = sheetData.type === '人間';
+  const isKoryu = (sheetData.upperSchool || sheetData.school) === '古流流派';
+  const selectedDomain = isKoryu ? sheetData.skillDomain : (sheetData.upperSchool || sheetData.school ? getDomainFromSchool(sheetData.upperSchool || sheetData.school || '') : null);
+  const [emptyLeftIndex, emptyRightIndex] = selectedDomain ? getEmptyColumnIndices(selectedDomain) : [-1, -1];
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* 流派情報セクション */}
-      <section>
-        <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
-          流派情報
-        </h2>
-        {(sheetData.upperSchool || sheetData.school) && selectedDomain && (
-          <div style={{ marginBottom: '1rem', padding: '0.5rem', backgroundColor: '#f0f0f0', borderRadius: '4px' }}>
-            <div>特技属性: {selectedDomain}</div>
-            {sheetData.ryuugi && (
-              <div style={{ marginTop: '0.5rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold' }}>流儀</label>
-                <textarea
-                  value={sheetData.ryuugi}
-                  onChange={(e) => {
-                    const updated = { ...sheetData, ryuugi: e.target.value };
-                    setIsInternalUpdate(true);
-                    setSheetData(updated);
-                    onChange(updated);
-                  }}
-                  rows={2}
-                  style={{
-                    width: '100%',
-                    padding: '0.5rem',
-                    fontSize: '1rem',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
-                    fontFamily: 'inherit',
-                  }}
-                />
-              </div>
-            )}
-          </div>
-        )}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              階級
-            </label>
+      {!isJinjin && (
+        <section>
+          <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
+            流派情報
+          </h2>
+          {(sheetData.upperSchool || sheetData.school) && selectedDomain && (
+            <div style={{ marginBottom: '1rem', padding: '0.5rem', backgroundColor: '#f0f0f0', borderRadius: '4px' }}>
+              <div>特技分野: {selectedDomain}</div>
+              {!isKoryu && sheetData.ryuugi && (
+                <div style={{ marginTop: '0.5rem' }}>
+                  <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold' }}>流儀</label>
+                  <textarea
+                    value={sheetData.ryuugi}
+                    onChange={(e) => {
+                      const updated = { ...sheetData, ryuugi: e.target.value };
+                      setIsInternalUpdate(true);
+                      setSheetData(updated);
+                      onChange(updated);
+                    }}
+                    rows={2}
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem',
+                      fontSize: '1rem',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontFamily: 'inherit',
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                階級
+              </label>
             <select
               value={sheetData.rank || ''}
               onChange={(e) => {
@@ -346,6 +359,7 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
           </div>
         </div>
       </section>
+      )}
 
       {/* 能力値セクション */}
       <section>
@@ -498,9 +512,17 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
           </div>
         </div>
 
-        {!(sheetData.upperSchool || sheetData.school) ? (
+        {isJinjin ? (
+          <div style={{ padding: '1rem', backgroundColor: '#fff3cd', borderRadius: '4px', color: '#856404' }}>
+            一般人を選択した場合、特技分野を選択すると特技テーブルが表示されます。
+          </div>
+        ) : !(sheetData.upperSchool || sheetData.school) ? (
           <div style={{ padding: '1rem', backgroundColor: '#fff3cd', borderRadius: '4px', color: '#856404' }}>
             上位流派を選択すると特技テーブルが表示されます。
+          </div>
+        ) : !selectedDomain ? (
+          <div style={{ padding: '1rem', backgroundColor: '#fff3cd', borderRadius: '4px', color: '#856404' }}>
+            古流流派を選択した場合、特技分野を選択すると特技テーブルが表示されます。
           </div>
         ) : (
           <>
@@ -630,16 +652,19 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
       </section>
 
       {/* 忍法セクション */}
-      <ShinobigamiNinpoSection
-        ninpos={sheetData.ninpo || []}
-        onAdd={addNinpo}
-        onUpdate={updateNinpo}
-        onRemove={removeNinpo}
-        rank={sheetData.rank}
-        maxNinpo={sheetData.rank ? (MAX_NINPO_BY_RANK[sheetData.rank] ?? undefined) : undefined}
-      />
+      {!isJinjin && (
+        <ShinobigamiNinpoSection
+          ninpos={sheetData.ninpo || []}
+          onAdd={addNinpo}
+          onUpdate={updateNinpo}
+          onRemove={removeNinpo}
+          rank={sheetData.rank}
+          maxNinpo={sheetData.rank ? (MAX_NINPO_BY_RANK[sheetData.rank] ?? undefined) : undefined}
+        />
+      )}
 
       {/* 奥義セクション */}
+      {!isJinjin && (
       <section>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <h2 style={{ fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem', margin: 0 }}>
@@ -761,6 +786,70 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
           )}
         </div>
       </section>
+      )}
+
+      {/* ペルソナセクション */}
+      {isJinjin && (
+        <section>
+          <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
+            ペルソナ
+          </h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {(sheetData.personas || []).map((persona, index) => (
+              <div key={index} style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem' }}>
+                <h3 style={{ margin: 0, fontSize: '1rem', marginBottom: '0.5rem' }}>ペルソナ #{index + 1}</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.5rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>偽装</label>
+                    <input
+                      type="text"
+                      value={persona.disguise}
+                      onChange={(e) => updatePersona(index, 'disguise', e.target.value)}
+                      style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>真実名</label>
+                    <input
+                      type="text"
+                      value={persona.trueName}
+                      onChange={(e) => updatePersona(index, 'trueName', e.target.value)}
+                      style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                    />
+                  </div>
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>設定</label>
+                    <textarea
+                      value={persona.setting}
+                      onChange={(e) => updatePersona(index, 'setting', e.target.value)}
+                      rows={2}
+                      style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                    />
+                  </div>
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>効果</label>
+                    <textarea
+                      value={persona.effect}
+                      onChange={(e) => updatePersona(index, 'effect', e.target.value)}
+                      rows={2}
+                      style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>参照ページ</label>
+                    <input
+                      type="text"
+                      value={persona.page}
+                      onChange={(e) => updatePersona(index, 'page', e.target.value)}
+                      style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* 忍具セクション */}
       <section>

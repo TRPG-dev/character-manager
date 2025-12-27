@@ -107,11 +107,11 @@ export const ShinobigamiNinpoSection = ({ ninpos, onAdd, onUpdate, onRemove, ran
                             <div>
                                 <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>コスト</label>
                                 <input
-                                    type="number"
+                                    type="text"
                                     value={ninpo.cost}
                                     onChange={(e) => onUpdate(index, 'cost', e.target.value)}
-                                    min="0"
                                     style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                                    placeholder="コスト（テキスト入力）"
                                 />
                             </div>
                             <div>

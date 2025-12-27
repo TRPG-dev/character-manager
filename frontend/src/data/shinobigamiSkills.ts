@@ -8,6 +8,7 @@ export const SHINOBI_SCHOOLS = [
   { value: '比良坂機関', label: '比良坂機関', domain: '謀術' },
   { value: '私立御斎学園', label: '私立御斎学園', domain: '戦術' },
   { value: '隠忍の血統', label: '隠忍の血統', domain: '妖術' },
+  { value: '古流流派', label: '古流流派', domain: '' },
 ] as const;
 
 export type SchoolType = typeof SHINOBI_SCHOOLS[number]['value'];
@@ -87,7 +88,7 @@ export const MAX_OKUGI_BY_RANK: Record<string, number> = {
 export const MAX_SKILLS = 6;
 
 /**
- * 流派から特技属性を取得
+ * 流派から特技分野を取得
  */
 export function getDomainFromSchool(school: string): string {
   const schoolData = SHINOBI_SCHOOLS.find(s => s.value === school);
@@ -141,7 +142,17 @@ export const SCHOOL_ENEMY_MAP: Record<string, string> = {
  * 上位流派から仇敵を取得
  */
 export function getEnemyFromUpperSchool(upperSchool: string): string {
+  if (upperSchool === '古流流派') {
+    return '';
+  }
   return SCHOOL_ENEMY_MAP[upperSchool] || '';
+}
+
+/**
+ * 流派から流儀を取得（古流流派選択時は空白）
+ */
+export function getRyuugiFromSchoolWithKoryu(school: string): string {
+  return SCHOOL_RYUUGI_MAP_WITH_KORYU[school] || '';
 }
 
 // 階級の選択肢
@@ -191,3 +202,19 @@ export const SHINNEN_OPTIONS = [
   '忠',
   '和',
 ] as const;
+
+// 特技分野の選択肢
+export const SKILL_DOMAIN_OPTIONS = [
+  '器術',
+  '体術',
+  '忍術',
+  '謀術',
+  '戦術',
+  '妖術',
+] as const;
+
+// 流派と流儀の対応関係（古流流派選択時は流儀が空白）
+export const SCHOOL_RYUUGI_MAP_WITH_KORYU: Record<string, string> = {
+  ...SCHOOL_RYUUGI_MAP,
+  '古流流派': '',
+};
