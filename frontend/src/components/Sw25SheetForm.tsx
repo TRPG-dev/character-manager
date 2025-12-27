@@ -44,6 +44,8 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
     normalized.skills = updateAutoSkills(normalized);
     // 自動追加される言語を更新
     normalized.languages = updateAutoLanguages(normalized);
+    // 能力値を再計算
+    normalized.attributes = calculateAttributes(normalized);
     setSheetData(normalized);
   }, [data]);
 
@@ -168,11 +170,25 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
   // 戦闘特技の更新
   const updateSkill = (index: number, field: 'name' | 'effect' | 'memo' | 'referencePage', value: string) => {
     const newSkills = [...sheetData.skills];
-    newSkills[index] = { ...newSkills[index], [field]: value };
-    const updated = { ...sheetData, skills: newSkills };
-    setIsInternalUpdate(true);
-    setSheetData(updated);
-    onChange(updated);
+    if (index >= 0 && index < newSkills.length) {
+      newSkills[index] = { ...newSkills[index], [field]: value };
+      const updated = { ...sheetData, skills: newSkills };
+      setIsInternalUpdate(true);
+      setSheetData(updated);
+      onChange(updated);
+    }
+  };
+
+  // 戦闘特技名と効果を一度に更新
+  const updateSkillNameAndEffect = (index: number, name: string, effect: string) => {
+    const newSkills = [...sheetData.skills];
+    if (index >= 0 && index < newSkills.length) {
+      newSkills[index] = { ...newSkills[index], name, effect };
+      const updated = { ...sheetData, skills: newSkills };
+      setIsInternalUpdate(true);
+      setSheetData(updated);
+      onChange(updated);
+    }
   };
 
   // 戦闘特技の削除
@@ -567,6 +583,7 @@ export const Sw25SheetForm = ({ data, onChange }: Sw25SheetFormProps) => {
           classes={sheetData.classes}
           onAddSkill={addSkill}
           onUpdateSkill={updateSkill}
+          onUpdateSkillNameAndEffect={updateSkillNameAndEffect}
           onRemoveSkill={removeSkill}
         />
       </CollapsibleSection>
