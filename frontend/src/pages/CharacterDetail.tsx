@@ -1365,133 +1365,154 @@ export const CharacterDetail = () => {
           ) : character.system === 'sw25' ? (
             <>
               {/* ソードワールド2.5の場合 */}
-              {(() => {
-                const sheetData = normalizeSw25SheetData(character.sheet_data) as Sw25SheetData;
-                return (
-                  <section style={{ 
-                    padding: '1.5rem',
-                    backgroundColor: 'var(--color-surface-muted)',
-                    borderRadius: '8px',
-                    border: '1px solid var(--color-border)',
-                    marginBottom: '2rem',
-                  }}>
-                    <h2 style={{ 
-                      marginTop: 0, 
-                      marginBottom: '1rem', 
-                      fontSize: '1.5rem',
-                      borderBottom: '2px solid var(--color-primary)',
-                      paddingBottom: '0.5rem'
-                    }}>
-                      基本情報
-                    </h2>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                      <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-                        {character.profile_image_url ? (
-                          <div 
-                            style={{ 
-                              cursor: 'pointer',
-                              flexShrink: 0,
-                            }}
-                            onClick={() => setIsImageModalOpen(true)}
-                          >
-                            <img
-                              src={character.profile_image_url}
-                              alt={character.name}
-                              style={{
-                                width: '120px',
-                                height: '120px',
-                                objectFit: 'cover',
-                                borderRadius: '8px',
-                                border: '2px solid var(--color-border)',
-                              }}
-                            />
-                          </div>
-                        ) : (
-                          <div style={{
-                            width: '120px',
-                            height: '120px',
-                            backgroundColor: 'var(--color-surface-muted)',
-                            border: '2px dashed var(--color-border)',
-                            borderRadius: '8px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: 'var(--color-text-muted)',
-                            fontSize: '2rem',
-                            flexShrink: 0,
-                          }}>
-                            🖼️
-                          </div>
-                        )}
-                        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
-                          <div>
-                            <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>システム</div>
-                            <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{SYSTEM_NAMES[character.system]}</div>
-                          </div>
-                          {sheetData.playerName && (
-                            <div>
-                              <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>プレイヤー名</div>
-                              <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.playerName}</div>
-                            </div>
-                          )}
-                          {sheetData.characterName && (
-                            <div>
-                              <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>キャラクター名</div>
-                              <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.characterName}</div>
-                            </div>
-                          )}
-                          {sheetData.race && (
-                            <div>
-                              <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>種族</div>
-                              <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.race}</div>
-                            </div>
-                          )}
-                          {sheetData.birth && (
-                            <div>
-                              <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>生まれ</div>
-                              <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.birth}</div>
-                            </div>
-                          )}
-                          {sheetData.age !== undefined && (
-                            <div>
-                              <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>年齢</div>
-                              <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.age}</div>
-                            </div>
-                          )}
-                          {sheetData.gender && (
-                            <div>
-                              <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>性別</div>
-                              <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.gender}</div>
-                            </div>
-                          )}
-                          {character.tags.length > 0 && (
-                            <div style={{ gridColumn: '1 / -1' }}>
-                              <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>タグ</div>
-                              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                                {character.tags.map(tag => (
-                                  <span
-                                    key={tag}
-                                    style={{
-                                      padding: '0.375rem 0.75rem',
-                                      backgroundColor: 'var(--color-primary)',
-                                      color: 'var(--color-text-inverse)',
-                                      borderRadius: '4px',
-                                      fontSize: '0.875rem',
-                                      fontWeight: '500',
-                                    }}
-                                  >
-                                    {tag}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
+              <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '2rem', alignItems: 'flex-start' }}>
+                <div style={{ flexShrink: 0 }}>
+                  {character.profile_image_url ? (
+                    <div 
+                      style={{ 
+                        cursor: 'pointer',
+                        display: 'inline-block',
+                      }}
+                      onClick={() => setIsImageModalOpen(true)}
+                    >
+                      <img
+                        src={character.profile_image_url}
+                        alt={character.name}
+                        style={{
+                          maxWidth: '300px',
+                          maxHeight: '400px',
+                          width: 'auto',
+                          height: 'auto',
+                          borderRadius: '8px',
+                          border: '2px solid var(--color-border)',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                          transition: 'transform 0.2s, box-shadow 0.2s',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = 'scale(1.02)';
+                          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'scale(1)';
+                          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                        }}
+                      />
+                      <div style={{ 
+                        marginTop: '0.5rem', 
+                        fontSize: '0.875rem', 
+                        color: 'var(--color-text-muted)',
+                        textAlign: 'center'
+                      }}>
+                        クリックで拡大表示
                       </div>
                     </div>
-                  </section>
-                );
-              })()}
+                  ) : (
+                    <div style={{
+                      width: '300px',
+                      height: '400px',
+                      backgroundColor: 'var(--color-surface-muted)',
+                      border: '2px dashed var(--color-border)',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'var(--color-text-muted)',
+                      fontSize: '1rem',
+                    }}>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>🖼️</div>
+                        <div>プロフィール画像なし</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {(() => {
+                  const sheetData = normalizeSw25SheetData(character.sheet_data) as Sw25SheetData;
+                  return (
+                    <section style={{ 
+                      flex: 1,
+                      padding: '1.5rem',
+                      backgroundColor: 'var(--color-surface-muted)',
+                      borderRadius: '8px',
+                      border: '1px solid var(--color-border)',
+                    }}>
+                      <h2 style={{ 
+                        marginTop: 0, 
+                        marginBottom: '1rem', 
+                        fontSize: '1.5rem',
+                        borderBottom: '2px solid var(--color-primary)',
+                        paddingBottom: '0.5rem'
+                      }}>
+                        {character.name}
+                      </h2>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+                        <div>
+                          <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>システム</div>
+                          <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{SYSTEM_NAMES[character.system]}</div>
+                        </div>
+                        {sheetData.playerName && (
+                          <div>
+                            <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>プレイヤー名</div>
+                            <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.playerName}</div>
+                          </div>
+                        )}
+                        {sheetData.characterName && (
+                          <div>
+                            <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>キャラクター名</div>
+                            <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.characterName}</div>
+                          </div>
+                        )}
+                        {sheetData.race && (
+                          <div>
+                            <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>種族</div>
+                            <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.race}</div>
+                          </div>
+                        )}
+                        {sheetData.birth && (
+                          <div>
+                            <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>生まれ</div>
+                            <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.birth}</div>
+                          </div>
+                        )}
+                        {sheetData.age !== undefined && (
+                          <div>
+                            <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>年齢</div>
+                            <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.age}</div>
+                          </div>
+                        )}
+                        {sheetData.gender && (
+                          <div>
+                            <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>性別</div>
+                            <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.gender}</div>
+                          </div>
+                        )}
+                        {character.tags.length > 0 && (
+                          <div style={{ gridColumn: '1 / -1' }}>
+                            <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>タグ</div>
+                            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                              {character.tags.map(tag => (
+                                <span
+                                  key={tag}
+                                  style={{
+                                    padding: '0.375rem 0.75rem',
+                                    backgroundColor: 'var(--color-primary)',
+                                    color: 'var(--color-text-inverse)',
+                                    borderRadius: '4px',
+                                    fontSize: '0.875rem',
+                                    fontWeight: '500',
+                                  }}
+                                >
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </section>
+                  );
+                })()}
+              </div>
               {isImageModalOpen && character.profile_image_url && (
                 <ImageModal
                   imageUrl={character.profile_image_url}
