@@ -864,28 +864,7 @@ export const CharacterDetail = () => {
                         <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>システム</div>
                         <div style={{ fontSize: '1.0rem', fontWeight: 'bold' }}>{SYSTEM_NAMES[character.system]}</div>
                       </div>
-                      {character.tags.length > 0 && (
-                        <div style={{ gridColumn: '1 / -1' }}>
-                          <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>タグ</div>
-                          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                            {character.tags.map(tag => (
-                              <span
-                                key={tag}
-                                style={{
-                                  padding: '0.375rem 0.75rem',
-                                  backgroundColor: 'var(--color-primary)',
-                                  color: 'var(--color-text-inverse)',
-                                  borderRadius: '4px',
-                                  fontSize: '0.875rem',
-                                  fontWeight: '500',
-                                }}
-                              >
-                                {tag}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+                      
                       {sheetData.playerName && (
                         <div>
                           <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>プレイヤー名</div>
@@ -920,6 +899,28 @@ export const CharacterDetail = () => {
                         <div>
                           <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>学校・学位</div>
                           <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>{sheetData.schoolDegree}</div>
+                        </div>
+                      )}
+                      {character.tags.length > 0 && (
+                        <div style={{ gridColumn: '1 / -1' }}>
+                          <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>タグ</div>
+                          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                            {character.tags.map(tag => (
+                              <span
+                                key={tag}
+                                style={{
+                                  padding: '0.375rem 0.75rem',
+                                  backgroundColor: 'var(--color-primary)',
+                                  color: 'var(--color-text-inverse)',
+                                  borderRadius: '4px',
+                                  fontSize: '0.875rem',
+                                  fontWeight: '500',
+                                }}
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>

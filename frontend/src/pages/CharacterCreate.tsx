@@ -256,7 +256,7 @@ export const CharacterCreate = () => {
                 borderRadius: '8px',
                 backgroundColor: 'var(--color-surface)',
                 cursor: 'pointer',
-                fontSize: '1.125rem',
+                fontSize: '1.0rem',
                 transition: 'all 0.2s',
               }}
               onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => {
