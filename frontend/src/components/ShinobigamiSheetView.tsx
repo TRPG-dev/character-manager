@@ -26,6 +26,7 @@ export const ShinobigamiSheetView = ({
   const [isJudgmentMode, setIsJudgmentMode] = useState(false);
   const [judgmentValue, setJudgmentValue] = useState<string>('');
   const [judgmentCommand, setJudgmentCommand] = useState<string>('');
+  const [clickedSkillInJudgmentMode, setClickedSkillInJudgmentMode] = useState<string | null>(null);
   
   const displayEmotions = [...(sheetData.emotions || []), ...temporaryEmotions];
   const baseHencho = new Set(sheetData.hencho || []);
@@ -89,8 +90,12 @@ export const ShinobigamiSheetView = ({
   };
   
   const handleSkillClickInJudgmentMode = (skillName: string) => {
+    if (clickedSkillInJudgmentMode === skillName) return;
+    
     const clickedPos = getSkillPosition(skillName);
     if (!clickedPos) return;
+    
+    setClickedSkillInJudgmentMode(skillName);
     
     const selectedSkills = Array.from(selectedSkillNames).map(name => ({
       name,
@@ -395,7 +400,11 @@ export const ShinobigamiSheetView = ({
                             const skillName = SKILL_TABLE_DATA[rowValue]?.[col.domain] || '';
                             const isSelected = selectedSkillNames.has(skillName);
                             const isHeaderSelected = selectedHeaders.has(col.domain);
-                            const backgroundColor = isHeaderSelected ? '#f8d7da' : (isSelected ? '#d4edda' : '#fff');
+                            const isClickedInJudgmentMode = clickedSkillInJudgmentMode === skillName;
+                            let backgroundColor = isHeaderSelected ? '#f8d7da' : (isSelected ? '#d4edda' : '#fff');
+                            if (isJudgmentMode && isClickedInJudgmentMode) {
+                              backgroundColor = '#cfe2ff';
+                            }
                             return (
                               <td
                                 key={colIndex}
@@ -431,6 +440,7 @@ export const ShinobigamiSheetView = ({
                       if (!e.target.checked) {
                         setJudgmentValue('');
                         setJudgmentCommand('');
+                        setClickedSkillInJudgmentMode(null);
                       }
                     }}
                     style={{ cursor: 'pointer' }}
