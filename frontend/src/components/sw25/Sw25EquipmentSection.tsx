@@ -63,7 +63,7 @@ export const Sw25EquipmentSection = ({
         </button>
         {weapons.map((weapon, index) => (
           <div key={index} style={{ marginBottom: '1rem', padding: '1rem', border: '1px solid #ddd', borderRadius: '4px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 1fr auto', gap: '1rem', marginBottom: '0.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '1rem', marginBottom: '0.5rem' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                   武器名
@@ -72,29 +72,6 @@ export const Sw25EquipmentSection = ({
                   type="text"
                   value={weapon.name}
                   onChange={(e) => onUpdateWeapon(index, 'name', e.target.value)}
-                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                  命中力
-                </label>
-                <input
-                  type="number"
-                  value={weapon.hit}
-                  onChange={(e) => onUpdateWeapon(index, 'hit', parseInt(e.target.value) || 0)}
-                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                  ダメージ
-                </label>
-                <input
-                  type="text"
-                  value={weapon.damage}
-                  onChange={(e) => onUpdateWeapon(index, 'damage', e.target.value)}
-                  placeholder="例: 2D6+1"
                   style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
                 />
               </div>
@@ -119,18 +96,6 @@ export const Sw25EquipmentSection = ({
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginBottom: '0.5rem' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                  価格
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={weapon.price || 0}
-                  onChange={(e) => onUpdateWeapon(index, 'price', e.target.value ? parseInt(e.target.value) : 0)}
-                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                   用法
                 </label>
                 <input
@@ -149,6 +114,17 @@ export const Sw25EquipmentSection = ({
                   min="0"
                   value={weapon.requiredStrength || 0}
                   onChange={(e) => onUpdateWeapon(index, 'requiredStrength', e.target.value ? parseInt(e.target.value) : 0)}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                  命中
+                </label>
+                <input
+                  type="number"
+                  value={weapon.hit}
+                  onChange={(e) => onUpdateWeapon(index, 'hit', parseInt(e.target.value) || 0)}
                   style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
                 />
               </div>
@@ -188,7 +164,19 @@ export const Sw25EquipmentSection = ({
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                  参照p
+                  価格
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={weapon.price || 0}
+                  onChange={(e) => onUpdateWeapon(index, 'price', e.target.value ? parseInt(e.target.value) : 0)}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                  参照ページ
                 </label>
                 <input
                   type="text"
@@ -233,7 +221,7 @@ export const Sw25EquipmentSection = ({
         </button>
         {armors.map((armor, index) => (
           <div key={index} style={{ marginBottom: '1rem', padding: '1rem', border: '1px solid #ddd', borderRadius: '4px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px auto', gap: '1rem', marginBottom: '0.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '1rem', marginBottom: '0.5rem' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                   防具名
@@ -242,17 +230,6 @@ export const Sw25EquipmentSection = ({
                   type="text"
                   value={armor.name}
                   onChange={(e) => onUpdateArmor(index, 'name', e.target.value)}
-                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                  防護点
-                </label>
-                <input
-                  type="number"
-                  value={armor.defense}
-                  onChange={(e) => onUpdateArmor(index, 'defense', parseInt(e.target.value) || 0)}
                   style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
                 />
               </div>
@@ -277,15 +254,17 @@ export const Sw25EquipmentSection = ({
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginBottom: '0.5rem' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                  価格
+                  タイプ
                 </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={armor.price || 0}
-                  onChange={(e) => onUpdateArmor(index, 'price', e.target.value ? parseInt(e.target.value) : 0)}
+                <select
+                  value={armor.type || ''}
+                  onChange={(e) => onUpdateArmor(index, 'type', e.target.value ? (e.target.value as '鎧' | '盾') : undefined)}
                   style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                />
+                >
+                  <option value="">選択してください</option>
+                  <option value="鎧">鎧</option>
+                  <option value="盾">盾</option>
+                </select>
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
@@ -312,21 +291,30 @@ export const Sw25EquipmentSection = ({
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                  タイプ
+                  防護点
                 </label>
-                <select
-                  value={armor.type || ''}
-                  onChange={(e) => onUpdateArmor(index, 'type', e.target.value ? (e.target.value as '鎧' | '盾') : undefined)}
+                <input
+                  type="number"
+                  value={armor.defense}
+                  onChange={(e) => onUpdateArmor(index, 'defense', parseInt(e.target.value) || 0)}
                   style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                >
-                  <option value="">選択してください</option>
-                  <option value="鎧">鎧</option>
-                  <option value="盾">盾</option>
-                </select>
+                />
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                  参照p
+                  価格
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={armor.price || 0}
+                  onChange={(e) => onUpdateArmor(index, 'price', e.target.value ? parseInt(e.target.value) : 0)}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                  参照ページ
                 </label>
                 <input
                   type="text"
@@ -371,7 +359,7 @@ export const Sw25EquipmentSection = ({
         </button>
         {accessories.map((accessory, index) => (
           <div key={index} style={{ marginBottom: '1rem', padding: '1rem', border: '1px solid #ddd', borderRadius: '4px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 150px auto', gap: '1rem', marginBottom: '0.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '1rem', marginBottom: '0.5rem' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                   装飾品名
@@ -383,6 +371,25 @@ export const Sw25EquipmentSection = ({
                   style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
                 />
               </div>
+              <div>
+                <button
+                  type="button"
+                  onClick={() => onRemoveAccessory(index)}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    backgroundColor: '#dc3545',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    marginTop: '1.5rem',
+                  }}
+                >
+                  削除
+                </button>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginBottom: '0.5rem' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                   装備スロット
@@ -406,25 +413,6 @@ export const Sw25EquipmentSection = ({
                 </select>
               </div>
               <div>
-                <button
-                  type="button"
-                  onClick={() => onRemoveAccessory(index)}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    backgroundColor: '#dc3545',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    marginTop: '1.5rem',
-                  }}
-                >
-                  削除
-                </button>
-              </div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginBottom: '0.5rem' }}>
-              <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                   価格
                 </label>
@@ -438,7 +426,7 @@ export const Sw25EquipmentSection = ({
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                  参照p
+                  参照ページ
                 </label>
                 <input
                   type="text"
@@ -447,17 +435,6 @@ export const Sw25EquipmentSection = ({
                   style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
                 />
               </div>
-            </div>
-            <div style={{ marginBottom: '0.5rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                効果
-              </label>
-              <textarea
-                value={accessory.effect || ''}
-                onChange={(e) => onUpdateAccessory(index, 'effect', e.target.value)}
-                rows={2}
-                style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-              />
             </div>
             <div>
               <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
@@ -511,7 +488,7 @@ export const Sw25EquipmentSection = ({
         </button>
         {items.map((item, index) => (
           <div key={index} style={{ marginBottom: '1rem', padding: '1rem', border: '1px solid #ddd', borderRadius: '4px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px auto', gap: '1rem', marginBottom: '0.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '1rem', marginBottom: '0.5rem' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                   アイテム名
@@ -520,18 +497,6 @@ export const Sw25EquipmentSection = ({
                   type="text"
                   value={item.name}
                   onChange={(e) => onUpdateItem(index, 'name', e.target.value)}
-                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                  数量
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={item.quantity}
-                  onChange={(e) => onUpdateItem(index, 'quantity', parseInt(e.target.value) || 0)}
                   style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
                 />
               </div>
@@ -553,6 +518,43 @@ export const Sw25EquipmentSection = ({
                 </button>
               </div>
             </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginBottom: '0.5rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                  数量
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={item.quantity}
+                  onChange={(e) => onUpdateItem(index, 'quantity', parseInt(e.target.value) || 0)}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                  参照ページ
+                </label>
+                <input
+                  type="text"
+                  value={item.referencePage || ''}
+                  onChange={(e) => onUpdateItem(index, 'referencePage', e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                  価格
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={item.price || 0}
+                  onChange={(e) => onUpdateItem(index, 'price', e.target.value ? parseInt(e.target.value) : 0)}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                />
+              </div>
+            </div>
             <div>
               <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                 備考
@@ -570,4 +572,6 @@ export const Sw25EquipmentSection = ({
     </>
   );
 };
+
+
 
