@@ -64,6 +64,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && github.ref || github.ref }}
+          fetch-depth: 0
 
       - name: Validate branch for tag events
         if: github.ref_type == 'tag'
@@ -73,7 +74,7 @@ jobs:
           echo "Branches containing this tag: $BRANCHES"
 
           # Check if tag is on master or dev/* branch
-          if echo "$BRANCHES" | grep -qE "(origin/master|origin/dev/)"; then
+          if echo "$BRANCHES" | grep -E "(origin/master|origin/dev/)"; then
             echo "Tag is on master or dev/* branch - proceeding"
           else
             echo "Error: Tags can only be created on master or dev/* branches"
