@@ -204,7 +204,16 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
   };
 
   const updatePersona = (index: number, field: keyof ShinobigamiPersona, value: string) => {
-    const newPersonas = [...(sheetData.personas || [])];
+    const currentPersonas = sheetData.personas && sheetData.personas.length > 0 
+      ? sheetData.personas 
+      : [
+          { disguise: '', trueName: '', setting: '', effect: '', page: '' },
+          { disguise: '', trueName: '', setting: '', effect: '', page: '' }
+        ];
+    const newPersonas = [...currentPersonas];
+    if (!newPersonas[index]) {
+      newPersonas[index] = { disguise: '', trueName: '', setting: '', effect: '', page: '' };
+    }
     newPersonas[index] = { ...newPersonas[index], [field]: value };
     const updated = { ...sheetData, personas: newPersonas };
     setIsInternalUpdate(true);
@@ -212,15 +221,15 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
     onChange(updated);
   };
 
-  const isJinjin = sheetData.type === '人間';
+  const isIppanjin = sheetData.type === '一般人';
   const isKoryu = (sheetData.upperSchool || sheetData.school) === '古流流派';
-  const selectedDomain = isKoryu ? sheetData.skillDomain : (sheetData.upperSchool || sheetData.school ? getDomainFromSchool(sheetData.upperSchool || sheetData.school || '') : null);
+  const selectedDomain = isIppanjin || isKoryu ? sheetData.skillDomain : (sheetData.upperSchool || sheetData.school ? getDomainFromSchool(sheetData.upperSchool || sheetData.school || '') : null);
   const [emptyLeftIndex, emptyRightIndex] = selectedDomain ? getEmptyColumnIndices(selectedDomain) : [-1, -1];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* 流派情報セクション */}
-      {!isJinjin && (
+      {!isIppanjin && (
         <section>
           <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
             流派情報
@@ -512,15 +521,15 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
           </div>
         </div>
 
-        {isJinjin ? (
+        {isIppanjin && !selectedDomain ? (
           <div style={{ padding: '1rem', backgroundColor: '#fff3cd', borderRadius: '4px', color: '#856404' }}>
             一般人を選択した場合、特技分野を選択すると特技テーブルが表示されます。
           </div>
-        ) : !(sheetData.upperSchool || sheetData.school) ? (
+        ) : !isIppanjin && !(sheetData.upperSchool || sheetData.school) ? (
           <div style={{ padding: '1rem', backgroundColor: '#fff3cd', borderRadius: '4px', color: '#856404' }}>
             上位流派を選択すると特技テーブルが表示されます。
           </div>
-        ) : !selectedDomain ? (
+        ) : !isIppanjin && !selectedDomain ? (
           <div style={{ padding: '1rem', backgroundColor: '#fff3cd', borderRadius: '4px', color: '#856404' }}>
             古流流派を選択した場合、特技分野を選択すると特技テーブルが表示されます。
           </div>
@@ -652,7 +661,7 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
       </section>
 
       {/* 忍法セクション */}
-      {!isJinjin && (
+      {!isIppanjin && (
         <ShinobigamiNinpoSection
           ninpos={sheetData.ninpo || []}
           onAdd={addNinpo}
@@ -664,7 +673,7 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
       )}
 
       {/* 奥義セクション */}
-      {!isJinjin && (
+      {!isIppanjin && (
       <section>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <h2 style={{ fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem', margin: 0 }}>
@@ -789,25 +798,19 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
       )}
 
       {/* ペルソナセクション */}
-      {isJinjin && (
+      {isIppanjin && (
         <section>
           <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', borderBottom: '2px solid #ddd', paddingBottom: '0.5rem' }}>
             ペルソナ
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {(sheetData.personas || []).map((persona, index) => (
+            {((sheetData.personas && sheetData.personas.length > 0) ? sheetData.personas : [
+              { disguise: '', trueName: '', setting: '', effect: '', page: '' },
+              { disguise: '', trueName: '', setting: '', effect: '', page: '' }
+            ]).map((persona, index) => (
               <div key={index} style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '1rem' }}>
                 <h3 style={{ margin: 0, fontSize: '1rem', marginBottom: '0.5rem' }}>ペルソナ #{index + 1}</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.5rem' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>偽装</label>
-                    <input
-                      type="text"
-                      value={persona.disguise}
-                      onChange={(e) => updatePersona(index, 'disguise', e.target.value)}
-                      style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                    />
-                  </div>
                   <div>
                     <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>真実名</label>
                     <input
@@ -817,8 +820,26 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
                       style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
                     />
                   </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>参照ページ</label>
+                    <input
+                      type="text"
+                      value={persona.page}
+                      onChange={(e) => updatePersona(index, 'page', e.target.value)}
+                      style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                    />
+                  </div>
                   <div style={{ gridColumn: '1 / -1' }}>
-                    <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>設定</label>
+                    <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>偽装</label>
+                    <textarea
+                      value={persona.disguise}
+                      onChange={(e) => updatePersona(index, 'disguise', e.target.value)}
+                      rows={2}
+                      style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                    />
+                  </div>
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>概要</label>
                     <textarea
                       value={persona.setting}
                       onChange={(e) => updatePersona(index, 'setting', e.target.value)}
@@ -832,15 +853,6 @@ export const ShinobigamiSheetForm = ({ data, onChange }: ShinobigamiSheetFormPro
                       value={persona.effect}
                       onChange={(e) => updatePersona(index, 'effect', e.target.value)}
                       rows={2}
-                      style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>参照ページ</label>
-                    <input
-                      type="text"
-                      value={persona.page}
-                      onChange={(e) => updatePersona(index, 'page', e.target.value)}
                       style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
                     />
                   </div>

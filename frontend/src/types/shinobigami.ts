@@ -90,7 +90,7 @@ export interface ShinobigamiSheetData {
   shinnen?: string; // 信念（凶、律、我、情、忠、和）
   koseki?: number; // 功績点
   regulation?: string; // レギュレーション
-  type?: "忍者" | "人間"; // タイプ
+  type?: "忍者" | "一般人"; // タイプ
   enemy?: string; // 仇敵
   skillDomain?: string; // 古流流派選択時の特技分野
   skills: ShinobigamiSkill[];
