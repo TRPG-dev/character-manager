@@ -1,7 +1,7 @@
 name: Build and Push Docker Images to GCP
 
 on:
-  push:
+  merge_group:
     branches:
       - master
       - 'dev/**'
