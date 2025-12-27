@@ -459,7 +459,7 @@ export const BasicInfoForm = ({
               </div>
               {((data as ShinobigamiSheetData).upperSchool || (data as ShinobigamiSheetData).school) && (
                 <>
-                  {((data as ShinobigamiSheetData).upperSchool || (data as ShinobigamiSheetData).school) === '古流流派' ? (
+                  {((data as ShinobigamiSheetData).upperSchool || (data as ShinobigamiSheetData).school) === '古流流派' && (
                     <div>
                       <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
                         特技分野 <span style={{ color: 'red' }}>*</span>
@@ -480,40 +480,24 @@ export const BasicInfoForm = ({
                         ))}
                       </select>
                     </div>
-                  ) : (
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
-                        流儀
-                      </label>
-                      <textarea
-                        value={(data as ShinobigamiSheetData).ryuugi || ''}
-                        onChange={(e) => {
-                          const updated = { ...data, ryuugi: e.target.value } as ShinobigamiSheetData;
-                          onChange(updated);
-                        }}
-                        rows={2}
-                        style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', fontFamily: 'inherit' }}
-                        placeholder="流儀を入力"
-                      />
-                    </div>
                   )}
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
+                      流儀
+                    </label>
+                    <textarea
+                      value={(data as ShinobigamiSheetData).ryuugi || ''}
+                      onChange={(e) => {
+                        const updated = { ...data, ryuugi: e.target.value } as ShinobigamiSheetData;
+                        onChange(updated);
+                      }}
+                      rows={2}
+                      style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', fontFamily: 'inherit' }}
+                      placeholder="流儀を入力"
+                    />
+                  </div>
                 </>
               )}
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
-                  下位流派
-                </label>
-                <input
-                  type="text"
-                  value={(data as ShinobigamiSheetData).lowerSchool || ''}
-                  onChange={(e) => {
-                    const updated = { ...data, lowerSchool: e.target.value } as ShinobigamiSheetData;
-                    onChange(updated);
-                  }}
-                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                  placeholder="下位流派を入力"
-                />
-              </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
                   レギュレーション
@@ -555,21 +539,6 @@ export const BasicInfoForm = ({
               </div>
               {(data as ShinobigamiSheetData).type !== '人間' && (
                 <>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
-                      上位流派
-                    </label>
-                    <input
-                      type="text"
-                      value={(data as ShinobigamiSheetData).upperSchool || ''}
-                      onChange={(e) => {
-                        const updated = { ...data, upperSchool: e.target.value } as ShinobigamiSheetData;
-                        onChange(updated);
-                      }}
-                      style={{ width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                      placeholder="上位流派を入力"
-                    />
-                  </div>
                   <div>
                     <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
                       下位流派
